@@ -32,7 +32,6 @@ export function useReviewQueue() {
 
   return {
     tab: computed(() => list.filters.value.status),
-    status,
     page: list.page,
     /** The list's URL query, kept by links into a review so Back returns here. */
     listQuery: computed(() => route.query),

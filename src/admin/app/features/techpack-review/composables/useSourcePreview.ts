@@ -1,53 +1,75 @@
 import { api } from '@/api'
-import type { ReviewItem } from '../models/review-item'
-import { sourcePreviewModel } from '../models/workbook-inspection'
+import type { ReviewDraft } from '../models/review-item'
+import { sourcePreviewModel } from '../models/source-preview'
 
-const UNAVAILABLE = 'PDF preview unavailable. Download the source PDF to compare it.'
+const FIT_ZOOM = 100
+const MAX_ZOOM = 250
+const ZOOM_STEP = 50
 
-/** One page of the source PDF as an image, with paging and zoom. */
-export function useSourcePreview(review: Readonly<Ref<ReviewItem | undefined>>) {
+/** Fetches one rendered PDF page at a time and tracks whether the browser could display it. */
+export function useSourcePreview(draft: Readonly<Ref<ReviewDraft | undefined>>) {
   const page = ref(1)
-  const zoom = ref(100)
-  const viewport = ref<HTMLElement | null>(null)
-  const imageFailed = ref(false)
+  const pageCount = ref(0)
+  const zoom = ref(FIT_ZOOM)
+  const imageStatus = ref<'loading' | 'shown' | 'failed'>('loading')
 
   const query = useApiQuery(
-    () => `techpack-reviews:source:${review.value?.fileId}:${page.value}`,
-    ({ signal }) => api.get('/admin/docai/techpack-reviews/{fileId}/source-preview', {
-      path: { fileId: review.value!.fileId },
-      query: { page: page.value },
-      signal,
-      model: sourcePreviewModel,
-    }),
-    { enabled: () => !!review.value?.draftUuid },
+    () => `techpack-reviews:source:${draft.value?.fileId}:${page.value}`,
+    async ({ signal }) => {
+      const current = draft.value
+      if (!current) return null
+      const requestedPage = page.value
+      const result = await api.get('/admin/docai/techpack-reviews/{fileId}/source-preview', {
+        path: { fileId: current.fileId },
+        query: { page: requestedPage },
+        signal,
+        model: sourcePreviewModel,
+      })
+      return { page: requestedPage, pageCount: result.pageCount, src: `data:image/png;base64,${result.pngBase64}` }
+    },
+    { enabled: () => !!draft.value },
   )
-
-  // A new page starts at the top.
-  watch(query.data, () => {
-    imageFailed.value = false
-    viewport.value?.scrollTo(0, 0)
+  const image = computed(() => {
+    if (query.pending.value) return
+    const preview = query.data.value
+    return preview?.page === page.value ? preview : undefined
   })
 
-  const error = computed(() => (query.error.value || imageFailed.value ? UNAVAILABLE : ''))
+  watch(image, (current) => {
+    imageStatus.value = 'loading'
+    if (current) pageCount.value = current.pageCount
+  }, { immediate: true, flush: 'sync' })
 
   function showPage(next: number) {
-    const last = query.data.value?.pageCount ?? next
-    if (next >= 1 && next <= last) page.value = next
+    if (Number.isInteger(next) && next >= 1 && (!pageCount.value || next <= pageCount.value)) {
+      page.value = next
+    }
+  }
+
+  function reportImage(src: string, imagePage: number, status: 'shown' | 'failed') {
+    if (image.value?.src === src && image.value.page === imagePage) imageStatus.value = status
+  }
+
+  function retry() {
+    // A browser decode failure needs a fresh image element even when the API returns identical bytes.
+    imageStatus.value = 'loading'
+    return query.refresh()
   }
 
   return {
-    preview: query.data,
-    page,
-    zoom,
-    viewport,
-    loading: query.pending,
-    error,
-    /** The reviewer could see the PDF: counts toward "source accessed". */
-    shown: computed(() => !!query.data.value && !error.value),
+    image,
+    page: readonly(page),
+    pageCount: readonly(pageCount),
+    zoom: readonly(zoom),
+    loading: computed(() => query.pending.value || (!!image.value && imageStatus.value === 'loading')),
+    error: computed(() => !!query.error.value || imageStatus.value === 'failed'),
+    shown: computed(() => !!image.value && !query.error.value && imageStatus.value === 'shown'),
+    canZoomIn: computed(() => zoom.value < MAX_ZOOM),
+    canZoomOut: computed(() => zoom.value > FIT_ZOOM),
     showPage,
-    zoomIn: () => (zoom.value = Math.min(250, zoom.value + 50)),
-    zoomOut: () => (zoom.value = Math.max(100, zoom.value - 50)),
-    /** The image itself didn't render. */
-    markImageFailed: () => (imageFailed.value = true),
+    zoomIn: () => { zoom.value = Math.min(MAX_ZOOM, zoom.value + ZOOM_STEP) },
+    zoomOut: () => { zoom.value = Math.max(FIT_ZOOM, zoom.value - ZOOM_STEP) },
+    reportImage,
+    retry,
   }
 }

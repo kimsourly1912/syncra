@@ -1,125 +1,134 @@
 <script setup lang="ts">
+import type { DropdownMenuItem } from '@nuxt/ui'
 import { useReviewDetail } from '../composables/useReviewDetail'
-import ReviewFindingsList from './ReviewFindingsList.vue'
 import ReviewWorkbookGrid from './ReviewWorkbookGrid.vue'
+import ReviewWorkbookReplacement from './ReviewWorkbookReplacement.vue'
 
-const { inspection: draft, actions } = useReviewDetail()
-const { inspection, loading, error, aiFindings, findings, sheet } = draft
+const { inspection: draft, workbook, actions } = useReviewDetail()
+const { inspection, pending, error } = draft
+const { sheets, sheet, sheetIndex, selection, flaggedCells, edits } = workbook
 const { busy } = actions
+
+const replacementOpen = ref(false)
+const workbookMenu = computed<DropdownMenuItem[]>(() => [{
+  label: 'Replace workbook',
+  icon: 'lucide:upload',
+  disabled: busy.value || !!workbook.staged.value.length,
+  onSelect: () => { replacementOpen.value = true },
+}])
+
+const hasCheckedSheet = computed(() => sheets.value.some(sheet => sheet.gridHeaderRow != null))
 </script>
 
 <template>
-  <div class="flex min-w-0 flex-col">
-    <div class="flex flex-wrap items-center justify-between gap-2 border-b border-default bg-default px-4 py-2.5">
+  <section
+    aria-label="Draft workbook"
+    class="flex min-h-0 min-w-0 flex-col overflow-hidden rounded-lg border border-default"
+  >
+    <header class="flex flex-wrap items-center justify-between gap-2 border-b border-default px-3 py-2">
       <h2 class="flex items-center gap-2 font-semibold text-highlighted">
         <UIcon
           name="lucide:sheet"
-          class="size-5 text-primary"
+          class="size-4 text-primary"
         />
         Draft workbook
       </h2>
+      <div class="flex items-center gap-1">
+        <UButton
+          label="Download workbook"
+          icon="lucide:download"
+          color="neutral"
+          variant="ghost"
+          size="sm"
+          :disabled="busy"
+          @click="actions.download('draft')"
+        />
+        <UDropdownMenu :items="workbookMenu">
+          <UButton
+            aria-label="Workbook actions"
+            icon="lucide:ellipsis"
+            color="neutral"
+            variant="ghost"
+            size="sm"
+            :disabled="busy"
+          />
+        </UDropdownMenu>
+      </div>
+    </header>
+
+    <div
+      v-if="inspection?.partial"
+      role="status"
+      class="border-b border-default bg-warning/5 px-3 py-2 text-sm text-highlighted"
+    >
+      This preview is limited. Download the full workbook before confirming your review.
+    </div>
+
+    <div
+      v-if="error"
+      class="flex flex-wrap items-center justify-between gap-2 border-b border-default px-3 py-2 text-sm text-muted"
+    >
+      <p role="status">
+        Workbook preview unavailable. Download the workbook to review it.
+      </p>
       <UButton
-        label="Download workbook"
-        icon="lucide:download"
+        label="Retry workbook preview"
         color="neutral"
-        variant="ghost"
+        variant="outline"
         size="sm"
-        :disabled="busy"
-        @click="actions.download('draft')"
+        :loading="pending"
+        @click="draft.refresh"
       />
     </div>
 
     <div
-      v-if="inspection"
-      class="flex min-w-0 flex-1 flex-col"
+      v-if="sheet"
+      class="flex min-h-0 flex-1 flex-col"
     >
       <div
-        v-if="inspection.sourceCheck?.verified"
-        class="flex items-start gap-2.5 border-b border-success/20 bg-success/5 px-4 py-3"
-        role="status"
+        class="flex items-center gap-1 overflow-x-auto border-b border-default px-2 py-1"
+        aria-label="Workbook sheets"
+        role="group"
       >
-        <UIcon
-          name="lucide:circle-check"
-          class="mt-0.5 size-4 shrink-0 text-success"
+        <UButton
+          v-for="(tab, index) in sheets"
+          :key="tab.name"
+          :label="tab.name"
+          :variant="sheetIndex === index ? 'soft' : 'ghost'"
+          :color="sheetIndex === index ? 'primary' : 'neutral'"
+          :aria-pressed="sheetIndex === index"
+          size="sm"
+          class="shrink-0"
+          @click="workbook.selectSheet(index)"
         />
-        <div class="text-sm">
-          <p class="font-semibold text-highlighted">
-            No differences found
-          </p>
-          <p class="text-muted">
-            All {{ inspection.sourceCheck.comparedCells }} size and tolerance cells match the PDF.
-            This workbook is already in review and needs admin approval to release.
-          </p>
-        </div>
-      </div>
-      <div
-        v-else-if="inspection.sourceCheck"
-        class="space-y-1 border-b border-default px-4 py-3 text-sm text-muted"
-      >
-        <p v-if="inspection.sourceCheck.comparedCells">
-          Compared {{ inspection.sourceCheck.comparedCells }} size and tolerance cells with the PDF.
-        </p>
-        <p
-          v-for="note in inspection.sourceCheck.notes"
-          :key="note"
-          class="text-highlighted"
+        <span
+          v-if="hasCheckedSheet && sheet.gridHeaderRow == null"
+          class="shrink-0 px-2 text-xs text-muted"
         >
-          {{ note }}
-        </p>
+          No size grid checks on this sheet
+        </span>
       </div>
-      <p
-        v-else
-        class="border-b border-default px-4 py-3 text-sm text-muted"
-      >
-        Source comparison unavailable. Verify the workbook against the PDF.
-      </p>
-      <div
-        v-if="inspection.aiReview"
-        class="space-y-1 border-b border-default px-4 py-3 text-sm text-muted"
-        role="status"
-      >
-        <p class="flex items-center gap-2 font-semibold text-highlighted">
-          <UIcon
-            name="lucide:scan-search"
-            class="size-4 text-primary"
-          />
-          Second AI review
-        </p>
-        <p v-if="inspection.aiReview.comparedCells">
-          The AI read the original PDF and compared {{ inspection.aiReview.comparedCells }} size and tolerance cells with the workbook.
-          <template v-if="!aiFindings.length">
-            No differences in the cells it compared.
-          </template>
-        </p>
-        <p
-          v-for="note in inspection.aiReview.notes"
-          :key="note"
-        >
-          {{ note }}
-        </p>
-        <p>Verify the workbook against the source PDF before approving release.</p>
-      </div>
-      <ReviewFindingsList v-if="findings.length" />
-      <p
-        v-if="inspection.partial"
-        class="border-b border-warning/20 bg-warning/5 px-4 py-2 text-sm text-highlighted"
-      >
-        This preview is limited. Download the full workbook before confirming your review.
-      </p>
-      <ReviewWorkbookGrid v-if="sheet" />
-      <p
-        v-else
-        class="px-4 py-5 text-sm text-muted"
-      >
-        No worksheet could be shown. Download the workbook to review it.
-      </p>
+      <ReviewWorkbookGrid
+        :sheet="sheet"
+        :sheet-index="sheetIndex"
+        :selection="selection"
+        :flagged-cells="flaggedCells"
+        :edits="edits"
+      />
     </div>
     <div
       v-else
-      class="grid min-h-48 flex-1 place-items-center p-5 text-center text-sm text-muted"
+      class="min-h-72 flex-1 p-4 text-sm text-muted @min-[72rem]:min-h-0"
       role="status"
     >
-      {{ loading ? 'Reading draft workbook…' : error }}
+      <p v-if="pending">
+        Reading draft workbook…
+      </p>
+      <p v-else-if="!error">
+        No worksheet could be shown. Download the workbook to review it.
+      </p>
     </div>
-  </div>
+
+    <ReviewWorkbookReplacement v-model:open="replacementOpen" />
+  </section>
 </template>

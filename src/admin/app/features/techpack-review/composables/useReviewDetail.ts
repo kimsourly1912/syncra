@@ -4,17 +4,16 @@ import { useDraftInspection } from './useDraftInspection'
 import { useReview } from './useReview'
 import { useReviewActions } from './useReviewActions'
 import { useSourcePreview } from './useSourcePreview'
+import { useWorkbookReview } from './useWorkbookReview'
 
-/**
- * One TechPack review screen: the record, the source PDF, the draft workbook, and the actions.
- * `ReviewDetailScreen` provides it once; each panel reads the part it shows with `useReviewDetail()`.
- */
-const [provideReviewDetail, injectReviewDetail] = createInjectionState((fileIdParam: string) => {
+const [provideReviewDetail, injectReviewDetail] = createInjectionState((fileId: string) => {
   const route = useRoute()
-  const record = useReview(fileIdParam)
-  const source = useSourcePreview(record.review)
-  const inspection = useDraftInspection(record.review)
-  const actions = useReviewActions(record.review, source, inspection)
+  const record = useReview(fileId)
+  const source = useSourcePreview(record.draft)
+  const inspection = useDraftInspection(record.draft)
+  const draftUuid = computed(() => record.draft.value?.draftUuid)
+  const workbook = useWorkbookReview(draftUuid, inspection.inspection, inspection.findings)
+  const actions = useReviewActions(record, source, inspection, workbook)
 
   useHead({ title: computed(() => `${record.review.value?.filename ?? 'TechPack review'} · Syncra Admin`) })
 
@@ -22,16 +21,15 @@ const [provideReviewDetail, injectReviewDetail] = createInjectionState((fileIdPa
     record,
     source,
     inspection,
+    workbook,
     actions,
-    /** Back to the queue tab and page the review was opened from. */
     backLink: computed(() => ({
       path: '/techpack-reviews',
       query: Object.fromEntries(Object.entries(route.query).filter(([key]) => key === 'status' || key === 'page')),
     })),
-    /** Shows a finding in the workbook and its cited page in the PDF. */
     showFinding(finding: ReviewFinding) {
-      void inspection.focus(finding)
-      if (finding.sourcePage && finding.sourcePage !== source.page.value) source.showPage(finding.sourcePage)
+      workbook.selectFinding(finding)
+      if (finding.sourcePage) source.showPage(finding.sourcePage)
     },
   }
 })

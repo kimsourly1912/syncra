@@ -1,4 +1,5 @@
 import { api, errorMessage } from '@/api'
+import type { ReviewDraft } from '../models/review-item'
 import { reviewItemModel } from '../models/review-item'
 
 /** The largest id the API accepts (a Java int). */
@@ -14,8 +15,18 @@ export function useReview(fileIdParam: string) {
     { enabled: fileId > 0 },
   )
 
+  const draft = computed<ReviewDraft | undefined>(() => {
+    const item = query.data.value
+    if (!item?.draftUuid || item.status !== 'IN_REVIEW') return
+    return { fileId: item.fileId, filename: item.filename, draftUuid: item.draftUuid }
+  })
+
   return {
     review: query.data,
+    draft,
+    pending: query.pending,
+    retry: fileId > 0 ? query.refresh : undefined,
+    refresh: query.refresh,
     loading: query.loading,
     error: computed(() => {
       if (!fileId) return 'This TechPack review could not be found.'

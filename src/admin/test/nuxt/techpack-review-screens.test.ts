@@ -6,11 +6,13 @@ import ReviewQueueScreen from '../../app/features/techpack-review/components/Rev
 import ReviewDetailScreen from '../../app/features/techpack-review/components/ReviewDetailScreen.vue'
 import { fakeApi, ok } from '../fake-api'
 
-const { navigate } = vi.hoisted(() => ({ navigate: vi.fn() }))
+const { navigate, route } = vi.hoisted(() => ({
+  navigate: vi.fn(),
+  route: { query: {} as Record<string, string>, params: {}, path: '/techpack-reviews' },
+}))
 
 mockNuxtImport('navigateTo', () => navigate)
-// The first queue page, In Review status.
-mockNuxtImport('useRoute', () => () => ({ query: {}, params: {}, path: '/techpack-reviews' }))
+mockNuxtImport('useRoute', () => () => route)
 
 // Sanitized fixtures shaped like the TechPack review endpoints.
 const item = {
@@ -45,6 +47,7 @@ function respondByEndpoint(responses: Record<string, unknown>) {
 beforeEach(() => {
   // Screens share loaded data by key; every test starts from nothing loaded.
   clearNuxtData()
+  route.query = {}
   api = fakeApi().transport
   navigate.mockReset()
 })
@@ -59,8 +62,22 @@ describe('review queue screen', () => {
     const link = wrapper.find('a[href="/techpack-reviews/101"]')
     expect(link.exists()).toBe(true)
     expect(link.text()).toBe('sample-techpack.pdf')
-    expect(wrapper.text()).toContain('Company 303 · Job 202')
+    expect(wrapper.findAll('th').map(cell => cell.text())).toEqual(['TechPack file', 'Company ID', 'Job ID'])
+    expect(wrapper.findAll('td').map(cell => cell.text())).toEqual(['sample-techpack.pdf', '303', '202'])
     expect(wrapper.find('[role="group"][aria-label="Review status"]').text()).toContain('In Review')
+  })
+
+  it('shows the review date column and plain filenames for released records', async () => {
+    route.query = { status: 'reviewed' }
+    respondByEndpoint({
+      'techpack-reviews': ok({ content: [{ ...item, status: 'REVIEWED', draftUuid: null }], totalPages: 1 }),
+    })
+    const wrapper = await mountSuspended(ReviewQueueScreen)
+    await flushPromises()
+
+    expect(wrapper.text()).toContain('Reviewed at')
+    expect(wrapper.findAll('td').map(cell => cell.text())).toEqual(['sample-techpack.pdf', '303', '202', '—'])
+    expect(wrapper.find('a[href="/techpack-reviews/101"]').exists()).toBe(false)
   })
 
   it('shows the status-specific empty message', async () => {
@@ -122,12 +139,53 @@ describe('review detail screen', () => {
       query: { draftUuid: item.draftUuid },
     }))
     expect(wrapper.text()).toContain('sample-techpack.pdf')
-    expect(wrapper.text()).toContain('1 difference from the PDF')
-    expect(wrapper.text()).toContain('PDF 52 · Workbook 50')
+    expect(wrapper.text()).toContain('PDF difference')
     expect(wrapper.text()).toContain('Measurements · B1')
+    expect(wrapper.text()).toContain('Resolve the PDF differences before approving.')
 
     const approve = wrapper.findAll('button').find(button => button.text().includes('Approve and release'))
     expect(approve?.attributes('disabled')).toBeDefined()
+  })
+
+  it('selects PDF and AI findings separately and saves a single correction for their shared cell', async () => {
+    const sharedCell = {
+      ...inspection,
+      findings: [{ ...inspection.findings[0], sourcePage: 2 }],
+      aiReview: {
+        findings: [{ sheetIndex: 0, rowNumber: 1, columnIndex: 1, measurement: 'Chest', column: 'M', sourcePage: 1, workbookValue: '50', aiValue: '49' }],
+      },
+    }
+    respondByEndpoint({
+      'techpack-reviews/104': ok({ ...item, fileId: 104 }),
+      'source-preview': ok({ pageCount: 2, pngBase64: 'iVBORw0KGgo=' }),
+      'draft-inspection': ok(sharedCell),
+      'draft-corrections': ok(null),
+    })
+    const wrapper = await mountSuspended(ReviewDetailScreen, { props: { fileId: '104' } })
+    await flushPromises()
+
+    const [pdf, ai] = wrapper.findAll('ul[aria-label="Workbook findings"] button')
+    await pdf!.trigger('click')
+    await flushPromises()
+    expect(pdf!.attributes('aria-pressed')).toBe('true')
+    expect(wrapper.find('[data-cell="0-1-1"]').classes()).toContain('active-cell')
+    expect(api).toHaveBeenCalledWith('/admin/docai/techpack-reviews/104/source-preview', expect.objectContaining({ query: { page: 2 } }))
+    await wrapper.findAll('button').find(button => button.text() === 'Use PDF value')!.trigger('click')
+
+    await ai!.trigger('click')
+    expect(ai!.attributes('aria-pressed')).toBe('true')
+    expect(pdf!.attributes('aria-pressed')).toBe('false')
+    expect(wrapper.text()).toContain('AI read')
+    expect(wrapper.findAll('button').some(button => button.text() === 'Use PDF value')).toBe(false)
+    expect(wrapper.text()).toContain('1 unsaved correction')
+    expect(wrapper.find('[data-cell="0-1-1"]').text()).toBe('52')
+
+    await wrapper.findAll('button').find(button => button.text() === 'Save corrections')!.trigger('click')
+    await flushPromises()
+    expect(api).toHaveBeenCalledWith('/admin/docai/techpack-reviews/104/draft-corrections', expect.objectContaining({
+      method: 'POST',
+      body: { draftUuid: item.draftUuid, corrections: [{ sheetIndex: 0, rowNumber: 1, columnIndex: 1, value: '52' }] },
+    }))
   })
 
   // A draft the reviewer can approve: no differences, and the whole workbook shown.
@@ -144,7 +202,7 @@ describe('review detail screen', () => {
     const wrapper = await mountSuspended(ReviewDetailScreen, { props: { fileId: '102' } })
     await flushPromises()
 
-    await wrapper.findAll('button').find(button => button.text().includes('PDF 52'))!.trigger('click')
+    await wrapper.findAll('button').find(button => button.text().includes('PDF difference'))!.trigger('click')
     await wrapper.findAll('button').find(button => button.text() === 'Use PDF value')!.trigger('click')
     expect(wrapper.text()).toContain('1 unsaved correction')
     await wrapper.findAll('button').find(button => button.text().includes('Save corrections'))!.trigger('click')
@@ -171,6 +229,10 @@ describe('review detail screen', () => {
 
     const approve = () => wrapper.findAll('button').find(button => button.text().includes('Approve and release'))!
     expect(approve().attributes('disabled')).toBeDefined()
+    expect(wrapper.find('[role="checkbox"]').attributes('disabled')).toBeDefined()
+    expect(wrapper.text()).toContain('Wait for the source PDF to load.')
+
+    await wrapper.get('img[alt^="Original TechPack PDF"]').trigger('load')
     await wrapper.find('[role="checkbox"]').trigger('click')
     expect(approve().attributes('disabled')).toBeUndefined()
     await approve().trigger('click')

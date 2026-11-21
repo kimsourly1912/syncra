@@ -1,111 +1,131 @@
 <script setup lang="ts">
+import type { TableColumn } from '@nuxt/ui'
 import type { ListStatusTab } from '@/components/list/ListStatusTabs.vue'
 import { useReviewQueue } from '../composables/useReviewQueue'
 import type { ReviewQueueTab } from '../composables/useReviewQueue'
+import type { ReviewItem } from '../models/review-item'
 
-const { tab, status, page, listQuery, items, totalPages, loading, refreshing, pending, error, refresh, showStatus, showPage } = useReviewQueue()
+const {
+  tab, page, listQuery, items, totalPages, loading, refreshing, pending, error, refresh, showStatus, showPage,
+} = useReviewQueue()
 
 const tabs: ListStatusTab<ReviewQueueTab>[] = [
   { label: 'In Review', value: 'in-review' },
   { label: 'Reviewed', value: 'reviewed' },
 ]
+
+const fileColumns: TableColumn<ReviewItem>[] = [
+  { accessorKey: 'filename', header: 'TechPack file' },
+  { accessorKey: 'companyId', header: 'Company ID' },
+  { accessorKey: 'jobId', header: 'Job ID', meta: { class: { td: 'pr-9' } } },
+]
+
+const reviewedAtColumn: TableColumn<ReviewItem> = {
+  accessorKey: 'reviewedAt',
+  header: 'Reviewed at',
+  meta: { class: { td: 'pr-9 whitespace-nowrap' } },
+  cell: ({ row }) => row.original.reviewedAt ? new Date(row.original.reviewedAt).toLocaleString() : '—',
+}
+
+const columns = computed(() => tab.value === 'reviewed' ? [...fileColumns, reviewedAtColumn] : fileColumns)
 </script>
 
 <template>
-  <section class="space-y-4">
-    <div class="flex items-center justify-between gap-3 border-b border-default">
-      <ListStatusTabs
-        :model-value="tab"
-        :items="tabs"
-        :disabled="pending"
-        aria-label="Review status"
-        @update:model-value="showStatus"
+  <UDashboardPanel>
+    <template #header>
+      <UDashboardNavbar
+        icon="lucide:file-check"
+        title="TechPack reviews"
       />
-      <UButton
-        label="Refresh"
-        icon="lucide:refresh-cw"
-        color="neutral"
-        variant="ghost"
-        :loading="pending"
-        @click="refresh"
+      <UDashboardToolbar>
+        <template #left>
+          <ListStatusTabs
+            :model-value="tab"
+            :items="tabs"
+            :disabled="pending"
+            aria-label="Review status"
+            @update:model-value="showStatus"
+          />
+        </template>
+        <template #right>
+          <UButton
+            label="Refresh"
+            icon="lucide:refresh-cw"
+            color="neutral"
+            variant="outline"
+            :loading="pending"
+            @click="refresh"
+          />
+        </template>
+      </UDashboardToolbar>
+    </template>
+
+    <template #body>
+      <AlertApiError
+        v-if="error"
+        :error="error"
+        title="Could not load TechPack reviews"
+        fallback="Could not load TechPack reviews."
+        :retrying="pending"
+        @retry="refresh"
       />
-    </div>
 
-    <AlertApiError
-      v-if="error"
-      :error="error"
-      title="Could not load TechPack reviews"
-      fallback="Could not load TechPack reviews."
-      :retrying="pending"
-      @retry="refresh"
-    />
-
-    <UCard v-else-if="loading">
-      <ListSkeleton
-        label="Loading reviews…"
-        :rows="4"
-      />
-    </UCard>
-
-    <ListRefresh
-      v-else
-      :active="refreshing"
-    >
-      <UCard>
-        <ListEmptyState
-          v-if="!items.length"
-          noun="TechPack reviews"
-          :title="status === 'IN_REVIEW' ? 'No TechPacks are waiting for review.' : 'No reviewed TechPacks.'"
-        />
-        <ul
-          v-else
-          class="divide-y divide-default"
+      <ListRefresh
+        v-else
+        :active="refreshing"
+      >
+        <UTable
+          :data="items"
+          :columns="columns"
+          :loading="loading"
+          :ui="{ root: 'rounded-lg border border-default', tr: 'relative' }"
+          aria-label="TechPack reviews"
         >
-          <li
-            v-for="item in items"
-            :key="item.fileId"
-            class="relative flex flex-wrap items-center justify-between gap-3 py-3"
-          >
-            <div class="min-w-0">
-              <!-- The filename opens the review: it holds only the name and stretches over the row. -->
+          <template #filename-cell="{ row }">
+            <div class="flex items-center gap-2">
+              <UIcon
+                name="lucide:file-text"
+                class="size-4 shrink-0 text-muted"
+              />
               <ULink
-                v-if="item.draftUuid"
-                :to="{ path: '/techpack-reviews/' + item.fileId, query: listQuery }"
-                class="font-medium break-all text-highlighted after:absolute after:inset-0 hover:text-primary focus-visible:outline-none focus-visible:after:rounded-md focus-visible:after:ring-2 focus-visible:after:ring-primary"
+                v-if="row.original.draftUuid"
+                :to="{ path: '/techpack-reviews/' + row.original.fileId, query: listQuery }"
+                class="font-medium wrap-anywhere text-highlighted after:absolute after:inset-0 hover:text-primary focus-visible:outline-none focus-visible:after:ring-2 focus-visible:after:ring-inset focus-visible:after:ring-primary"
               >
-                {{ item.filename }}
+                {{ row.original.filename }}
+                <UIcon
+                  name="lucide:chevron-right"
+                  class="absolute end-3 top-1/2 size-4 -translate-y-1/2 text-muted"
+                  aria-hidden="true"
+                />
               </ULink>
-              <p
+              <span
                 v-else
-                class="font-medium break-all text-highlighted"
-              >
-                {{ item.filename }}
-              </p>
-              <p class="text-sm text-muted">
-                Company {{ item.companyId }} · Job {{ item.jobId }}
-              </p>
+                class="font-medium wrap-anywhere text-highlighted"
+              >{{ row.original.filename }}</span>
             </div>
-            <UIcon
-              v-if="item.draftUuid"
-              name="lucide:chevron-right"
-              class="size-5 text-dimmed"
+          </template>
+          <template #loading>
+            <ListSkeleton
+              label="Loading reviews…"
+              :rows="4"
             />
-            <span
-              v-else-if="item.reviewedAt"
-              class="text-sm text-muted"
-            >
-              {{ new Date(item.reviewedAt).toLocaleString() }}
-            </span>
-          </li>
-        </ul>
-      </UCard>
-    </ListRefresh>
+          </template>
+          <template #empty>
+            <ListEmptyState
+              noun="TechPack reviews"
+              :title="tab === 'in-review' ? 'No TechPacks are waiting for review.' : 'No reviewed TechPacks.'"
+            />
+          </template>
+        </UTable>
+      </ListRefresh>
 
-    <ListPagination
-      :page="page"
-      :page-count="totalPages"
-      :disabled="pending"
-      @update:page="showPage"
-    />
-  </section>
+      <ListPagination
+        :page="page"
+        :page-count="totalPages"
+        :disabled="pending"
+        @update:page="showPage"
+      />
+    </template>
+  </UDashboardPanel>
 </template>
