@@ -67,7 +67,7 @@ const columns = computed(() => {
       header: 'Status',
       cell({ row }) {
         const { status } = row.original
-        return h(UBadge, { label: status, color: 'success', size: 'lg', variant: 'soft' })
+        return h(UBadge, { label: status, color: 'success', variant: 'subtle' })
       },
     },
     {
@@ -90,7 +90,10 @@ useSortable('.product-table', data)
 <template>
   <UDashboardPanel>
     <template #header>
-      <UDashboardNavbar title="Product Management">
+      <UDashboardNavbar
+        icon="lucide:package"
+        title="Product Management"
+      >
         <template #right>
           <UButton
             label="Create New Product"
@@ -101,9 +104,9 @@ useSortable('.product-table', data)
 
       <UDashboardToolbar>
         <template #left>
-          <UInput
-            icon="lucide:search"
-            placeholder="Search"
+          <!-- Static page: the search isn't wired to an API yet. -->
+          <InputSearch
+            placeholder="Search products…"
             class="w-full max-w-sm"
           />
         </template>

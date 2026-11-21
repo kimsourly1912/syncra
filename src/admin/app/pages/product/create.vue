@@ -2,9 +2,12 @@
 </script>
 
 <template>
-  <UDashboardPanel>
+  <UDashboardPanel class="page-narrow">
     <template #header>
-      <UDashboardNavbar title="Create New Product">
+      <UDashboardNavbar
+        icon="lucide:package-plus"
+        title="Create New Product"
+      >
         <template #leading>
           <UButton
             icon="lucide:arrow-left"

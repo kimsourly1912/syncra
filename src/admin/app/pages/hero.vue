@@ -1,7 +1,10 @@
 <template>
-  <UDashboardPanel>
+  <UDashboardPanel class="page-narrow">
     <template #header>
-      <UDashboardNavbar title="HeroPage Management">
+      <UDashboardNavbar
+        icon="lucide:panels-top-left"
+        title="HeroPage Management"
+      >
         <template #right>
           <UButton label="Edit" />
         </template>

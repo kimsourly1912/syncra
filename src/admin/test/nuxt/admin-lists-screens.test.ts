@@ -101,9 +101,9 @@ describe('lead list screen', () => {
     expect(call[1]).toMatchObject({ query: { page: 0, size: 20 } })
     expect((call[1] as { query: Record<string, unknown> }).query.status).toBeUndefined()
     expect((call[1] as { query: Record<string, unknown> }).query.search).toBeUndefined()
-    // Nothing yet, nothing filtered; missing totals show as dashes.
+    // Nothing yet, nothing filtered; a total the API didn't send leaves its tab without a count.
     expect(wrapper.text()).toContain('No leads yet')
-    expect(wrapper.text()).toContain('—')
+    expect(wrapper.find('[role="tab"]').text()).toBe('All')
   })
 
   it('tells a filtered empty list apart, with Clear filters', async () => {

@@ -1,7 +1,10 @@
 <template>
   <UDashboardPanel>
     <template #header>
-      <UDashboardNavbar title="Community Management" />
+      <UDashboardNavbar
+        icon="lucide:users"
+        title="Community Management"
+      />
     </template>
 
     <template #body>

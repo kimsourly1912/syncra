@@ -35,7 +35,7 @@ const columns = computed(() => {
       :key="item.label"
       :title="item.label"
       variant="outline"
-      :ui="{ title: 'font-normal text-muted' }"
+      :ui="{ root: 'bg-elevated/40', title: 'font-normal text-muted' }"
     >
       <template #leading>
         <UBadge

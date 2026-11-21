@@ -11,7 +11,10 @@ const fileId = typeof route.params.fileId === 'string' ? route.params.fileId : '
 <template>
   <UDashboardPanel>
     <template #header>
-      <UDashboardNavbar title="TechPack review" />
+      <UDashboardNavbar
+        icon="lucide:file-search"
+        title="TechPack review"
+      />
     </template>
 
     <template #body>

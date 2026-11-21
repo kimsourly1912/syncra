@@ -18,3 +18,60 @@
 /* @theme {
   --font-sans: 'League Spartan', sans-serif;
 } */
+
+/*
+ * Light-mode primary (decision 0012): Nuxt UI's light primary is the 500 shade, and brand-500 is
+ * 2.4:1 on white (AA needs 4.5:1) for links, the active tab, and white labels on solid buttons.
+ * brand-800 passes on white (6.7:1), on its own 10% tint (5.8:1), and on `bg-elevated` (6.1:1);
+ * brand-700 fails the last two. Dark mode keeps Nuxt UI's 400 shade (8.3:1 on the dark background).
+ * Unlayered, so it wins over Nuxt UI's colors in `@layer theme`.
+ */
+:root,
+.light {
+  --ui-primary: var(--ui-color-primary-800);
+}
+
+.dark {
+  --ui-primary: var(--ui-color-primary-400);
+}
+
+/*
+ * Page width (decision 0012, ui.md → Page width): on a wide screen a page is centered and capped,
+ * and its navbar, toolbar, and body line up on one edge. `app.config.ts` applies `--page-gutter` as
+ * their side padding; `100%` there is the panel's width, so it holds beside the sidebar. Below the
+ * cap the padding is Nuxt UI's own (1rem, 1.5rem from `sm`). Pages set no max-width: lists and
+ * details get 80rem, and a form or settings page adds `page-narrow` to its UDashboardPanel (56rem).
+ */
+:root {
+  --page-max: var(--container-7xl);
+  --page-pad: calc(var(--spacing) * 4);
+  --page-gutter: max(var(--page-pad), calc((100% - var(--page-max)) / 2));
+}
+
+@media (width >= 40rem) {
+  :root {
+    --page-pad: calc(var(--spacing) * 6);
+  }
+}
+
+/* --page-gutter is restated: a custom property's var() resolves where it's declared. */
+@utility page-narrow {
+  --page-max: var(--container-4xl);
+  --page-gutter: max(var(--page-pad), calc((100% - var(--page-max)) / 2));
+}
+
+/* A row that scrolls sideways with no visible scrollbar (tab rows that don't fit). */
+@utility scrollbar-none {
+  scrollbar-width: none;
+
+  &::-webkit-scrollbar {
+    display: none;
+  }
+}
+
+/* Thin scrollbars everywhere: panels, modals, menus. `scrollbar-width` isn't inherited. */
+@layer base {
+  * {
+    scrollbar-width: thin;
+  }
+}

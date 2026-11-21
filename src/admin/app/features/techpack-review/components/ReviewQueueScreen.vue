@@ -12,7 +12,7 @@ const tabs: ListStatusTab<ReviewQueueTab>[] = [
 </script>
 
 <template>
-  <section class="max-w-5xl space-y-4">
+  <section class="space-y-4">
     <div class="flex items-center justify-between gap-3 border-b border-default">
       <ListStatusTabs
         :model-value="tab"
@@ -41,20 +41,10 @@ const tabs: ListStatusTab<ReviewQueueTab>[] = [
     />
 
     <UCard v-else-if="loading">
-      <div
-        role="status"
-        aria-label="Loading reviews…"
-        class="divide-y divide-default"
-      >
-        <div
-          v-for="i in 4"
-          :key="i"
-          class="space-y-2 py-3"
-        >
-          <USkeleton class="h-4 w-1/3" />
-          <USkeleton class="h-3 w-1/4" />
-        </div>
-      </div>
+      <ListSkeleton
+        label="Loading reviews…"
+        :rows="4"
+      />
     </UCard>
 
     <ListRefresh

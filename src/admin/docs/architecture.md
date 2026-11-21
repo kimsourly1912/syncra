@@ -27,10 +27,10 @@ src/admin/app/
 │       ├── models/ utils/       # response models; pure helpers (findings)
 │       └── index.ts
 ├── components/                  # shared, auto-registered WITH folder prefix (see below)
-│   └── alert/ card/ input/ list/ modal/ # AlertApiError, CardStats, InputPassword, InputSearch, List* (Details, StatusTabs, Pagination, EmptyState, Refresh), ModalConfirm; the rest is Nuxt UI
-├── composables/                 # useApiQuery, useApiMutation, useListQuery, useUrlTab, useRefreshIndicator, useAppToast
+│   └── alert/ card/ input/ list/ modal/ # AlertApiError, CardStats, InputPassword, InputSearch, List* (Details, StatusTabs, Pagination, EmptyState, Refresh, Skeleton), ModalConfirm; the rest is Nuxt UI
+├── composables/                 # useApiQuery, useApiMutation, useListQuery, useUrlTab, useCenteredTab, useRefreshIndicator, useAppToast
 ├── api/                         # '@/api': client, errors, session recovery, contract helpers, generated/ (types, schemas, endpoint map; never edit)
-├── utils/                       # file.ts (saveFile)
+├── utils/                       # file.ts (saveFile), navigation.ts (isSectionActive)
 ├── types/page-meta.d.ts         # the `access` page meta
 ├── middleware/                  # access.global.ts: loads the session, checks `access`
 ├── layouts/                     # default (UDashboardGroup + UDashboardSidebar), auth
@@ -40,7 +40,7 @@ src/admin/app/
 ### What gets imported automatically
 
 - **Components** use Nuxt's default naming, which **includes the folder**: `components/card/CardStats.vue` becomes `<CardStats>`. Every existing file already starts with its folder name, so keep that: `components/modal/ModalConfirm.vue`, not `components/modal/Confirm.vue`.
-- **No `schema/`, `theme/`, `constants/`, or shared `types/`.** Form schemas live in their feature and start from the generated request schema ([forms](forms.md)). Components use Nuxt UI defaults, with no shared `:ui` objects. A component's prop types live in its own `<script lang="ts">` block. `types/` holds only `page-meta.d.ts`.
+- **No `schema/`, `theme/`, `constants/`, or shared `types/`.** Form schemas live in their feature and start from the generated request schema ([forms](forms.md)). Components use Nuxt UI defaults, with no shared `:ui` objects; the few app-wide layout rules live in `app/app.config.ts`, and the page width and light-mode primary in `app/assets/css/tailwind.css` ([ui](ui.md#foundation), [0012](../../../docs/decisions/0012-admin-page-width-and-layout-overrides.md)). A component's prop types live in its own `<script lang="ts">` block. `types/` holds only `page-meta.d.ts`.
 - Composables and utils are auto-imported. Feature code, models, and `@/api` are imported explicitly.
 - **Session state** is two `useState` keys owned by `features/session` (`useSession`). There's no store library.
 
@@ -70,13 +70,13 @@ There are no services: a composable calls `api` with a path from the spec and a 
 | Pattern | Reference | Why |
 | --- | --- | --- |
 | API-backed list | `features/techpack-review/composables/useReviewQueue.ts` + `ReviewQueueScreen.vue` | `useListQuery` (status and 1-based page in the URL) + `useApiQuery` keyed by them. `ListStatusTabs`, `AlertApiError`, skeleton rows, `ListRefresh`, `ListEmptyState`, `ListPagination`; the filename opens the record. A page past the end moves back. |
-| Searchable table list with totals | `features/lead-inquiry/composables/useLeadList.ts` + `LeadListScreen.vue` | `useListQuery` with `search` and `pageSizes`; `envelope: false` for this endpoint; a separate summary query feeds `CardStats` (skeleton while loading, its own error). The screen owns the `UDashboardPanel`, so the toolbar can bind to the list state. Extra filters: `useSaleRequestList` (type select); navbar actions through a slot: `AccountListScreen`. |
+| Searchable table list with totals | `features/lead-inquiry/composables/useLeadList.ts` + `LeadListScreen.vue` | `useListQuery` with `search` and `pageSizes`; `envelope: false` for this endpoint; a separate summary query feeds the `ListStatusTabs` counts (its own error above the tabs). The screen owns the `UDashboardPanel`, so the toolbar can bind to the list state. Extra filters: `useSaleRequestList` (type select); navbar actions through a slot: `AccountListScreen`. |
 | A screen split into panels | `useReviewDetail.ts` + `ReviewDetailScreen.vue` and its panels | Focused composables (record, PDF preview, inspection, actions) composed once and shared with panels through `createInjectionState`. |
 | Writes | `features/techpack-review/composables/useReviewActions.ts` | `useApiMutation` per action: toasts, pending, double-submit guard, `invalidate`. Each save sends the current `draftUuid`; a draft change clears the attestation. |
 | Form with Valibot + pending | `pages/auth/sign-in.vue` + `features/auth/composables/useSignIn.ts` | `UForm` + a feature schema (`features/auth/schemas/`) + `FIELD_NAME satisfies { [K in keyof IForm]: K }`. The composable wraps the request in `useApiMutation` and acts on `result.ok`. |
 | Request + model | `features/auth/composables/useForgotPassword.ts`, `features/auth/models/forgot-password.ts` | `api.post('/admin/auth/forgot-password', { body, auth: false, model })` |
 | Session-aware action | `features/session/composables/useSession.ts` | Shared state in `useState`, one in-flight load, idempotent `end()` |
-| Tabs in the URL | `pages/account/[id].vue` | `UTabs` bound to `useUrlTab`: an unknown `?tab=` reads as the first tab, and switching replaces the URL |
+| Tabs in the URL | `pages/account/[id].vue` | `ListToolbarTabs` bound to `useUrlTab`: an unknown `?tab=` reads as the first tab, and switching replaces the URL |
 | Page layout | `pages/product/create.vue` | `UDashboardPanel` → `UDashboardNavbar` (back button in `#leading`, actions in `#right`) → `UPageCard` |
 
 ## Legacy: don't copy

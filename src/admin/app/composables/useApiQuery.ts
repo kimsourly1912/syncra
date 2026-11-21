@@ -22,6 +22,8 @@ export async function invalidateQueries(...features: string[]) {
  *   overwrite a newer one.
  * - `error` is an `ApiError`. When a refresh fails for the connection or the server, the data
  *   from the last good load stays on screen (same key only).
+ * - `loading` is a load with nothing to show for this key: the first load, and a new key (a filter,
+ *   search, or page change). `refreshing` is a reload of the same key with its data still shown.
  *
  * @example
  * const review = useApiQuery(
@@ -56,9 +58,18 @@ export function useApiQuery<T>(
   watch(asyncData.data, (value) => {
     if (value != null) kept.value = { key: toValue(key), value: value as T }
   })
+
+  // While a new key loads (another filter, search, or page), Nuxt keeps showing the previous key's
+  // data. Those are another query's rows, so they don't count: the new key is loading, not
+  // refreshing. `dataKey` is the key the current data was loaded for.
+  const dataKey = shallowRef<string>()
+  watch(asyncData.data, () => {
+    dataKey.value = toValue(key)
+  }, { immediate: true, flush: 'sync' })
+
   const data = computed<T | undefined>(() => {
     const value = asyncData.data.value as T | undefined
-    if (value != null) return value
+    if (value != null && dataKey.value === toValue(key)) return value
     return error.value?.retryable && kept.value?.key === toValue(key) ? kept.value.value : undefined
   })
 
