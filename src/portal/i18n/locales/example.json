@@ -1,0 +1,86 @@
+{
+  "validation": {
+    "required": {
+      "default": "This field is required",
+      "select": "Please select an option",
+      "checkbox": "Please accept to continue",
+      "file": "Please select a file"
+    },
+    "text": {
+      "minLength": "Must be at least {min} characters",
+      "maxLength": "Must be less than {max} characters",
+      "exactLength": "Must be exactly {length} characters",
+      "invalid": "Contains invalid characters",
+      "alphabetic": "Can only contain letters",
+      "alphanumeric": "Can only contain letters and numbers"
+    },
+    "email": {
+      "invalid": "Please enter a valid email address",
+      "required": "Email address is required"
+    },
+    "password": {
+      "required": "Password is required",
+      "minLength": "Must be at least 8 characters long",
+      "strength": "Must include lowercase and uppercase letters, numbers, and symbols",
+      "noSpaces": "Cannot contain spaces",
+      "mismatch": "Passwords do not match",
+      "weak": "Password is too weak"
+    },
+    "number": {
+      "min": "Must be greater than or equal to {min}",
+      "max": "Must be less than or equal to {max}",
+      "range": "Must be between {min} and {max}",
+      "integer": "Must be a whole number",
+      "positive": "Must be a positive number",
+      "decimal": "Must have no more than {places} decimal places"
+    },
+    "date": {
+      "invalid": "Please enter a valid date",
+      "past": "Date cannot be in the past",
+      "future": "Date cannot be in the future",
+      "min": "Must be after {date}",
+      "max": "Must be before {date}"
+    },
+    "file": {
+      "tooLarge": "File must be smaller than {maxSize}",
+      "invalidType": "File type not allowed",
+      "multipleRequired": "Please select at least one file",
+      "maxFiles": "Cannot upload more than {max} files"
+    },
+    "url": {
+      "invalid": "Please enter a valid URL",
+      "required": "Website URL is required"
+    },
+    "phone": {
+      "invalid": "Please enter a valid phone number",
+      "required": "Phone number is required"
+    },
+    "generic": {
+      "invalid": "Please enter a valid value",
+      "network": "Network error. Please try again.",
+      "unknown": "An error occurred. Please try again."
+    }
+  },
+  "success": {
+    "form": {
+      "submitted": "Form submitted successfully",
+      "saved": "Changes saved successfully",
+      "updated": "Updated successfully",
+      "created": "Created successfully",
+      "deleted": "Deleted successfully"
+    },
+    "password": {
+      "updated": "Password updated successfully",
+      "reset": "Password reset instructions sent to your email"
+    },
+    "profile": {
+      "updated": "Profile updated successfully"
+    }
+  },
+  "status": {
+    "loading": "Processing...",
+    "submitting": "Submitting...",
+    "saving": "Saving...",
+    "uploading": "Uploading..."
+  }
+}

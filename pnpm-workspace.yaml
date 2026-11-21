@@ -1,0 +1,11 @@
+packages:
+  - "src/*"
+  - "!**/tests/**" # Exclude test directories from workspace
+
+allowBuilds:
+  '@parcel/watcher': true
+  core-js: true
+  esbuild: true
+  sharp: true
+  unrs-resolver: true
+  vue-demi: true

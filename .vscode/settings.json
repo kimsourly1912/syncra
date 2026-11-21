@@ -1,0 +1,32 @@
+{
+  "files.associations": {
+    "*.css": "tailwindcss"
+  },
+  "editor.quickSuggestions": {
+    "strings": "on"
+  },
+  // Auto fix
+  "editor.codeActionsOnSave": {
+    "source.fixAll.eslint": "explicit",
+  },
+  "tailwindCSS.classAttributes": [
+    "class",
+    "ui"
+  ],
+  "tailwindCSS.classFunctions": [
+    "defineAppConfig"
+  ],
+  "eslint.useFlatConfig": true,
+  // autocomplete on function (tw)
+  "tailwindCSS.experimental.classRegex": [
+    "tw`(.*?)`",
+    "tw\\('(.*?)'\\)",
+    "tw\\(\\s*('(.*?)'|\"(.*?)\")\\s*\\)",
+  ],
+  "i18n-ally.localesPaths": [
+    "src/portal/i18n",
+    "src/web/i18n",
+    "src/portal/i18n/locales",
+    "src/web/i18n/locales"
+  ]
+}

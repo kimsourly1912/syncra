@@ -1,0 +1,145 @@
+{
+  "hello": "Hello",
+  "common": {
+    "back": "Back",
+    "cancel": "Cancel"
+  },
+  "glossary": {
+    "eyebrow": "Translation workbench",
+    "title": "POM glossary",
+    "description": "Review the English and Simplified Chinese terms that shape every TechPack export. Preview changes before they reach the factory floor.",
+    "tabs": {
+      "entries": "Live terms",
+      "upload": "Upload & preview",
+      "history": "History"
+    },
+    "launcher": {
+      "title": "POM translation glossary",
+      "description": "See which English–Chinese terms are live, preview spreadsheet changes, and restore an earlier version.",
+      "action": "Open glossary"
+    },
+    "scope": {
+      "title": "Glossary scope",
+      "description": "Choose where these translations should win.",
+      "company": "Company-wide",
+      "brand": "Specific brand",
+      "brandKey": "Configured brand key",
+      "brandPlaceholder": "e.g. VB or SJ",
+      "brandHelp": "The backend verifies this key against an active TechPack configuration for your company.",
+      "brandValue": "Brand: {brand}",
+      "brandRequiredTitle": "Enter a brand key",
+      "brandRequiredDescription": "A configured brand key is required before this scope can be loaded."
+    },
+    "entries": {
+      "title": "Live translation ledger",
+      "description": "The winning term for this scope, including the layer it came from.",
+      "search": "Search English or Chinese",
+      "english": "English term",
+      "chinese": "Simplified Chinese",
+      "layer": "Winning layer",
+      "emptyTitle": "No matching terms",
+      "emptyDescription": "Try another search or scope. This glossary may currently inherit every term from another layer."
+    },
+    "upload": {
+      "modalTitle": "Upload a POM glossary",
+      "title": "Preview a spreadsheet",
+      "description": "Uploading creates a reviewable preview. Nothing changes until you explicitly apply it.",
+      "dropLabel": "Drop your POM glossary here",
+      "dropDescription": "One .xlsx file, up to 5 MB. Use the template if you need the expected columns.",
+      "previewAction": "Build preview",
+      "previewPromise": "Previewing never writes to the live glossary.",
+      "xlsxOnly": "Only .xlsx files are accepted.",
+      "tooLarge": "The file exceeds the 5 MB limit.",
+      "rowsParsed": "{count} rows parsed"
+    },
+    "preview": {
+      "eyebrow": "Safety review",
+      "title": "Review glossary changes",
+      "description": "Nothing is live yet. Check every addition, translation change, and removal before applying this file.",
+      "back": "Back to glossary",
+      "notFoundTitle": "Preview unavailable",
+      "notFoundDescription": "This preview does not exist, has expired, or is not available to your company."
+    },
+    "counts": {
+      "added": "Added",
+      "changed": "Changed",
+      "removed": "Removed",
+      "unchanged": "Unchanged"
+    },
+    "diff": {
+      "addedTitle": "New terms",
+      "changedTitle": "Changed translations",
+      "removedTitle": "Terms to deactivate",
+      "removedHelp": "These terms are absent from the file and will fall back to a broader layer.",
+      "before": "Current",
+      "after": "After apply",
+      "truncated": "Only the first 500 rows are shown. The count above includes every affected term.",
+      "noChangesTitle": "Everything already matches",
+      "noChangesDescription": "This file produces an empty diff for the selected scope."
+    },
+    "issues": {
+      "blockingTitle": "Fix these issues before applying",
+      "warningTitle": "Review these warnings",
+      "rows": "Rows {rows}"
+    },
+    "history": {
+      "title": "Upload history",
+      "description": "Applied, superseded, and rejected files for the selected scope.",
+      "emptyTitle": "No upload history",
+      "emptyDescription": "Completed and rejected uploads will appear here.",
+      "revertedFrom": "reverts #{id}"
+    },
+    "layers": {
+      "companyBrand": "Company + brand",
+      "companyWide": "Company-wide",
+      "global": "Shared baseline"
+    },
+    "status": {
+      "preview": "Preview",
+      "applied": "Live",
+      "superseded": "Superseded",
+      "discarded": "Discarded"
+    },
+    "actions": {
+      "template": "Download template",
+      "newUpload": "New upload",
+      "startOver": "Start over",
+      "discard": "Discard preview",
+      "apply": "Apply glossary",
+      "applyWithRemoval": "Apply — removes 1 term",
+      "applyWithRemovals": "Apply — removes {count} terms",
+      "confirmApply": "Yes, apply changes",
+      "refresh": "Refresh",
+      "revert": "Restore",
+      "revertPreview": "Review restore"
+    },
+    "confirm": {
+      "title": "Apply this glossary?",
+      "description": "The file will become the complete glossary for this scope.",
+      "removalTitle": "{count} term(s) will be deactivated",
+      "removalDescription": "They are not deleted, but will fall back to the next available glossary layer.",
+      "scope": "Target scope: {scope}",
+      "typeCount": "Type {count} to confirm this removal"
+    },
+    "stale": {
+      "title": "The glossary changed after this preview",
+      "description": "Start over and upload the file again so you can review a fresh diff.",
+      "action": "Start over"
+    },
+    "toast": {
+      "appliedTitle": "Glossary applied",
+      "appliedDescription": "Future TechPack exports will use the new terms for this scope.",
+      "revertTitle": "Restore preview ready",
+      "revertDescription": "Review the diff, then apply it through the normal confirmation step."
+    },
+    "unavailable": {
+      "title": "Glossary is unavailable",
+      "description": "POM Chinese translation is not enabled for this company, or you do not have access to this workspace."
+    },
+    "pagination": {
+      "page": "Page {current} of {total}",
+      "previous": "Previous page",
+      "next": "Next page"
+    }
+  }
+}

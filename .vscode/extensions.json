@@ -1,0 +1,10 @@
+{
+  "recommendations": [
+    "bradlc.vscode-tailwindcss",
+    "dbaeumer.vscode-eslint",
+    "Vue.volar",
+    "lokalise.i18n-ally",
+    "kisstkondoros.vscode-gutter-preview",
+    "vitest.explorer"
+  ]
+}

@@ -1,0 +1,14 @@
+[
+  {
+    "Label": "small (5-49)",
+    "value": "small"
+  },
+  {
+    "Label": "medium (50-199)",
+    "value": "medium"
+  },
+  {
+    "Label": "large (200+)",
+    "value": "large"
+  }
+]

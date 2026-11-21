@@ -1,0 +1,167 @@
+[
+    {
+        "id": 1,
+        "code": "Subscription Module",
+        "name": "Subscription Module",
+        "description": "Perfect for small teams ready to unlock Syncra’s core synchronization and AI automation capabilities.",
+        "iconKey": "doc-ai",
+        "active": true,
+        "sortOrder": 1,
+        "plans": [
+            {
+                "id": 1,
+                "moduleId": 1,
+                "moduleCode": "Subscription Module",
+                "code": "DOC_AI_STARTER",
+                "name": "Let's Talk",
+                "shortDescription": "Starter plan for Doc AI module.",
+                "currency": "$",
+                "priceMonthly": 99,
+                "priceAnnual": 499.0000,
+                "ctaLabel": "/month",
+                "popular": true,
+                "active": true,
+                "sortOrder": 1,
+                "keyfeature":"Key Features",
+                "features": [
+                    "5 free user accounts (additional user $25/user/month)",
+                    "Full access to standard AI module (WIP, score card & basic alert features)",
+                    "Email & chat support (48-hour response)",
+                    "Cancel anytime"
+                ]
+            }
+        ]
+    },
+    {
+        "id": 2,
+        "code": "SCORE_CARD",
+        "name": "Entry",
+        "description": "Ideal for small teams beginning to leverage advanced AI Features.",
+        "iconKey": "score-card",
+        "active": true,
+        "sortOrder": 2,
+        "plans": [
+            {
+                "id": 2,
+                "moduleId": 2,
+                "moduleCode": "SCORE_CARD",
+                "code": "SCORE_CARD_STARTER",
+                "name": "Let's Talk",
+                "shortDescription": "Starter plan for Score Card.",
+                "currency": "$",
+                "priceMonthly": 180,
+                "priceAnnual": 499.0000,
+                "ctaLabel": "(one-time payment)",
+                "popular": false,
+                "active": true,
+                "sortOrder": 1,
+                "keyfeature":"Key Features",
+                "features": [
+                    "1,600,000 Tokens",
+                    "3 free user accounts (additional user $25/user/month)",
+                    "Compatible with all Syncra AI modules",
+                    "Email & chat support (48-hour response)"
+                ]
+            }
+        ]
+    },
+    {
+        "id": 3,
+        "code": "Growth",
+        "name": "Growth",
+        "description": "Designed for growing teams with regular advanced AI usage.",
+        "iconKey": "Growth",
+        "active": true,
+        "sortOrder": 3,
+        "plans": [
+            {
+                "id": 3,
+                "moduleId": 3,
+                "moduleCode": "Growth",
+                "code": "QC_STARTER",
+                "name": "Let's Talk",
+                "shortDescription": "Starter plan for QC.",
+                "currency": "$",
+                "priceMonthly": 342,
+                "priceAnnual": 499.0000,
+                "ctaLabel": "(one-time payment)",
+                "popular": false,
+                "active": true,
+                "sortOrder": 1,
+                 "keyfeature":"Key Features",
+                "features": [
+                    "3,200,000 Tokens",
+                    "3 free user accounts (additional user $25/user/month)",
+                    "Compatible with all Syncra AI modules",
+                    "Email & chat support (48-hour response)"
+                ]
+            }
+        ]
+    },
+    {
+        "id": 4,
+        "code": "Advanced",
+        "name": "Advanced",
+        "description": "Perfect for teams and departments running intensive AI-powered workflows.",
+        "iconKey": "alert",
+        "active": true,
+        "sortOrder": 4,
+        "plans": [
+            {
+                "id": 4,
+                "moduleId": 4,
+                "moduleCode": "ALERT",
+                "code": "ALERT_STARTER",
+                "name": "Let's Talk",
+                "shortDescription": "Starter plan for Alert.",
+                "currency": "$",
+                "priceMonthly": 486,
+                "priceAnnual": 499.0000,
+                "ctaLabel": "(one-time payment)",
+                "popular": false,
+                "active": true,
+                "sortOrder": 1,
+                "keyfeature":"Key Features",
+                "features": [
+                    "4,800,000 Tokens",
+                    "5 free user accounts (additional user $25/user/month)",
+                    "Compatible with all Syncra AI modules",
+                    "Email & chat support (48-hour response)"
+                ]
+            }
+        ]
+    },
+    {
+        "id": 5,
+        "code": "Enterprise",
+        "name": "Enterprise",
+        "description": "The highest-value option for organizations with substantial AI demands.",
+        "iconKey": "wip",
+        "active": true,
+        "sortOrder": 5,
+        "plans": [
+            {
+                "id": 5,
+                "moduleId": 5,
+                "moduleCode": "Enterprise",
+                "code": "Enterprise_STARTER",
+                "name": "Let's Talk",
+                "shortDescription": "Starter plan for WIP.",
+                "currency": "$",
+                "priceMonthly": 612,
+                "priceAnnual": 499.0000,
+                "ctaLabel": "(one-time payment)",
+                "popular": false,
+                "active": true,
+                "sortOrder": 1,
+                "keyfeature":"Key Features",
+                "features": [
+                    "6,400,000 Tokens",
+                    "10 free user accounts (additional user $25/user/month)",
+                    "Compatible with all Syncra AI modules",
+                    "Email & chat support (48-hour response)"
+                ]
+            }
+        ]
+    }
+]

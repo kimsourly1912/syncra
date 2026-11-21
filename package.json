@@ -1,0 +1,24 @@
+{
+  "name": "syncra",
+  "private": true,
+  "packageManager": "pnpm@12.21.0",
+  "engines": {
+    "node": "^24.0.0"
+  },
+  "scripts": {
+    "dev:web": "pnpm --filter web dev",
+    "dev:admin": "pnpm --filter admin dev",
+    "dev:portal": "pnpm --filter portal dev",
+    "dev:web:local": "pnpm --filter web dev:local",
+    "dev:admin:local": "pnpm --filter admin dev:local",
+    "dev:portal:local": "pnpm --filter portal dev:local",
+    "preview:web": "pnpm --filter web preview",
+    "preview:admin": "pnpm --filter admin preview",
+    "preview:portal": "pnpm --filter portal preview"
+  },
+  "devDependencies": {
+    "@types/node": "^24.10.0",
+    "tsx": "^4.20.6",
+    "typescript": "^5.9.3"
+  }
+}

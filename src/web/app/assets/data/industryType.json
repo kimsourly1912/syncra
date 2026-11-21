@@ -1,0 +1,83 @@
+[
+  {
+    "Label": "Garment Manufacturing",
+    "value": "Garment"
+  },
+  {
+    "Label": "Footwear Manufacturing",
+    "value": "Footwear"
+  },
+  {
+    "Label": "Bags & Travel Goods Manufacturing",
+    "value": "Bags"
+  },
+  {
+    "Label": "Textile & Fabric Production",
+    "value": "Textile"
+  },
+  {
+    "Label": "Food & Beverage Processing",
+    "value": "Food"
+  },
+  {
+    "Label": "Agriculture & Agro-processing",
+    "value": "Agriculture"
+  },
+  {
+    "Label": "Wood Products Manufacturing",
+    "value": "Wood"
+  },
+  {
+    "Label": "Furniture Manufacturing",
+    "value": "Furniture"
+  },
+  {
+    "Label": "Paper, Printing & Packaging Manufacturing",
+    "value": "Paper"
+  },
+
+  {
+    "Label": "Chemical, Rubber & Plastics Manufacturing",
+    "value": "Chemical"
+  },
+
+  {
+    "Label": "Non-metallic Mineral Products Manufacturing",
+    "value": "Non-metallic"
+  },
+
+  {
+    "Label": "Metal Processing & Fabrication",
+    "value": "Metal"
+  },
+
+  {
+    "Label": "Electronics Components & Assembly",
+    "value": "Electronics"
+  },
+  {
+    "Label": "Automotive Parts Manufacturing",
+    "value": "Automotive"
+  },
+  {
+    "Label": "Bicycles & Transport Equipment Assembly",
+    "value": "Bicycles"
+  },
+
+  {
+    "Label": "Pharmaceuticals & Medical Products Manufacturing",
+    "value": "Pharmaceuticals"
+  },
+  {
+    "Label": "Cosmetics & Personal Care Manufacturing",
+    "value": "Cosmetics"
+  },
+  {
+    "Label": "Recycling & Waste Processing",
+    "value": "Recycling"
+  },
+  {
+    "Label": "Construction Materials Manufacturing",
+    "value": "Construction"
+  }
+]

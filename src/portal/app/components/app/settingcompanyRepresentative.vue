@@ -1,0 +1,76 @@
+<script setup lang="ts">
+const props = defineProps({
+  modelValue: {
+    type: Object,
+    required: true,
+  },
+})
+
+const emit = defineEmits(['update:modelValue', 'edit'])
+const form = computed({
+  get: () => props.modelValue,
+  set: value => emit('update:modelValue', value),
+})
+
+const onSave = () => {
+  emit('edit')
+}
+</script>
+
+<template>
+  <UCard class="rounded-2xl">
+    <main>
+      <section class="space-y-6">
+        <div class="grid grid-cols-2 flex-col-1 items-end gap-4 ">
+          <div class="flex flex-col">
+            <h1 class="text-sm xl:text-2xl font-semibold">
+              Representative Details
+            </h1>
+            <p>
+              Update your Representative Details
+            </p>
+          </div>
+          <div class="flex justify-end pt-4">
+            <UButton
+              class="px-6 py-2 text-md text-primary active:bg-accented border border-accented hover:bg-accented bg-transparent dark:text-[#ffffff]"
+              label="Edit Profile"
+              @click="onSave"
+            />
+          </div>
+        </div>
+        <div class="bg-[#4ba0b81a] space-y-2 rounded-2xl p-4">
+          <div class="grid grid-cols-2 flex-col-1 items-end gap-4 ">
+            <UFormField
+              label="Full Name"
+            >
+              <h2 class=" text-sm xl:text-md font-bold py-2">
+                {{ form.firstName }} {{ form.lastName }}
+              </h2>
+            </UFormField>
+            <UFormField
+              label="Work Email Address"
+            >
+              <h2 class=" text-sm xl:text-md font-bold py-2">
+                {{ form.workEmail }}
+              </h2>
+            </UFormField>
+            <UFormField
+              label="Role/Position"
+            >
+              <h2 class=" text-sm xl:text-md font-bold py-2">
+                {{ form.rolePosition }}
+              </h2>
+            </UFormField>
+            <UFormField
+              label="Contact Number"
+            >
+              <h2 class=" text-sm xl:text-md font-bold py-2">
+                {{ form.countryCode }} {{ form.contactNumber }}
+              </h2>
+            </UFormField>
+          </div>
+        </div>
+      </section>
+    </main>
+  </UCard>
+</template>
