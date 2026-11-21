@@ -10,7 +10,7 @@ Syncra helps companies turn supply-chain documents into usable data. In Doc AI, 
 | Portal | [`src/portal`](src/portal) | Customer teams processing documents and managing their company workspace | `pnpm dev:portal` | 444 |
 | Admin | [`src/admin`](src/admin) | Syncra staff managing customer accounts, catalog content, and workbook reviews | `pnpm dev:admin` | 555 |
 
-Each Nuxt app keeps its own constants, reference data, and scripts. See the [project scope](docs/project-scope.md) for the feature inventory and the evidence behind it.
+Each Nuxt app keeps its own constants, reference data, and scripts. See the [product scope](docs/product/scope.md) for the feature inventory and the evidence behind it.
 
 ## Local setup
 
@@ -45,10 +45,10 @@ pnpm --filter @syncra/portal test:unit --run
 pnpm --filter @syncra/portal test:nuxt --run
 ```
 
-See [app-specific commands and browser verification](docs/architecture.md#local-development-and-verification) for Web, Admin, and focused tests.
+Each app lists its own checks in its `AGENTS.md` and explains them in `docs/testing.md`: [Portal](src/portal/docs/testing.md), [Admin](src/admin/docs/testing.md), [Web](src/web/docs/testing.md).
 
 ## Documentation
 
-- [Agent instructions](AGENTS.md) give Codex and other agents a starting point by task. [Claude Code](CLAUDE.md) loads the same instructions.
-- [Documentation index](docs/README.md) links the product scope, architecture, and feature standard.
-- [Doc AI feature reference](docs/features/doc-ai.md) maps the upload, retry, result, glossary, and workbook review workflows to source and tests.
+- [Agent instructions](AGENTS.md) are the starting point for Codex, Claude Code, ChatGPT, and other agents. [CLAUDE.md](CLAUDE.md) imports the same file. Each app has its own instructions: [Portal](src/portal/AGENTS.md), [Admin](src/admin/AGENTS.md), [Web](src/web/AGENTS.md).
+- The [documentation index](docs/README.md) shows which doc owns each rule: architecture, conventions, feature standard, product scope, and decision records.
+- [Doc AI](docs/features/doc-ai.md) maps the upload, retry, result, glossary, and workbook review workflows to source and tests.
