@@ -1,4 +1,6 @@
 <script setup lang="ts">
+import { checkPasswordRules } from '../schemas/reset-password-form'
+
 defineProps<{
   value: string
 }>()
@@ -11,7 +13,7 @@ defineProps<{
     </h1>
     <ul class="text-sm text-muted mt-1">
       <li
-        v-for="(o, idx) in getPasswordValidationMessages(value)"
+        v-for="(o, idx) in checkPasswordRules(value)"
         :key="idx"
         class="flex items-center gap-2"
       >

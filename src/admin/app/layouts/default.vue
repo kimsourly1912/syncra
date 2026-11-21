@@ -2,9 +2,8 @@
 import type { NavigationMenuItem } from '@nuxt/ui'
 import { useSignOut } from '@/features/auth'
 
-const { preference } = useStorage()
-
 const signOut = useSignOut()
+const router = useRouter()
 
 const menuItems: NavigationMenuItem[] = [
   {
@@ -13,17 +12,17 @@ const menuItems: NavigationMenuItem[] = [
   },
   {
     label: 'Account Management',
-    type: 'link',
+    icon: 'lucide:building-2',
     to: '/',
   },
   {
     label: 'TechPack Reviews',
-    type: 'link',
+    icon: 'lucide:file-check',
     to: '/techpack-reviews',
   },
   {
     label: 'Sale Request',
-    type: 'link',
+    icon: 'lucide:shopping-cart',
     to: '/sale-request',
   },
   {
@@ -32,27 +31,27 @@ const menuItems: NavigationMenuItem[] = [
   },
   {
     label: 'Lead Inquiry',
-    type: 'link',
+    icon: 'lucide:inbox',
     to: '/lead-inquiry',
   },
   {
     label: 'HeroPage Management',
-    type: 'link',
+    icon: 'lucide:panels-top-left',
     to: '/hero',
   },
   {
     label: 'Product Management',
-    type: 'link',
+    icon: 'lucide:package',
     to: '/product',
   },
   {
     label: 'Plan & Pricing Management',
-    type: 'link',
+    icon: 'lucide:tags',
     to: '/plan-pricing',
   },
   {
     label: 'Community Management',
-    type: 'link',
+    icon: 'lucide:users',
     to: '/community',
   },
   {
@@ -61,111 +60,66 @@ const menuItems: NavigationMenuItem[] = [
   },
   {
     label: 'Setting',
-    type: 'link',
+    icon: 'lucide:settings',
     to: '/setting',
   },
 ]
 
-const toggle = reactive({
-  menu: false,
-})
+// Links to pages that don't exist yet are hidden, and so is a heading left with no links.
+// Checked against the route table: `router.resolve` warns for every unknown path.
+const routePaths = new Set(router.getRoutes().map(route => route.path))
+const links = menuItems.filter(item => item.type === 'label' || routePaths.has(item.to as string))
+const visibleItems = links.filter((item, index) => item.type !== 'label' || (links[index + 1] && links[index + 1]!.type !== 'label'))
 </script>
 
 <template>
-  <main>
-    <header class="border-b border-default flex items-center py-2 px-4 bg-white z-50 min-h-16">
-      <section class="flex items-center gap-2">
-        <UButton
-          size="md"
-          variant="ghost"
-          color="neutral"
-          :icon="preference.sidebar ? 'lucide:panel-right-close' : 'lucide:panel-left-close'"
-          class="max-xl:hidden"
-          @click="preference.sidebar = !preference.sidebar"
-        />
-
-        <UButton
-          size="md"
-          variant="ghost"
-          color="neutral"
-          icon="lucide:menu"
-          class="xl:hidden"
-          @click="toggle.menu = !toggle.menu"
-        />
-
+  <UDashboardGroup unit="rem">
+    <UDashboardSidebar
+      collapsible
+      resizable
+      :default-size="17"
+      :max-size="24"
+      :ui="{ footer: 'lg:border-t lg:border-default' }"
+    >
+      <template #header="{ collapsed }">
         <NuxtLink
+          v-if="!collapsed"
           to="/"
-          class="flex items-center gap-3 text-2xl font-semibold"
+          class="flex items-center gap-3 text-xl font-semibold text-highlighted"
         >
           <img
             src="/img/syncra-logo.png"
-            class="max-w-8"
+            alt="Syncra"
+            class="size-8"
           >
           Syncra
         </NuxtLink>
-      </section>
-    </header>
-
-    <main class="flex">
-      <aside
-        :class="[
-          'h-[calc(100svh-var(--spacing)*16)] bg-secondary-100 py-4 w-64 max-xl:hidden flex-col overflow-y-auto',
-          preference.sidebar ? 'hidden' : 'flex',
-        ]"
-      >
-        <LayoutNavMenu
-          :items="menuItems"
-          :signing-out="signOut.pending.value"
-          @sign-out="signOut.submit"
-        />
-      </aside>
-
-      <section class="h-[calc(100svh-var(--spacing)*16)] bg-[#F8F9FA] flex-1 px-4 pt-4 pb-10 md:px-6 md:pt-6 md:pb-14 overflow-y-auto">
-        <slot />
-      </section>
-    </main>
-
-    <UDrawer
-      v-model:open="toggle.menu"
-      direction="left"
-      title="Menu"
-      :handle-only="false"
-      :handle="false"
-      :close-threshold="0"
-      :active-snap-point="null"
-    >
-      <template #title />
-      <template #description />
-      <template #content>
-        <main class="w-64 flex flex-col">
-          <header class="flex items-center gap-2 py-4 px-2">
-            <UButton
-              size="md"
-              variant="ghost"
-              color="neutral"
-              icon="lucide:menu"
-              @click="toggle.menu = !toggle.menu"
-            />
-            <NuxtLink
-              to="/"
-              class="flex items-center gap-3 text-2xl font-semibold"
-              @click="toggle.menu = false"
-            >
-              <img
-                src="/img/syncra-logo.png"
-                class="max-w-8"
-              >
-              Syncra
-            </NuxtLink>
-          </header>
-          <LayoutNavMenu
-            :items="menuItems"
-            :signing-out="signOut.pending.value"
-            @navigate="toggle.menu = false"
-            @sign-out="signOut.submit"
-          />
-        </main>
+        <UDashboardSidebarCollapse class="ms-auto" />
       </template>
-    </UDrawer>
-  </main>
+
+      <template #default="{ collapsed }">
+        <UNavigationMenu
+          :items="visibleItems"
+          :collapsed
+          orientation="vertical"
+          tooltip
+        />
+      </template>
+
+      <template #footer="{ collapsed }">
+        <UButton
+          :label="collapsed ? undefined : 'Log Out'"
+          :aria-label="collapsed ? 'Log Out' : undefined"
+          icon="lucide:log-out"
+          color="neutral"
+          variant="ghost"
+          block
+          :loading="signOut.pending.value"
+          @click="signOut.submit"
+        />
+      </template>
+    </UDashboardSidebar>
+
+    <slot />
+  </UDashboardGroup>
 </template>

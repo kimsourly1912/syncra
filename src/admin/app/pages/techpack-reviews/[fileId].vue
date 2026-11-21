@@ -9,5 +9,13 @@ const fileId = typeof route.params.fileId === 'string' ? route.params.fileId : '
 </script>
 
 <template>
-  <ReviewDetailScreen :file-id="fileId" />
+  <UDashboardPanel>
+    <template #header>
+      <UDashboardNavbar title="TechPack review" />
+    </template>
+
+    <template #body>
+      <ReviewDetailScreen :file-id="fileId" />
+    </template>
+  </UDashboardPanel>
 </template>

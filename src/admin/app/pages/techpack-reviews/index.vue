@@ -3,5 +3,13 @@ import ReviewQueueScreen from '@/features/techpack-review/components/ReviewQueue
 </script>
 
 <template>
-  <ReviewQueueScreen />
+  <UDashboardPanel>
+    <template #header>
+      <UDashboardNavbar title="TechPack reviews" />
+    </template>
+
+    <template #body>
+      <ReviewQueueScreen />
+    </template>
+  </UDashboardPanel>
 </template>

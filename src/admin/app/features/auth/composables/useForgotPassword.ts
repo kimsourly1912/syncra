@@ -1,5 +1,5 @@
 import { api } from '@/api'
-import type { IForgotEmailSchema } from '@/schema/auth.schema'
+import type { IForgotPasswordSchema } from '../schemas/forgot-password-form'
 import { forgotPasswordResultModel } from '../models/forgot-password'
 
 export function useForgotPassword() {
@@ -7,11 +7,11 @@ export function useForgotPassword() {
   const sent = shallowRef(false)
 
   const request = useApiMutation(
-    (form: IForgotEmailSchema) => api.post('/admin/auth/forgot-password', { body: { email: form.email }, auth: false, model: forgotPasswordResultModel }),
+    (form: IForgotPasswordSchema) => api.post('/admin/auth/forgot-password', { body: { email: form.email }, auth: false, model: forgotPasswordResultModel }),
     { error: 'Could not send the reset link' },
   )
 
-  async function submit(form: IForgotEmailSchema) {
+  async function submit(form: IForgotPasswordSchema) {
     const result = await request.execute(form)
     if (!result.ok) return false
     if (!result.data.sent) {

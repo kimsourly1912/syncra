@@ -1,10 +1,10 @@
 <script setup lang="ts">
-import type { ListItem } from '@/types/components/list'
+import type { ListDetail } from '@/components/list/ListDetails.vue'
 
 const route = useRoute()
 const id = route.params.id as string
 
-const leadItems: ListItem[] = [
+const leadItems: ListDetail[] = [
   {
     label: 'Lead ID',
     value: `L-${id}`,
@@ -22,7 +22,7 @@ const leadItems: ListItem[] = [
   },
 ]
 
-const contactInfoItems: ListItem[] = [
+const contactInfoItems: ListDetail[] = [
   {
     label: 'Name',
     value: 'John Doe',
@@ -47,13 +47,19 @@ const contactInfoItems: ListItem[] = [
 </script>
 
 <template>
-  <div>
-    <LayoutContent>
-      <LayoutHeading
-        :title="`Lead Inquiry #L-${id} Detail`"
-        to="/lead-inquiry"
-      >
-        <template #suffix>
+  <UDashboardPanel>
+    <template #header>
+      <UDashboardNavbar :title="`Lead Inquiry #L-${id} Detail`">
+        <template #leading>
+          <UButton
+            icon="lucide:arrow-left"
+            color="neutral"
+            variant="ghost"
+            to="/lead-inquiry"
+            aria-label="Back to lead inquiries"
+          />
+        </template>
+        <template #right>
           <UButton
             label="Mark as not Interested"
             color="error"
@@ -68,8 +74,10 @@ const contactInfoItems: ListItem[] = [
             label="Converted to Customer"
           />
         </template>
-      </LayoutHeading>
+      </UDashboardNavbar>
+    </template>
 
+    <template #body>
       <UAlert
         icon="lucide:circle-check"
         title="This Lead has been marked as converted to Customer by Admin A"
@@ -78,19 +86,24 @@ const contactInfoItems: ListItem[] = [
         color="success"
       />
 
-      <CardWrapper title="Lead Information">
-        <ListWrapper>
-          <ListItem :items="leadItems" />
-        </ListWrapper>
-      </CardWrapper>
+      <UPageCard
+        title="Lead Information"
+        variant="outline"
+      >
+        <ListDetails :items="leadItems" />
+      </UPageCard>
 
-      <CardWrapper title="Contact Information">
-        <ListWrapper>
-          <ListItem :items="contactInfoItems" />
-        </ListWrapper>
-      </CardWrapper>
+      <UPageCard
+        title="Contact Information"
+        variant="outline"
+      >
+        <ListDetails :items="contactInfoItems" />
+      </UPageCard>
 
-      <CardWrapper title="Interested Product">
+      <UPageCard
+        title="Interested Product"
+        variant="outline"
+      >
         <ul class="flex items-center gap-4 flex-wrap">
           <li
             v-for="i in 3"
@@ -101,9 +114,12 @@ const contactInfoItems: ListItem[] = [
             />
           </li>
         </ul>
-      </CardWrapper>
+      </UPageCard>
 
-      <CardWrapper title="Lead Intent">
+      <UPageCard
+        title="Lead Intent"
+        variant="outline"
+      >
         <section class="space-y-2">
           <h1 class="text-muted">
             Customer Message
@@ -117,7 +133,7 @@ const contactInfoItems: ListItem[] = [
             description="We would like to activate the DocAI module to streamline our document processing workflow. Our team processes over 500 tech packs and invoices monthly, and the AI-powered extraction features would significantly improve our efficiency."
           />
         </section>
-      </CardWrapper>
-    </LayoutContent>
-  </div>
+      </UPageCard>
+    </template>
+  </UDashboardPanel>
 </template>

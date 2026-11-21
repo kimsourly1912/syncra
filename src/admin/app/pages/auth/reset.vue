@@ -1,9 +1,7 @@
 <script setup lang="ts">
 import type { FormSubmitEvent } from '@nuxt/ui'
-import type { SchemaToString } from '@/types/common'
-import { changePasswordSchema } from '@/schema/auth.schema'
-import type { IChangePasswordSchema } from '@/schema/auth.schema'
-import { useResetPassword } from '@/features/auth'
+import { PasswordSuggestion, resetPasswordSchema, useResetPassword } from '@/features/auth'
+import type { IResetPasswordSchema } from '@/features/auth'
 
 definePageMeta({ access: 'guest', layout: 'auth' })
 
@@ -11,7 +9,7 @@ const route = useRoute()
 const { pending, success, submit } = useResetPassword()
 const token = typeof route.query.token === 'string' ? route.query.token : undefined
 
-const data = reactive<IChangePasswordSchema>({
+const data = reactive<IResetPasswordSchema>({
   newPassword: '',
   confirmPassword: '',
 })
@@ -19,9 +17,9 @@ const data = reactive<IChangePasswordSchema>({
 const FIELD_NAME = {
   newPassword: 'newPassword',
   confirmPassword: 'confirmPassword',
-} satisfies SchemaToString<IChangePasswordSchema>
+} satisfies { [K in keyof IResetPasswordSchema]: K }
 
-function onSubmit(evt: FormSubmitEvent<IChangePasswordSchema>) {
+function onSubmit(evt: FormSubmitEvent<IResetPasswordSchema>) {
   return submit(token, evt.data)
 }
 </script>
@@ -30,9 +28,11 @@ function onSubmit(evt: FormSubmitEvent<IChangePasswordSchema>) {
   <div class="p-4 max-w-lg w-full space-y-4">
     <template v-if="success">
       <section class="bg-white flex flex-col items-center gap-6 rounded-lg p-6 text-center">
-        <BaseIconBadge
+        <UBadge
           icon="lucide:circle-check"
-          size="lg"
+          size="xl"
+          square
+          class="rounded-full p-3"
         />
         <p class="text-muted">
           Password Changed
@@ -60,7 +60,7 @@ function onSubmit(evt: FormSubmitEvent<IChangePasswordSchema>) {
         <UForm
           class="space-y-4"
           :state="data"
-          :schema="changePasswordSchema"
+          :schema="resetPasswordSchema"
           @submit="onSubmit"
         >
           <UFormField
@@ -71,7 +71,7 @@ function onSubmit(evt: FormSubmitEvent<IChangePasswordSchema>) {
             <InputPassword v-model="data.newPassword" />
           </UFormField>
 
-          <FormPasswordSuggestion :value="data.newPassword" />
+          <PasswordSuggestion :value="data.newPassword" />
 
           <UFormField
             label="Confirm Password"

@@ -1,64 +1,53 @@
-<script setup lang="ts">
-</script>
-
 <template>
-  <div>
-    <LayoutContent>
-      <LayoutHeading
-        title="HeroPage Management"
-        description="Manage hero tagline, description, and video content"
-      />
+  <UDashboardPanel>
+    <template #header>
+      <UDashboardNavbar title="HeroPage Management">
+        <template #right>
+          <UButton label="Edit" />
+        </template>
+      </UDashboardNavbar>
+    </template>
 
-      <UCard>
-        <section class="space-y-6">
-          <section class="flex items-center justify-between gap-4 flex-wrap">
-            <CardTitle title="Hero Content" />
-            <UButton
-              label="Edit"
-              size="lg"
-            />
-          </section>
+    <template #body>
+      <UPageCard
+        title="Hero Content"
+        variant="outline"
+      >
+        <dl class="space-y-4">
+          <div>
+            <dt class="text-muted text-sm">
+              Tagline
+            </dt>
+            <dd class="mt-1">
+              Enterprise AI Solutions for Modern Supply Chains
+            </dd>
+          </div>
 
-          <ul class="space-y-4">
-            <li class="flex flex-col gap-1">
-              <span class="text-muted text-sm">Tagline</span>
-              <p>
-                Enterprise AI Solutions for Modern Supply Chains
-              </p>
-            </li>
+          <div>
+            <dt class="text-muted text-sm">
+              Description
+            </dt>
+            <dd class="mt-1">
+              Syncra helps manufacturers automate complex workflows with intelligent AI modules designed for tech packs,
+              quality control, and document extraction.
+            </dd>
+          </div>
 
-            <li class="flex flex-col gap-1">
-              <span class="text-muted text-sm">Description</span>
-              <p>
-                Syncra helps manufacturers automate complex workflows with intelligent AI modules designed for tech packs,
-                quality control, and document extraction.
-              </p>
-            </li>
-
-            <li class="flex flex-col gap-1">
-              <span class="text-muted text-sm">Hero Video</span>
-              <section class="bg-secondary-100 border-2 border-dashed border-secondary-200 rounded-lg p-10 cursor-pointer">
-                <section class="flex text-center items-center justify-center flex-col gap-4">
-                  <div class="size-20 rounded-full bg-white flex items-center justify-center">
-                    <UIcon
-                      name="lucide:video"
-                      class="text-3xl text-muted"
-                    />
-                  </div>
-                  <section>
-                    <h1 class="text-lg">
-                      No Video Uploaded
-                    </h1>
-                    <p class="text-muted text-sm">
-                      Click Edit to upload a hero video
-                    </p>
-                  </section>
-                </section>
-              </section>
-            </li>
-          </ul>
-        </section>
-      </UCard>
-    </LayoutContent>
-  </div>
+          <div>
+            <dt class="text-muted text-sm">
+              Hero Video
+            </dt>
+            <dd class="mt-1">
+              <UEmpty
+                icon="lucide:video"
+                title="No Video Uploaded"
+                description="Click Edit to upload a hero video"
+                variant="subtle"
+              />
+            </dd>
+          </div>
+        </dl>
+      </UPageCard>
+    </template>
+  </UDashboardPanel>
 </template>

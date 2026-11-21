@@ -1,5 +1,4 @@
 <script setup lang="ts">
-import { tableTheme } from '@/theme/table'
 import type { TableColumn } from '@nuxt/ui'
 import { UBadge, UButton } from '#components'
 import { useSortable } from '@vueuse/integrations/useSortable'
@@ -89,38 +88,39 @@ useSortable('.product-table', data)
 </script>
 
 <template>
-  <div>
-    <LayoutContent>
-      <LayoutHeading
-        title="Product Management"
-        description="Manage Syncra Product Listing"
-      >
-        <template #suffix>
+  <UDashboardPanel>
+    <template #header>
+      <UDashboardNavbar title="Product Management">
+        <template #right>
           <UButton
             label="Create New Product"
             to="/product/create"
           />
         </template>
-      </LayoutHeading>
+      </UDashboardNavbar>
 
-      <section class="space-y-4">
-        <UInput
-          icon="lucide:search"
-          placeholder="Search"
-          class="max-w-sm w-full"
-        />
-        <UTable
-          :column-pinning="{
-            right: ['action'],
-          }"
-          :data
-          :columns
-          :ui="{
-            tbody: 'product-table',
-            ...tableTheme,
-          }"
-        />
-      </section>
-    </LayoutContent>
-  </div>
+      <UDashboardToolbar>
+        <template #left>
+          <UInput
+            icon="lucide:search"
+            placeholder="Search"
+            class="w-full max-w-sm"
+          />
+        </template>
+      </UDashboardToolbar>
+    </template>
+
+    <template #body>
+      <UTable
+        :column-pinning="{
+          right: ['action'],
+        }"
+        :data
+        :columns
+        :ui="{
+          tbody: 'product-table',
+        }"
+      />
+    </template>
+  </UDashboardPanel>
 </template>

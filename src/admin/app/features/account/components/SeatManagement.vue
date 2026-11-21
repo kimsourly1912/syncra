@@ -1,8 +1,6 @@
 <script setup lang="ts">
 import type { TableColumn } from '@nuxt/ui'
-import type { CardBoxItem } from '@/types/components/card'
-import CardTitle from '~/components/card/CardTitle.vue'
-import { tableTheme } from '@/theme/table'
+import type { CardStat } from '@/components/card/CardStats.vue'
 
 interface SeatTableData {
   type: string
@@ -18,7 +16,7 @@ interface MemberTableData {
   status: string
 }
 
-const seatItems: CardBoxItem[] = [
+const seatItems: CardStat[] = [
   {
     label: 'Used Seat',
     value: '20',
@@ -97,10 +95,12 @@ const memberTableColumn = computed(() => {
 </script>
 
 <template>
-  <header class="flex items-center gap-4 justify-between flex-wrap">
-    <CardTitle title="Account Seats" />
-
-    <div class="flex gap-4 flex-wrap">
+  <UPageCard
+    title="Account Seats"
+    variant="naked"
+    orientation="horizontal"
+  >
+    <div class="flex gap-2 flex-wrap lg:justify-end">
       <UButton
         label="Deduct Seat"
         icon="lucide:minus"
@@ -112,57 +112,53 @@ const memberTableColumn = computed(() => {
         icon="lucide:plus"
       />
     </div>
-  </header>
+  </UPageCard>
 
-  <CardBoxWrapper :cols="3">
-    <CardBoxItem :items="seatItems" />
-  </CardBoxWrapper>
+  <CardStats :items="seatItems" />
 
-  <section class="space-y-4">
-    <CardTitle title="Seats Management History" />
-
-    <section class="grid grid-cols-1 sm:grid-cols-12 gap-4">
+  <UPageCard
+    title="Seats Management History"
+    variant="naked"
+  >
+    <div class="flex flex-wrap items-center justify-between gap-2">
       <UInput
         icon="lucide:search"
         placeholder="Search"
-        class="lg:col-span-9 sm:col-span-6"
+        class="w-full max-w-sm"
       />
-
       <USelect
         placeholder="Activity"
         :items="['Completed', 'Pending']"
-        class="lg:col-span-3 sm:col-span-6"
+        class="w-48"
       />
-    </section>
+    </div>
 
     <UTable
       :data="seatTableData"
       :columns="seatTableColumn"
-      :ui="tableTheme"
     />
-  </section>
+  </UPageCard>
 
-  <section class="space-y-4">
-    <CardTitle title="Member Detail" />
-
-    <section class="grid grid-cols-1 sm:grid-cols-12 gap-4">
+  <UPageCard
+    title="Member Detail"
+    variant="naked"
+  >
+    <div class="flex flex-wrap items-center justify-between gap-2">
       <UInput
         icon="lucide:search"
         placeholder="Search"
-        class="lg:col-span-9 sm:col-span-6"
+        class="w-full max-w-sm"
       />
-
       <USelect
         placeholder="Activity"
         :items="['Completed', 'Pending']"
-        class="lg:col-span-3 sm:col-span-6"
+        class="w-48"
       />
-    </section>
+    </div>
 
     <UTable
       :data="memberTableData"
       :columns="memberTableColumn"
-      :ui="tableTheme"
     />
-  </section>
+  </UPageCard>
 </template>

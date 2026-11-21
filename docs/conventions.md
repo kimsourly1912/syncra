@@ -17,7 +17,7 @@ These rules are the same in Web, Portal, and Admin. Each app's docs cover only h
 
 - Avoid `any`. If a library type forces it, add `// eslint-disable-next-line @typescript-eslint/no-explicit-any` with a reason.
 - Prefer inference. Annotate exported function parameters, DTOs, and component props.
-- Use `satisfies` to check an object literal without widening its type: `FIELD_NAME = { … } satisfies SchemaToString<IForm>`. `SchemaToString` is defined in Portal and Admin `types/common.ts`. Web has only the weaker `ObjectValueToString`.
+- Use `satisfies` to check an object literal without widening its type: `FIELD_NAME = { … } satisfies SchemaToString<IForm>`. `SchemaToString` is defined in Portal `types/common.ts`; Admin writes it inline as `satisfies { [K in keyof IForm]: K }`. Web has only the weaker `ObjectValueToString`.
 - Use `as const` objects for fixed sets: endpoint parts, `ASYNC_DATA` keys, route maps, status maps. Derive types from them, for example `ExtractObjectValue<typeof ROUTE_PRIVATE>`.
 - Put type-only imports in their own statement:
 
@@ -56,13 +56,13 @@ These rules are the same in Web, Portal, and Admin. Each app's docs cover only h
 | Kind | File name | Symbol |
 | --- | --- | --- |
 | Page | `app/pages/<route>.vue`, kebab-case, `[param]` for dynamic segments | — |
-| Component | `PascalCase.vue`. In Portal and Web, the name must be unique across the app because the folder isn't part of the name (`pathPrefix: false`). In Admin, the name must start with its folder name, as in `card/CardWrapper.vue`. | `<FeatureThing>` |
+| Component | `PascalCase.vue`. In Portal and Web, the name must be unique across the app because the folder isn't part of the name (`pathPrefix: false`). In Admin, the name must start with its folder name, as in `card/CardStats.vue`. | `<FeatureThing>` |
 | Composable | `useCamelCase.ts` | `export function useThing()` |
 | Store (Portal) | `app/stores/use<Name>Store.ts` | `defineStore(STORE_ID.<name>, () => { … })` |
 | Service | `app/services/<resource>.service.ts`, kebab-case | One exported function per endpoint |
 | DTO (Portal, Web) | `app/types/dto/<resource>.dto.ts`, kebab-case | Re-exported as a namespace: `export * as GlossaryDTO from './glossary.dto'` |
 | Model (Admin) | `app/features/<feature>/models/<name>.ts`, kebab-case | `<name>Model = defineModel(v<Schema>, …)` and `type <Name> = v.InferOutput<typeof <name>Model>` ([0007](decisions/0007-generated-api-contract.md)) |
-| Form schema | `app/features/<feature>/schemas/<name>-form.ts` (new), or `app/schema/<resource>.schema.ts` (existing) | `<name>Schema` and `type I<Name>Schema = v.InferOutput<typeof <name>Schema>` |
+| Form schema | `app/features/<feature>/schemas/<name>-form.ts` (new), or `app/schema/<resource>.schema.ts` (existing; Portal and Web) | `<name>Schema` and `type I<Name>Schema = v.InferOutput<typeof <name>Schema>` |
 | Feature folder | `app/features/<kebab-name>/` | Public API in `index.ts` |
 | Test | `test/unit/<subject>.test.ts` or `test/nuxt/<subject>.test.ts` | `describe('<behavior>')` |
 
@@ -147,8 +147,8 @@ export function getUpload(param: GlossaryDTO.GlossaryUploadParam) {
 
 ## Forms
 
-- Write a Valibot schema for the fields the user edits. Reuse `baseSchema` from `app/schema/base.schema.ts` for required strings, emails, phones, files, and passwords.
-- Derive the form type with `v.InferOutput`. Name the field constants with `satisfies SchemaToString<IForm>`, so a renamed field breaks the build.
+- Write a Valibot schema for the fields the user edits. In Portal and Web, reuse `baseSchema` from `app/schema/base.schema.ts` for required strings, emails, phones, files, and passwords. Admin has no `baseSchema`: each field starts from the generated request schema ([Admin forms](../src/admin/docs/forms.md)).
+- Derive the form type with `v.InferOutput`. Name the field constants with `satisfies SchemaToString<IForm>` (Admin: the inline mapped type), so a renamed field breaks the build.
 - Map form values to a `Req` in a pure function next to the schema. Unit-test it when it does more than copy fields.
 - Each app's `docs/forms.md` has the component pattern.
 

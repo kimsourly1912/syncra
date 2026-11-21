@@ -1,8 +1,7 @@
 <script setup lang="ts">
 import type { TableColumn } from '@nuxt/ui'
 import { UBadge, UButton } from '#components'
-import type { CardBoxItem } from '@/types/components/card'
-import { tableTheme } from '@/theme/table'
+import type { CardStat } from '@/components/card/CardStats.vue'
 
 interface OpenItem {
   create: boolean
@@ -14,7 +13,7 @@ const open = reactive<OpenItem>({
   success: false,
 })
 
-const overviewItems: CardBoxItem[] = [
+const overviewItems: CardStat[] = [
   {
     label: 'Account Registered',
     icon: 'lucide:building-complex',
@@ -111,13 +110,10 @@ const columns = computed(() => {
 </script>
 
 <template>
-  <div>
-    <LayoutContent>
-      <LayoutHeading
-        title="Account Management"
-        description="Manage company information, workspace, token, seat"
-      >
-        <template #suffix>
+  <UDashboardPanel>
+    <template #header>
+      <UDashboardNavbar title="Account Management">
+        <template #right>
           <UButton
             label="Add Member to Company"
             variant="outline"
@@ -129,181 +125,181 @@ const columns = computed(() => {
             @click="open.success = true"
           />
         </template>
-      </LayoutHeading>
+      </UDashboardNavbar>
 
-      <CardBoxWrapper :cols="3">
-        <CardBoxItem :items="overviewItems" />
-      </CardBoxWrapper>
-
-      <section class="space-y-4">
-        <section class="grid grid-cols-1 sm:grid-cols-12 gap-4">
+      <UDashboardToolbar>
+        <template #left>
           <UInput
             icon="lucide:search"
             placeholder="Search"
-            class="lg:col-span-9 sm:col-span-6"
+            class="w-full max-w-sm"
           />
-
+        </template>
+        <template #right>
           <USelect
             placeholder="Onboarding Status"
             :items="['Completed', 'Pending']"
-            class="lg:col-span-3 sm:col-span-6"
+            class="w-48"
           />
-        </section>
+        </template>
+      </UDashboardToolbar>
+    </template>
 
-        <UTable
-          :data
-          :columns
-          :ui="tableTheme"
-        />
-      </section>
-    </LayoutContent>
+    <template #body>
+      <CardStats :items="overviewItems" />
 
-    <UModal
-      v-model:open="open.create"
-      title="Create Company Admin"
-      description="Create a workspace and its primary admin"
-    >
-      <template #body>
-        <UForm class="space-y-5">
-          <UFormField
-            label="Company Name"
-          >
-            <UInput
-              class="w-full"
-              placeholder="Input Company Name"
-            />
-          </UFormField>
+      <UTable
+        :data
+        :columns
+      />
 
-          <section class="grid sm:grid-cols-2 grid-cols-1 gap-5">
+      <UModal
+        v-model:open="open.create"
+        title="Create Company Admin"
+        description="Create a workspace and its primary admin"
+      >
+        <template #body>
+          <UForm class="space-y-5">
             <UFormField
-              label="First Name"
+              label="Company Name"
             >
               <UInput
                 class="w-full"
-                placeholder="Input First Name"
+                placeholder="Input Company Name"
               />
             </UFormField>
-            <UFormField
-              label="Last Name"
-            >
-              <UInput
-                class="w-full"
-                placeholder="Input Last Name"
-              />
-            </UFormField>
-          </section>
 
-          <UFormField
-            label="Email Address"
-          >
-            <UInput
-              class="w-full"
-              placeholder="Input Email Address"
-            />
-          </UFormField>
-
-          <UFormField
-            label="Role"
-          >
-            <UInput
-              class="w-full"
-              placeholder="Admin"
-              disabled
-              :ui="{
-                base: 'disabled:bg-elevated',
-              }"
-            />
-
-            <USelect
-              value-key="Operator"
-              :items="['Operator', 'Admin']"
-              class="w-full"
-              placeholder="Select Role"
-            />
-          </UFormField>
-
-          <footer class="flex gap-5">
-            <UButton
-              label="Cancel"
-              variant="outline"
-              color="error"
-              block
-            />
-            <UButton
-              label="Create Account"
-              block
-            />
-          </footer>
-        </UForm>
-      </template>
-    </UModal>
-
-    <UModal
-      v-model:open="open.success"
-    >
-      <template #content>
-        <section class="p-8 space-y-6">
-          <header class="space-y-4 text-center flex items-center justify-center flex-col">
-            <div class="size-14 rounded-full flex items-center justify-center bg-primary">
-              <UIcon
-                name="lucide:circle-check"
-                class="text-3xl text-white"
-              />
-            </div>
-            <section class="space-y-1">
-              <h1 class="text-2xl text-highlighted font-medium">
-                Company Admin Created
-              </h1>
-              <p class="text-muted">
-                Sarah Chan Has been registered as the company admin for Syncra Inc.
-              </p>
+            <section class="grid sm:grid-cols-2 grid-cols-1 gap-5">
+              <UFormField
+                label="First Name"
+              >
+                <UInput
+                  class="w-full"
+                  placeholder="Input First Name"
+                />
+              </UFormField>
+              <UFormField
+                label="Last Name"
+              >
+                <UInput
+                  class="w-full"
+                  placeholder="Input Last Name"
+                />
+              </UFormField>
             </section>
-          </header>
 
-          <UForm class="space-y-6">
             <UFormField
-              label="Login Email"
+              label="Email Address"
             >
-              <section class="flex items-center gap-2.5">
-                <UInput class="flex-1" />
-                <UButton
-                  icon="lucide:copy"
-                  color="neutral"
-                  variant="outline"
-                />
-              </section>
+              <UInput
+                class="w-full"
+                placeholder="Input Email Address"
+              />
             </UFormField>
 
             <UFormField
-              label="Temporary Password"
+              label="Role"
             >
-              <section class="flex items-center gap-2.5">
-                <InputPassword />
-                <UButton
-                  icon="lucide:copy"
-                  color="neutral"
-                  variant="outline"
-                />
-              </section>
+              <UInput
+                class="w-full"
+                placeholder="Admin"
+                disabled
+                :ui="{
+                  base: 'disabled:bg-elevated',
+                }"
+              />
+
+              <USelect
+                value-key="Operator"
+                :items="['Operator', 'Admin']"
+                class="w-full"
+                placeholder="Select Role"
+              />
             </UFormField>
 
             <footer class="flex gap-5">
               <UButton
-                label="Copy All"
-                icon="lucide:copy"
-                color="info"
+                label="Cancel"
                 variant="outline"
+                color="error"
                 block
               />
-
               <UButton
-                label="Done"
+                label="Create Account"
                 block
               />
             </footer>
           </UForm>
-        </section>
-      </template>
-    </UModal>
-  </div>
+        </template>
+      </UModal>
+
+      <UModal
+        v-model:open="open.success"
+      >
+        <template #content>
+          <section class="p-8 space-y-6">
+            <header class="space-y-4 text-center flex items-center justify-center flex-col">
+              <UBadge
+                icon="lucide:circle-check"
+                size="xl"
+                square
+                class="rounded-full p-3"
+              />
+              <section class="space-y-1">
+                <h1 class="text-2xl text-highlighted font-medium">
+                  Company Admin Created
+                </h1>
+                <p class="text-muted">
+                  Sarah Chan Has been registered as the company admin for Syncra Inc.
+                </p>
+              </section>
+            </header>
+
+            <UForm class="space-y-6">
+              <UFormField
+                label="Login Email"
+              >
+                <section class="flex items-center gap-2.5">
+                  <UInput class="flex-1" />
+                  <UButton
+                    icon="lucide:copy"
+                    color="neutral"
+                    variant="outline"
+                  />
+                </section>
+              </UFormField>
+
+              <UFormField
+                label="Temporary Password"
+              >
+                <section class="flex items-center gap-2.5">
+                  <InputPassword />
+                  <UButton
+                    icon="lucide:copy"
+                    color="neutral"
+                    variant="outline"
+                  />
+                </section>
+              </UFormField>
+
+              <footer class="flex gap-5">
+                <UButton
+                  label="Copy All"
+                  icon="lucide:copy"
+                  color="info"
+                  variant="outline"
+                  block
+                />
+
+                <UButton
+                  label="Done"
+                  block
+                />
+              </footer>
+            </UForm>
+          </section>
+        </template>
+      </UModal>
+    </template>
+  </UDashboardPanel>
 </template>

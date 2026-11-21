@@ -2,13 +2,19 @@
 </script>
 
 <template>
-  <div>
-    <LayoutContent>
-      <LayoutHeading
-        title="Create New Plan"
-        to="/plan-pricing"
-      >
-        <template #suffix>
+  <UDashboardPanel>
+    <template #header>
+      <UDashboardNavbar title="Create New Plan">
+        <template #leading>
+          <UButton
+            icon="lucide:arrow-left"
+            color="neutral"
+            variant="ghost"
+            to="/plan-pricing"
+            aria-label="Back"
+          />
+        </template>
+        <template #right>
           <UButton
             label="Cancel"
             variant="outline"
@@ -18,9 +24,14 @@
             label="Save"
           />
         </template>
-      </LayoutHeading>
+      </UDashboardNavbar>
+    </template>
 
-      <CardWrapper title="Plan Information">
+    <template #body>
+      <UPageCard
+        title="Plan Information"
+        variant="outline"
+      >
         <UForm class="space-y-5">
           <UFormField
             label="Plan Name"
@@ -48,9 +59,12 @@
             </div>
           </UFormField>
         </UForm>
-      </CardWrapper>
+      </UPageCard>
 
-      <CardWrapper title="Pricing Configuration">
+      <UPageCard
+        title="Pricing Configuration"
+        variant="outline"
+      >
         <UForm class="space-y-5">
           <section class="grid grid-cols-1 sm:grid-cols-3 gap-4">
             <UFormField
@@ -97,9 +111,12 @@
             </UFormField>
           </section>
         </UForm>
-      </CardWrapper>
+      </UPageCard>
 
-      <CardWrapper title="Key Features">
+      <UPageCard
+        title="Key Features"
+        variant="outline"
+      >
         <UForm class="space-y-5">
           <UForm
             class="space-y-3"
@@ -132,7 +149,7 @@
             variant="ghost"
           />
         </UForm>
-      </CardWrapper>
-    </LayoutContent>
-  </div>
+      </UPageCard>
+    </template>
+  </UDashboardPanel>
 </template>

@@ -1,22 +1,20 @@
 <script setup lang="ts">
 import type { FormSubmitEvent } from '@nuxt/ui'
-import type { SchemaToString } from '@/types/common'
-import { forgotEmailSchema } from '@/schema/auth.schema'
-import type { IForgotEmailSchema } from '@/schema/auth.schema'
-import { useForgotPassword } from '@/features/auth'
+import { forgotPasswordSchema, useForgotPassword } from '@/features/auth'
+import type { IForgotPasswordSchema } from '@/features/auth'
 
 definePageMeta({ access: 'guest', layout: 'auth' })
 
 const { pending, sent: success, submit } = useForgotPassword()
-const data = reactive<IForgotEmailSchema>({
+const data = reactive<IForgotPasswordSchema>({
   email: '',
 })
 
 const FIELD_NAME = {
   email: 'email',
-} satisfies SchemaToString<IForgotEmailSchema>
+} satisfies { [K in keyof IForgotPasswordSchema]: K }
 
-function onSubmit(evt: FormSubmitEvent<IForgotEmailSchema>) {
+function onSubmit(evt: FormSubmitEvent<IForgotPasswordSchema>) {
   return submit(evt.data)
 }
 </script>
@@ -25,9 +23,11 @@ function onSubmit(evt: FormSubmitEvent<IForgotEmailSchema>) {
   <div class="p-4 max-w-lg w-full space-y-4">
     <template v-if="success">
       <section class="bg-white flex flex-col items-center gap-6 rounded-lg p-6 text-center">
-        <BaseIconBadge
+        <UBadge
           icon="lucide:circle-check"
-          size="lg"
+          size="xl"
+          square
+          class="rounded-full p-3"
         />
         <p class="text-muted">
           We have sent a reset link to your provided email!
@@ -54,7 +54,7 @@ function onSubmit(evt: FormSubmitEvent<IForgotEmailSchema>) {
         <UForm
           class="space-y-4"
           :state="data"
-          :schema="forgotEmailSchema"
+          :schema="forgotPasswordSchema"
           @submit="onSubmit"
         >
           <UFormField

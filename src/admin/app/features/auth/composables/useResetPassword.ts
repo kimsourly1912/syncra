@@ -1,5 +1,5 @@
 import { api } from '@/api'
-import type { IChangePasswordSchema } from '@/schema/auth.schema'
+import type { IResetPasswordSchema } from '../schemas/reset-password-form'
 import { useSession } from '@/features/session'
 
 export function useResetPassword() {
@@ -13,7 +13,7 @@ export function useResetPassword() {
     { error: 'Could not reset the password' },
   )
 
-  async function submit(token: string | undefined, form: IChangePasswordSchema) {
+  async function submit(token: string | undefined, form: IResetPasswordSchema) {
     if (!token) {
       toast.failed('No token provided')
       return false
