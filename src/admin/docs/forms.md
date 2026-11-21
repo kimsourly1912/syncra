@@ -28,16 +28,13 @@ function onSubmit(evt: FormSubmitEvent<ISignInSchema>) {
 async function submit(form: ISignInSchema) {
   pending.value = true
   try {
-    const res = await signIn({ email: form.email, password: form.password })   // maps form → Api.SuperAdminLoginRequest
-    if (!res.success) {                                                     // failure path 1
-      toast.failed(res.reason || 'Could not sign in')
-      return false
-    }
-    await auth.onSuccess(async () => { await navigateTo(toRoute('/')); toast.success('Welcome to Syncra') })
+    await session.signIn({ email: form.email, password: form.password })   // maps form → Api.SuperAdminLoginRequest
+    await router.push(redirectTarget(route.query.redirect))
+    toast.success('Welcome to Syncra')
     return true
   }
-  catch (e) {                                                               // failure path 2, incl. ApiContractError
-    toast.exception(e)
+  catch (e) {                                                             // every failure, as ApiError
+    toast.error(e)
     return false
   }
   finally {

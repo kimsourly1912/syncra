@@ -1,25 +1,12 @@
-import { ApiContractError } from '@/api'
-import type { ParsedEnvelope } from '@/api'
+import { ApiError, errorMessage } from '@/api'
 import type { ReviewItem } from '../models/review-item'
 import type { SourcePreview, WorkbookInspection, WorkbookRow } from '../models/workbook-inspection'
 import * as reviewService from '../services/techpack-review.service'
 import { aiReviewFindings, cellKey, draftFileName, editKey, pdfReviewFindings, stagedCorrections } from '../utils/findings'
 import type { ReviewFinding } from '../utils/findings'
 
-// Turns a resolved `success: false` into a thrown error, so each catch handles both failure paths.
-function dataOf<T>(res: ParsedEnvelope<T>) {
-  if (!res.success) throw new Error(res.reason || res.msg || '')
-  return res.data
-}
-
-function errorMessage(error: unknown, fallback: string) {
-  if (error instanceof Error && error.name !== 'FetchError') return error.message || fallback
-  const response = error as { data?: { reason?: string, detail?: string, msg?: string } }
-  return response?.data?.reason || response?.data?.detail || response?.data?.msg || fallback
-}
-
 function logContractError(error: unknown) {
-  if (error instanceof ApiContractError) console.error(error)
+  if (ApiError.from(error).kind === 'contract') console.error(error)
 }
 
 /**
@@ -27,7 +14,6 @@ function logContractError(error: unknown) {
  * Saves and approval use the current `draftUuid`. Any draft change clears the attestation.
  */
 export function useReviewDetail(fileIdParam: string) {
-  const nuxtApp = useNuxtApp()
   const route = useRoute()
   const toast = useToast()
 
@@ -90,7 +76,7 @@ export function useReviewDetail(fileIdParam: string) {
         pageError.value = 'This TechPack review could not be found.'
         return
       }
-      const data = dataOf(await nuxtApp.runWithContext(() => reviewService.getReview(Number(fileIdParam), reviewRequest.signal)))
+      const data = await reviewService.getReview(Number(fileIdParam), reviewRequest.signal)
       if (disposed) return
       selected.value = data
       if (data.draftUuid) {
@@ -115,7 +101,7 @@ export function useReviewDetail(fileIdParam: string) {
     sourceError.value = ''
     sourceLoading.value = true
     try {
-      const data = dataOf(await nuxtApp.runWithContext(() => reviewService.getSourcePreview(item.fileId, page, request.signal)))
+      const data = await reviewService.getSourcePreview(item.fileId, page, request.signal)
       if (request.signal.aborted) return
       source.value = data
       sourcePage.value = page
@@ -142,7 +128,7 @@ export function useReviewDetail(fileIdParam: string) {
     inspectionLoading.value = true
     selectSheet(0)
     try {
-      const data = dataOf(await nuxtApp.runWithContext(() => reviewService.getDraftInspection(item.fileId, draftUuid, request.signal)))
+      const data = await reviewService.getDraftInspection(item.fileId, draftUuid, request.signal)
       if (request.signal.aborted) return
       inspection.value = data
       draftAccessed.value ||= !data.partial && data.sheets.some(item => item.rows.length > 0)
@@ -208,7 +194,7 @@ export function useReviewDetail(fileIdParam: string) {
     busy.value = true
     reviewError.value = ''
     try {
-      const blob = await nuxtApp.runWithContext(() => reviewService.downloadReviewFile(item.fileId, kind, draftUuid))
+      const blob = await reviewService.downloadReviewFile(item.fileId, kind, draftUuid)
       const url = URL.createObjectURL(blob)
       const link = document.createElement('a')
       link.href = url
@@ -236,7 +222,7 @@ export function useReviewDetail(fileIdParam: string) {
     const draftUuid = item?.draftUuid
     const workbook = replacement.value
     if (!item || !draftUuid || !workbook || stagedEdits.value.length || busy.value) return
-    await saveDraft(() => nuxtApp.runWithContext(() => reviewService.replaceDraft(item.fileId, draftUuid, workbook)))
+    await saveDraft(() => reviewService.replaceDraft(item.fileId, draftUuid, workbook))
   }
 
   async function saveInlineCorrections() {
@@ -244,14 +230,14 @@ export function useReviewDetail(fileIdParam: string) {
     const draftUuid = item?.draftUuid
     if (!item || !draftUuid || !stagedEdits.value.length || replacement.value || busy.value) return
     const corrections = stagedEdits.value
-    await saveDraft(() => nuxtApp.runWithContext(() => reviewService.correctDraft(item.fileId, draftUuid, corrections)))
+    await saveDraft(() => reviewService.correctDraft(item.fileId, draftUuid, corrections))
   }
 
-  async function saveDraft(request: () => Promise<ParsedEnvelope<ReviewItem>>) {
+  async function saveDraft(request: () => Promise<ReviewItem>) {
     busy.value = true
     reviewError.value = ''
     try {
-      const data = dataOf(await request())
+      const data = await request()
       if (disposed) return
       selected.value = data
       inlineEdits.clear()
@@ -276,7 +262,7 @@ export function useReviewDetail(fileIdParam: string) {
     busy.value = true
     reviewError.value = ''
     try {
-      dataOf(await nuxtApp.runWithContext(() => reviewService.approveReview(item.fileId, draftUuid)))
+      await reviewService.approveReview(item.fileId, draftUuid)
       if (disposed) return
       toast.add({ title: 'Workbook reviewed and released.', color: 'success', icon: 'lucide:circle-check' })
       await navigateTo({ path: '/techpack-reviews', query: { status: 'reviewed' } }, { replace: true })

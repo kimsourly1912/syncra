@@ -9,16 +9,16 @@ export function useForgotPassword() {
   async function submit(form: IForgotEmailSchema) {
     pending.value = true
     try {
-      const res = await forgotPassword({ email: form.email })
-      if (!res.success || !res.data.sent) {
-        toast.failed((!res.success && res.reason) || 'Could not send the reset link')
+      const result = await forgotPassword({ email: form.email })
+      if (!result.sent) {
+        toast.failed('Could not send the reset link')
         return false
       }
       sent.value = true
       return true
     }
     catch (e) {
-      toast.exception(e)
+      toast.error(e)
       return false
     }
     finally {

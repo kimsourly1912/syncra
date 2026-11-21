@@ -1,10 +1,7 @@
-import { beforeEach, describe, expect, it, vi } from 'vitest'
-import { mockNuxtImport } from '@nuxt/test-utils/runtime'
-import { ApiContractError } from '../../app/api'
+import { describe, expect, it } from 'vitest'
+import { ApiError } from '../../app/api'
 import { approveReview, correctDraft, getDraftInspection, getReview, listReviews } from '../../app/features/techpack-review/services/techpack-review.service'
-
-const { api } = vi.hoisted(() => ({ api: vi.fn() }))
-mockNuxtImport('useAPI', () => api)
+import { fakeApi, ok, refused } from '../fake-api'
 
 // Sanitized fixtures shaped like the TechPack review endpoints.
 const item = {
@@ -30,70 +27,72 @@ const inspection = {
   },
 }
 
-beforeEach(() => {
-  api.mockReset()
-})
+const REVIEWS = 'admin/docai/techpack-reviews'
 
 describe('TechPack review service', () => {
   it('lists the queue with the zero-based page and status', async () => {
-    api.mockResolvedValueOnce({ success: true, data: { content: [item], totalPages: 3, totalElements: 21 } })
+    const { transport } = fakeApi({ [`GET ${REVIEWS}`]: ok({ content: [item], totalPages: 3, totalElements: 21 }) })
 
-    const res = await listReviews({ status: 'IN_REVIEW', page: 2 })
+    const page = await listReviews({ status: 'IN_REVIEW', page: 2 })
 
-    expect(api).toHaveBeenCalledWith('admin/docai/techpack-reviews', { query: { status: 'IN_REVIEW', page: 2 }, signal: undefined })
-    expect(res).toEqual({ success: true, msg: undefined, data: { content: [expect.objectContaining({ fileId: 101 })], totalPages: 3 } })
+    expect(transport).toHaveBeenCalledWith(REVIEWS, expect.objectContaining({ method: 'GET', query: { status: 'IN_REVIEW', page: 2 } }))
+    expect(page).toEqual({ content: [expect.objectContaining({ fileId: 101 })], totalPages: 3 })
   })
 
   it('fails the whole list when one row lacks a required field', async () => {
-    api.mockResolvedValueOnce({ success: true, data: { content: [item, { ...item, fileId: null }], totalPages: 1 } })
+    fakeApi({ [`GET ${REVIEWS}`]: ok({ content: [item, { ...item, fileId: null }], totalPages: 1 }) })
 
     await expect(listReviews({ status: 'IN_REVIEW', page: 0 })).rejects.toThrow(/content\.1\.fileId/)
   })
 
-  it('returns a resolved failure without parsing data', async () => {
-    api.mockResolvedValueOnce({ success: false, reason: 'Review not found', data: null })
+  it('throws the API reason when the response is success: false', async () => {
+    fakeApi({ [`GET ${REVIEWS}/101`]: refused('Review not found') })
 
-    expect(await getReview(101)).toEqual({ success: false, reason: 'Review not found', msg: undefined })
+    await expect(getReview(101)).rejects.toMatchObject({ kind: 'rejected', message: 'Review not found' })
   })
 
   it('refuses a missing fileId before sending anything', async () => {
+    const { transport } = fakeApi()
+
     await expect(getReview(0)).rejects.toThrow('fileId is required')
-    expect(api).not.toHaveBeenCalled()
+    expect(transport).not.toHaveBeenCalled()
   })
 
   it('keeps pdfValue on PDF findings even though the spec omits it', async () => {
-    api.mockResolvedValueOnce({ success: true, data: inspection })
+    const { transport } = fakeApi({ [`GET ${REVIEWS}/101/draft-inspection`]: ok(inspection) })
 
-    const res = await getDraftInspection(101, item.draftUuid)
+    const data = await getDraftInspection(101, item.draftUuid)
 
-    expect(api).toHaveBeenCalledWith('admin/docai/techpack-reviews/101/draft-inspection', {
-      query: { draftUuid: item.draftUuid }, signal: undefined,
-    })
-    if (!res.success) throw new Error('expected success')
-    expect(res.data.findings?.[0]?.pdfValue).toBe('52')
-    expect(res.data.aiReview?.findings?.[0]?.aiValue).toBe('51')
-    expect(res.data.sheets[0]?.rows[0]?.cells).toEqual(['Chest', '50'])
+    expect(transport).toHaveBeenCalledWith(`${REVIEWS}/101/draft-inspection`, expect.objectContaining({ query: { draftUuid: item.draftUuid } }))
+    expect(data.findings?.[0]?.pdfValue).toBe('52')
+    expect(data.aiReview?.findings?.[0]?.aiValue).toBe('51')
+    expect(data.sheets[0]?.rows[0]?.cells).toEqual(['Chest', '50'])
   })
 
   it('rejects an inspection whose rows have no cells', async () => {
     const broken = { ...inspection, sheets: [{ ...inspection.sheets[0], rows: [{ number: 1, cells: null }] }] }
-    api.mockResolvedValueOnce({ success: true, data: broken })
+    fakeApi({ [`GET ${REVIEWS}/101/draft-inspection`]: ok(broken) })
 
-    await expect(getDraftInspection(101, item.draftUuid)).rejects.toBeInstanceOf(ApiContractError)
+    const error = await getDraftInspection(101, item.draftUuid).catch(e => e)
+    expect(error).toBeInstanceOf(ApiError)
+    expect(error.kind).toBe('contract')
   })
 
   it('saves corrections and approves against the current draftUuid', async () => {
-    api.mockResolvedValueOnce({ success: true, data: item }).mockResolvedValueOnce({ success: true, data: null })
+    const { transport } = fakeApi({
+      [`POST ${REVIEWS}/101/draft-corrections`]: ok(item),
+      [`POST ${REVIEWS}/101/approve`]: ok(null),
+    })
     const corrections = [{ sheetIndex: 0, rowNumber: 1, columnIndex: 1, value: '52' }]
 
     await correctDraft(101, item.draftUuid, corrections)
     await approveReview(101, item.draftUuid)
 
-    expect(api).toHaveBeenNthCalledWith(1, 'admin/docai/techpack-reviews/101/draft-corrections', {
+    expect(transport).toHaveBeenNthCalledWith(1, `${REVIEWS}/101/draft-corrections`, expect.objectContaining({
       method: 'POST', body: { draftUuid: item.draftUuid, corrections },
-    })
-    expect(api).toHaveBeenNthCalledWith(2, 'admin/docai/techpack-reviews/101/approve', {
+    }))
+    expect(transport).toHaveBeenNthCalledWith(2, `${REVIEWS}/101/approve`, expect.objectContaining({
       method: 'POST', body: { draftUuid: item.draftUuid, sourceVerified: true },
-    })
+    }))
   })
 })

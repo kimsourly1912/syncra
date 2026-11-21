@@ -1,6 +1,6 @@
 # 0007: Admin generates its API contract from the OpenAPI spec and parses responses into feature models
 
-- Status: Accepted. Admin only. All Admin services migrated; `types/dto/` removed.
+- Status: Accepted. Admin only. All Admin services migrated; `types/dto/` removed. Point 4 changed by [0008](0008-admin-api-client-and-session.md): services pass a `model`, and the client parses the envelope.
 - Date: 2026-11-21
 - Scope: Admin. Portal and Web keep hand-written DTOs until they adopt this.
 

@@ -1,4 +1,5 @@
 import * as v from 'valibot'
+import { ApiError } from './errors'
 
 // Hand-written pieces of the API contract. Everything generated lives in ./generated.
 
@@ -11,20 +12,6 @@ export interface ApiErrorBody {
   status?: number
   type?: string
   instance?: string
-}
-
-/** The response doesn't have the shape a feature's model requires. */
-export class ApiContractError extends Error {
-  readonly source: string
-  readonly issues: string[]
-
-  constructor(source: string, issues: v.BaseIssue<unknown>[]) {
-    const details = issues.map(issue => `${v.getDotPath(issue) ?? '(response)'}: ${issue.message}`)
-    super(`Unexpected response from ${source} (${details.join('; ')})`)
-    this.name = 'ApiContractError'
-    this.source = source
-    this.issues = details
-  }
 }
 
 type ModelEntries<E extends v.ObjectEntries, R extends keyof E, O extends keyof E> = {
@@ -47,30 +34,10 @@ export function defineModel<
   return v.object(entries) as v.ObjectSchema<ModelEntries<E, R, O>, undefined>
 }
 
-/** Validates API data against a model and returns the parsed model, or throws `ApiContractError`. */
+/** Validates API data against a model and returns the parsed model, or throws `ApiError` kind `contract`. */
 export function parseData<S extends v.GenericSchema>(schema: S, data: unknown, source: string): v.InferOutput<S> {
   const result = v.safeParse(schema, data)
   if (result.success) return result.output
-  throw new ApiContractError(source, result.issues)
-}
-
-interface Envelope {
-  success?: boolean | null
-  msg?: string | null
-  reason?: string | null
-  data?: unknown
-}
-
-export type ParsedEnvelope<T>
-  = | { success: true, data: T, msg?: string }
-    | { success: false, reason?: string, msg?: string }
-
-/**
- * Parses a `ResponseMsg*` envelope. `data` is checked only when `success` is true, so a
- * resolved failure still reaches the caller's `if (!res.success)` branch.
- */
-export function parseEnvelope<S extends v.GenericSchema>(res: Envelope, schema: S, source: string): ParsedEnvelope<v.InferOutput<S>> {
-  const msg = res.msg ?? undefined
-  if (res.success !== true) return { success: false, reason: res.reason ?? undefined, msg }
-  return { success: true, data: parseData(schema, res.data, source), msg }
+  const issues = result.issues.map(issue => `${v.getDotPath(issue) ?? '(response)'}: ${issue.message}`)
+  throw new ApiError({ kind: 'contract', message: `Unexpected response from ${source} (${issues.join('; ')})`, source, issues })
 }

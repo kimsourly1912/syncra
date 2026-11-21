@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { ApiContractError, defineModel, parseData, parseEnvelope, vReviewItem } from '../../app/api'
+import { ApiError, defineModel, parseData, vReviewItem } from '../../app/api'
 
 // Sanitized fixture shaped like GET /admin/docai/techpack-reviews/{fileId}.
 const reviewItem = {
@@ -32,7 +32,7 @@ describe('defineModel', () => {
   })
 
   it('rejects a required field that is null or missing', () => {
-    expect(() => parseData(reviewModel, { ...reviewItem, fileId: null }, 'review')).toThrow(ApiContractError)
+    expect(() => parseData(reviewModel, { ...reviewItem, fileId: null }, 'review')).toThrow(ApiError)
     expect(() => parseData(reviewModel, { status: 'IN_REVIEW' }, 'review')).toThrow(/fileId/)
   })
 
@@ -41,19 +41,15 @@ describe('defineModel', () => {
   })
 })
 
-describe('parseEnvelope', () => {
-  it('parses data only when success is true', () => {
-    const res = parseEnvelope({ success: true, msg: 'ok', reason: null, data: reviewItem }, reviewModel, 'review')
-    expect(res).toEqual({ success: true, msg: 'ok', data: { fileId: 101, status: 'IN_REVIEW', draftUuid: null } })
-  })
-
-  it('returns a resolved failure without checking data', () => {
-    const res = parseEnvelope({ success: false, msg: null, reason: 'Not found', data: null }, reviewModel, 'review')
-    expect(res).toEqual({ success: false, reason: 'Not found', msg: undefined })
-  })
-
-  it('names the endpoint and field in the error', () => {
-    expect(() => parseEnvelope({ success: true, data: {} }, reviewModel, 'GET admin/docai/techpack-reviews/101'))
+describe('parseData', () => {
+  it('throws a contract ApiError naming the source and field', () => {
+    expect(() => parseData(reviewModel, {}, 'GET admin/docai/techpack-reviews/101'))
       .toThrow('Unexpected response from GET admin/docai/techpack-reviews/101 (fileId:')
+    try {
+      parseData(reviewModel, {}, 'review')
+    }
+    catch (error) {
+      expect(error).toMatchObject({ kind: 'contract', source: 'review' })
+    }
   })
 })

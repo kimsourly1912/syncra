@@ -1,8 +1,9 @@
 import type { IChangePasswordSchema } from '@/schema/auth.schema'
+import { useSession } from '@/features/session'
 import { confirmReset } from '../services/auth.service'
 
 export function useResetPassword() {
-  const auth = useAuth()
+  const session = useSession()
   const toast = useAppToast()
   const pending = shallowRef(false)
   const success = shallowRef(false)
@@ -15,18 +16,15 @@ export function useResetPassword() {
 
     pending.value = true
     try {
-      const res = await confirmReset({ token, newPassword: form.newPassword })
-      if (!res.success) {
-        toast.failed(res.reason || 'Could not reset the password')
-        return false
-      }
-      await auth.onSuccess(() => {
-        success.value = true
-      })
+      await confirmReset({ token, newPassword: form.newPassword })
+      // The password is changed even if the new session doesn't load; "Continue" then
+      // lands on sign-in through the route guard.
+      success.value = true
+      await session.reload()
       return true
     }
     catch (e) {
-      toast.exception(e)
+      toast.error(e)
       return false
     }
     finally {

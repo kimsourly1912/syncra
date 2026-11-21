@@ -1,6 +1,4 @@
-import type { FetchError } from 'ofetch'
-import { ApiContractError } from '@/api'
-import type { ApiErrorBody } from '@/api'
+import { ApiError } from '@/api'
 
 export function useAppToast() {
   const toast = useToast()
@@ -13,20 +11,18 @@ export function useAppToast() {
     return toast.add({ title: 'Failed', description, color: 'error' })
   }
 
-  function exception(e: unknown) {
-    if (e instanceof ApiContractError) {
-      console.error(e)
-      return failed(e.message)
-    }
-    const err = e as FetchError<ApiErrorBody>
-    if (err instanceof Error && err.name !== 'FetchError') return failed(err.message)
-    return failed(err.data?.reason ?? err.data?.detail ?? 'Internal Server error')
+  /** Shows any thrown error by its user-safe message. Cancelled requests and an ended session show nothing. */
+  function error(e: unknown) {
+    const err = ApiError.from(e)
+    if (err.silent) return
+    if (err.kind === 'contract' || err.kind === 'unknown') console.error(err)
+    return failed(err.message)
   }
 
   return {
     base: toast,
     failed,
     success,
-    exception,
+    error,
   }
 }

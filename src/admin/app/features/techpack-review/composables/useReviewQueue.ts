@@ -1,4 +1,4 @@
-import { ApiContractError } from '@/api'
+import { errorMessage } from '@/api'
 import type { ReviewItem, ReviewStatus } from '../models/review-item'
 import { listReviews } from '../services/techpack-review.service'
 
@@ -13,7 +13,6 @@ function queueQuery(status: ReviewStatus, page: number) {
 
 /** The review queue. Status and the zero-based page live in the URL. */
 export function useReviewQueue() {
-  const nuxtApp = useNuxtApp()
   const route = useRoute()
 
   const status = computed<ReviewStatus>(() => route.query.status === 'reviewed' ? 'REVIEWED' : 'IN_REVIEW')
@@ -34,13 +33,8 @@ export function useReviewQueue() {
     loading.value = true
     listError.value = ''
     try {
-      const res = await nuxtApp.runWithContext(() => listReviews({ status: status.value, page: page.value }, request.signal))
+      const data = await listReviews({ status: status.value, page: page.value }, request.signal)
       if (request.signal.aborted) return
-      if (!res.success) {
-        listError.value = res.reason || res.msg || 'Could not load TechPack reviews.'
-        return
-      }
-      const { data } = res
       items.value = data.content
       totalPages.value = data.totalPages
       if (!items.value.length && page.value > 0) {
@@ -49,12 +43,7 @@ export function useReviewQueue() {
     }
     catch (error) {
       if (request.signal.aborted) return
-      if (error instanceof ApiContractError) {
-        listError.value = error.message
-        return
-      }
-      const response = error as { data?: { reason?: string, detail?: string, msg?: string } }
-      listError.value = response?.data?.reason || response?.data?.detail || response?.data?.msg || 'Could not load TechPack reviews.'
+      listError.value = errorMessage(error, 'Could not load TechPack reviews.')
     }
     finally {
       if (!request.signal.aborted) loading.value = false

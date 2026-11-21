@@ -3,13 +3,10 @@ import { flushPromises } from '@vue/test-utils'
 import { mockNuxtImport, mountSuspended } from '@nuxt/test-utils/runtime'
 import ReviewQueueScreen from '../../app/features/techpack-review/components/ReviewQueueScreen.vue'
 import ReviewDetailScreen from '../../app/features/techpack-review/components/ReviewDetailScreen.vue'
+import { fakeApi } from '../fake-api'
 
-const { api, navigate } = vi.hoisted(() => ({
-  api: vi.fn(),
-  navigate: vi.fn(),
-}))
+const { navigate } = vi.hoisted(() => ({ navigate: vi.fn() }))
 
-mockNuxtImport('useAPI', () => api)
 mockNuxtImport('navigateTo', () => navigate)
 // The first queue page, In Review status.
 mockNuxtImport('useRoute', () => () => ({ query: {}, params: {}, path: '/techpack-reviews' }))
@@ -33,15 +30,19 @@ const inspection = {
   aiReview: null,
 }
 
+let api: ReturnType<typeof fakeApi>['transport']
+
+/** Answers each endpoint by its longest matching suffix. */
 function respondByEndpoint(responses: Record<string, unknown>) {
-  api.mockImplementation((endpoint: string) => {
+  api.mockImplementation(async (endpoint: string) => {
     const match = Object.keys(responses).sort((a, b) => b.length - a.length).find(key => endpoint.endsWith(key))
-    return match ? Promise.resolve(responses[match]) : Promise.reject(new Error(`unexpected ${endpoint}`))
+    if (!match) throw new Error(`unexpected ${endpoint}`)
+    return responses[match]
   })
 }
 
 beforeEach(() => {
-  api.mockReset()
+  api = fakeApi().transport
   navigate.mockReset()
 })
 

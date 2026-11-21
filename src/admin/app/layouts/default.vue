@@ -1,10 +1,10 @@
 <script setup lang="ts">
 import type { NavigationMenuItem } from '@nuxt/ui'
+import { useSignOut } from '@/features/auth'
 
-const { logoutProps } = useAuth()
 const { preference } = useStorage()
 
-const logout = logoutProps()
+const signOut = useSignOut()
 
 const menuItems: NavigationMenuItem[] = [
   {
@@ -143,8 +143,8 @@ const toggle = reactive({
             variant="outline"
             block
             color="neutral"
-            :loading="logout.pending.value"
-            @click="logout.execute"
+            :loading="signOut.pending.value"
+            @click="signOut.submit"
           />
         </footer>
       </aside>
@@ -224,8 +224,8 @@ const toggle = reactive({
               variant="outline"
               block
               color="neutral"
-              :loading="logout.pending.value"
-              @click="logout.execute"
+              :loading="signOut.pending.value"
+              @click="signOut.submit"
             />
           </footer>
         </main>

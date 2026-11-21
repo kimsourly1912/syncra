@@ -5,6 +5,8 @@ import { changePasswordSchema } from '@/schema/auth.schema'
 import type { IChangePasswordSchema } from '@/schema/auth.schema'
 import { useResetPassword } from '@/features/auth'
 
+definePageMeta({ access: 'guest', layout: 'auth' })
+
 const route = useRoute()
 const { pending, success, submit } = useResetPassword()
 const token = typeof route.query.token === 'string' ? route.query.token : undefined
@@ -38,7 +40,7 @@ function onSubmit(evt: FormSubmitEvent<IChangePasswordSchema>) {
         <UButton
           label="Continue to Syncra Admin"
           block
-          :to="toRoute('/')"
+          to="/"
         />
       </section>
     </template>

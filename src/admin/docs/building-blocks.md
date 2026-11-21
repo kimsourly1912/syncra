@@ -23,11 +23,21 @@ These are Admin's shared components, composables, and utilities. Components and 
 
 | Composable | Use for |
 | --- | --- |
-| `useAPI<T>`, `useRawAPI<T>` | API calls ([data access](data-access.md#the-client-stack)) |
-| `useAppToast()` | `success(description)`, `failed(description)`, `exception(e)`, `base` |
-| `useAuth()` | `authState`, `isAuthenticated`, `onSuccess(fn)`, `logoutProps()` → `{ pending, execute }`, `setAuthState` |
-| `useProfile()` | `key`, `data`, `pending`, `refresh()`, `clear()` for the signed-in staff profile |
+| `useAppToast()` | `success(description)`, `failed(description)`, `error(e)` (skips silent errors), `base` |
 | `useStorage()` | `preference` (sidebar collapsed) in `localStorage` |
+
+## API and session
+
+Imported explicitly, not auto-imported.
+
+| Export | From | Use for |
+| --- | --- | --- |
+| `api.get/post/put/patch/delete/download` | `@/api` | Every API call ([data access](data-access.md#the-client)) |
+| `ApiError`, `errorMessage(e, fallback)` | `@/api` | Reading a thrown error; inline alert text |
+| `defineModel`, `parseData`, `Api.*`, `v*` | `@/api` | Feature models and request types |
+| `useSession()` | `@/features/session` | `status`, `staff`, `signedIn`, `load`, `reload`, `signIn`, `signOut`, `end` ([session](data-access.md#the-session)) |
+| `SESSION_PATHS`, `redirectTarget(value)` | `@/features/session` | Home and sign-in paths; a safe `?redirect=` target |
+| `useSignIn`, `useSignOut`, `useForgotPassword`, `useResetPassword` | `@/features/auth` | The auth forms and the Log Out button |
 
 ## Theme objects
 
@@ -41,8 +51,5 @@ These are Admin's shared components, composables, and utilities. Components and 
 | Export | File | Use for |
 | --- | --- | --- |
 | `buildEndPoint<Parts>(prefix, parts)` | `utils/api.ts` | Service paths |
-| `toRoute(path, ...segments)` | `utils/common.ts` | Typed links from `constants/route.ts` |
-| `tw`, `IS_DEV`, `IS_SERVER` | `utils/common.ts` | Class strings in TypeScript; environment checks |
+| `tw`, `IS_DEV` | `utils/common.ts` | Class strings in TypeScript; dev check |
 | `validatePassword*`, `getPasswordValidationMessages` | `utils/validate.ts` | Password rules |
-| `routePublicMap`, `routePrivateMap`, `routeRules` | `constants/route.ts` | Protected routes (the "public" map) and guest routes (the "private" map); the generated rules |
-| `ASYNC_DATA`, `STATE`, `STATUS_CODE` | `constants/key.ts` | Data keys, state keys, `expiry: 401`, `tooManyRequest: 429` |

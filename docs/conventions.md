@@ -9,7 +9,7 @@ These rules are the same in Web, Portal, and Admin. Each app's docs cover only h
 | Framework | Nuxt 4, `ssr: false` (single-page apps) | Code runs in the browser. Middleware returns early on the server: `import.meta.server` (Portal) or `IS_SERVER` (Admin). |
 | UI | Nuxt UI 4 + Tailwind CSS 4 | Theme tokens live in each app's `app/assets/css/tailwind.css` and `app/app.config.ts`. |
 | Validation | Valibot | Form schemas only. API responses are typed, not validated. |
-| HTTP | `$fetch.create` in `app/plugins/api*.ts`, used through `useAPI` | Never call `$fetch` or `useFetch` directly in feature code. |
+| HTTP | `$fetch.create` in an app plugin, used through `useAPI` (Portal, Web) or `api` from `@/api` (Admin) | Never call `$fetch` or `useFetch` directly in feature code. |
 | Lint | `@nuxt/eslint` with `stylistic: true` | Two-space indent, single quotes, no semicolons. Run the app's `lint:fix` (Portal and Web), or `pnpm --filter admin exec eslint . --fix` for Admin. |
 | Package manager | pnpm, version pinned in the root `package.json` | Node `^24` |
 
@@ -66,7 +66,7 @@ These rules are the same in Web, Portal, and Admin. Each app's docs cover only h
 | Feature folder | `app/features/<kebab-name>/` | Public API in `index.ts` |
 | Test | `test/unit/<subject>.test.ts` or `test/nuxt/<subject>.test.ts` | `describe('<behavior>')` |
 
-**Existing misspellings:** `setingCompany.dto.ts`, `SatisticCard.vue`, `settingcompanyRepresentative.vue`, `steup.client.ts`, `company-infomation`, `privatecy`. Keep these names when you only edit nearby code, because renaming touches every importer. Never copy the spelling into new names. A rename belongs in its own change.
+**Existing misspellings:** `setingCompany.dto.ts`, `SatisticCard.vue`, `settingcompanyRepresentative.vue`, `company-infomation`, `privatecy`. Keep these names when you only edit nearby code, because renaming touches every importer. Never copy the spelling into new names. A rename belongs in its own change.
 
 ## API response envelope
 

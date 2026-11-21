@@ -5,6 +5,8 @@ import type { SchemaToString } from '@/types/common'
 import type { ISignInSchema } from '@/schema/auth.schema'
 import { useSignIn } from '@/features/auth'
 
+definePageMeta({ access: 'guest', layout: 'auth' })
+
 const { pending, submit } = useSignIn()
 
 const data = reactive<ISignInSchema>({
@@ -70,7 +72,7 @@ function onSubmit(evt: FormSubmitEvent<ISignInSchema>) {
 
       <footer class="text-center">
         <NuxtLink
-          :to="toRoute('/auth/forgot')"
+          to="/auth/forgot"
           class="text-info underline"
         >
           Forgot Password?

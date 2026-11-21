@@ -1,5 +1,3 @@
-import { routeRules } from './app/constants/route'
-
 // The API only allows CORS from deployed *.syncra.app origins and scopes its session
 // cookies to .syncra.app, so in `nuxt dev` the browser calls this same-origin path and
 // Nitro forwards it to NUXT_PUBLIC_API_URL. Not `/api`: Nitro serves /api/_nuxt_icon.
@@ -53,7 +51,6 @@ export default defineNuxtConfig({
       apiProxyPath: '',
     },
   },
-  routeRules,
   devServer: {
     port: 555,
   },
