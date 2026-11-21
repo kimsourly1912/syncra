@@ -64,7 +64,10 @@ const columns = computed(() => {
 <template>
   <UDashboardPanel>
     <template #header>
-      <UDashboardNavbar title="Plan & Pricing Management">
+      <UDashboardNavbar
+        icon="lucide:tags"
+        title="Plan & Pricing Management"
+      >
         <template #right>
           <UButton
             label="Create New Plan"
@@ -75,9 +78,9 @@ const columns = computed(() => {
 
       <UDashboardToolbar>
         <template #left>
-          <UInput
-            icon="lucide:search"
-            placeholder="Search"
+          <!-- Static page: the search isn't wired to an API yet. -->
+          <InputSearch
+            placeholder="Search plans…"
             class="w-full max-w-sm"
           />
         </template>

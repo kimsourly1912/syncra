@@ -64,7 +64,10 @@ const columns: TableColumn<PortalUserRow>[] = [
 <template>
   <UDashboardPanel>
     <template #header>
-      <UDashboardNavbar title="Account Management">
+      <UDashboardNavbar
+        icon="lucide:building-2"
+        title="Account Management"
+      >
         <template #right>
           <slot name="actions" />
         </template>
@@ -120,6 +123,9 @@ const columns: TableColumn<PortalUserRow>[] = [
           :columns="columns"
           :loading="loading"
         >
+          <template #loading>
+            <ListSkeleton label="Loading accounts…" />
+          </template>
           <template #empty>
             <ListEmptyState
               noun="accounts"

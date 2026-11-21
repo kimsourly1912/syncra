@@ -1,7 +1,10 @@
 <template>
   <UDashboardPanel class="page-narrow">
     <template #header>
-      <UDashboardNavbar title="Setting" />
+      <UDashboardNavbar
+        icon="lucide:settings"
+        title="Setting"
+      />
     </template>
 
     <template #body>

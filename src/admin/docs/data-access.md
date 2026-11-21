@@ -44,13 +44,13 @@ const review = useApiQuery(
   { enabled: fileId > 0 },
 )
 review.data       // the model, or undefined
-review.loading    // first load: nothing to show yet
-review.refreshing // reloading while the previous data is shown
+review.loading    // nothing to show for this key yet: the first load, or a new key
+review.refreshing // reloading the same key while its data is shown
 review.error      // ApiError | undefined
 review.refresh()
 ```
 
-- **The key is `'<feature>:<name>:<inputs…>'`.** Use a getter (`() => \`…:${page.value}\``) when inputs change. A new key loads again, and the previous key's data stays on screen while it loads. Put every input the request uses into the key.
+- **The key is `'<feature>:<name>:<inputs…>'`.** Use a getter (`() => \`…:${page.value}\``) when inputs change. A new key loads again, and while it loads `data` is `undefined` and `loading` is true: Nuxt keeps the previous key's data, but those are another filter's or page's rows, so the screen shows `ListSkeleton` rather than stale rows. Only a reload of the same key (Refresh, Retry, `invalidateQueries`) is `refreshing`. Put every input the request uses into the key.
 - Pass `signal` through: a newer load cancels the older one.
 - `enabled` (a boolean or getter) holds the load until its inputs exist, for example a `draftUuid`.
 - When a refresh fails for the connection or the server, the last good data stays on screen. A refusal (404, `success: false`) clears it.

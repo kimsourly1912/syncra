@@ -121,9 +121,9 @@ const memberTableColumn = computed(() => {
     variant="naked"
   >
     <div class="flex flex-wrap items-center justify-between gap-2">
-      <UInput
-        icon="lucide:search"
-        placeholder="Search"
+      <!-- Static panel: the search isn't wired to an API yet. -->
+      <InputSearch
+        placeholder="Search seat history…"
         class="w-full max-w-sm"
       />
       <USelect
@@ -144,9 +144,10 @@ const memberTableColumn = computed(() => {
     variant="naked"
   >
     <div class="flex flex-wrap items-center justify-between gap-2">
-      <UInput
-        icon="lucide:search"
-        placeholder="Search"
+      <!-- The page's second search box: `/` stays with the first. -->
+      <InputSearch
+        placeholder="Search members…"
+        :shortcut="false"
         class="w-full max-w-sm"
       />
       <USelect

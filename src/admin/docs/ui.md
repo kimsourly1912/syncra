@@ -25,7 +25,7 @@ The `default` layout is `UDashboardGroup` with a collapsible `UDashboardSidebar`
 <template>
   <UDashboardPanel class="page-narrow">                    <!-- forms and settings only -->
     <template #header>
-      <UDashboardNavbar title="Create New Product">
+      <UDashboardNavbar icon="lucide:package-plus" title="Create New Product">
         <template #leading>                                <!-- detail and form pages only -->
           <UButton icon="lucide:arrow-left" color="neutral" variant="ghost" to="/product" aria-label="Back to products" />
         </template>
@@ -48,6 +48,8 @@ The `default` layout is `UDashboardGroup` with a collapsible `UDashboardSidebar`
 ```
 
 The route file owns the panel, and feature screens (TechPack review) render inside `#body`. The exception is a list screen with a toolbar (Lead Inquiry, Account Management, Sale Requests): it renders the panel itself so the toolbar can bind to its list state. Page-level actions go in through a slot (`AccountListScreen` `#actions`). `UDashboardNavbar` shows its mobile sidebar toggle by itself.
+
+**Every page title has an icon** (`UDashboardNavbar` `icon`), the same Lucide icon as its sidebar entry, so the page and its link read as one. A page with its own purpose gets the matching variant: Create New Product is `lucide:package-plus`, a TechPack review is `lucide:file-search`.
 
 The sidebar (`layouts/default.vue`) has the logo and collapse button in its header, then a `UDashboardSearchButton` and the navigation. Its footer holds the staff menu (the signed-in email and Log Out) and a `UColorModeButton`. Ctrl/⌘+K opens `UDashboardSearch`, which lists every sidebar page plus Nuxt UI's light/dark commands. A section stays highlighted on the pages under it (`/techpack-reviews/101`, `/product/create`) through `isSectionActive`. When a section's pages live elsewhere, list them in the layout's `SECTION_PATHS` (Account Management is `/`, its details are `/account/<id>`).
 
@@ -86,8 +88,8 @@ A record's **name opens it**: a `ULink` (or a `UButton variant="link"` for an ov
 
 | State | Show |
 | --- | --- |
-| Loading (first) | Keep the layout in place. Use `USkeleton` rows shaped like the content or `:loading` on the table, and disable the controls that would change the query. Never the empty state. |
-| Refreshing | The content stays, dimmed under a thin moving bar: wrap it in `<ListRefresh :active="refreshing">` |
+| Loading | `loading`: the first load, and every filter, search, or page change. Keep the layout in place: `ListSkeleton` in `UTable`'s `#loading` slot (with `:loading` on the table), or in place of a list. Disable the controls that would change the query. Never the empty state, and never the previous filter's rows. |
+| Refreshing | `refreshing`: a reload of the same query (Refresh, Retry). The content stays, dimmed under a thin moving bar: wrap it in `<ListRefresh :active="refreshing">` |
 | Empty | `ListEmptyState`. "No *X* yet" (with the create action) differs from "No *X* match your filters" (with Clear filters). Pass `title` when the state needs its own words: "No TechPacks are waiting for review." vs "No reviewed TechPacks." |
 | Error | `AlertApiError` with the API reason and Retry, in place of the content |
 | Pending write | `:loading` on the action, with conflicting actions disabled |
@@ -96,7 +98,8 @@ A record's **name opens it**: a `ULink` (or a `UButton variant="link"` for an ov
 
 ## Review checklist
 
-- [ ] The page is a `UDashboardPanel` with a `UDashboardNavbar`.
+- [ ] The page is a `UDashboardPanel` with a `UDashboardNavbar` that has a title `icon`.
+- [ ] A search box is `InputSearch`; a filter or page change shows `ListSkeleton`, not the previous rows.
 - [ ] Loading, refreshing, empty, error, and pending states all render.
 - [ ] It reads well in light and dark: semantic tokens only, no `bg-white` or hex.
 - [ ] Records open from their name, not a separate Manage column.

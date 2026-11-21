@@ -49,7 +49,10 @@ const contactInfoItems: ListDetail[] = [
 <template>
   <UDashboardPanel>
     <template #header>
-      <UDashboardNavbar :title="`Lead Inquiry #L-${id} Detail`">
+      <UDashboardNavbar
+        icon="lucide:inbox"
+        :title="`Lead Inquiry #L-${id} Detail`"
+      >
         <template #leading>
           <UButton
             icon="lucide:arrow-left"

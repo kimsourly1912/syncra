@@ -27,7 +27,7 @@ src/admin/app/
 │       ├── models/ utils/       # response models; pure helpers (findings)
 │       └── index.ts
 ├── components/                  # shared, auto-registered WITH folder prefix (see below)
-│   └── alert/ card/ input/ list/ modal/ # AlertApiError, CardStats, InputPassword, InputSearch, List* (Details, StatusTabs, Pagination, EmptyState, Refresh), ModalConfirm; the rest is Nuxt UI
+│   └── alert/ card/ input/ list/ modal/ # AlertApiError, CardStats, InputPassword, InputSearch, List* (Details, StatusTabs, Pagination, EmptyState, Refresh, Skeleton), ModalConfirm; the rest is Nuxt UI
 ├── composables/                 # useApiQuery, useApiMutation, useListQuery, useUrlTab, useRefreshIndicator, useAppToast
 ├── api/                         # '@/api': client, errors, session recovery, contract helpers, generated/ (types, schemas, endpoint map; never edit)
 ├── utils/                       # file.ts (saveFile), navigation.ts (isSectionActive)

@@ -108,9 +108,9 @@ const tokenTableColumn = computed(() => {
     variant="naked"
   >
     <div class="flex flex-wrap items-center justify-between gap-2">
-      <UInput
-        icon="lucide:search"
-        placeholder="Search"
+      <!-- Static panel: the search isn't wired to an API yet. -->
+      <InputSearch
+        placeholder="Search transactions…"
         class="w-full max-w-sm"
       />
       <USelect

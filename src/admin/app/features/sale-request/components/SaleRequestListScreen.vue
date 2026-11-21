@@ -64,7 +64,10 @@ const columns: TableColumn<SaleRequestRow>[] = [
 <template>
   <UDashboardPanel>
     <template #header>
-      <UDashboardNavbar title="Sale Requests" />
+      <UDashboardNavbar
+        icon="lucide:shopping-cart"
+        title="Sale Requests"
+      />
 
       <UDashboardToolbar>
         <template #left>
@@ -134,6 +137,9 @@ const columns: TableColumn<SaleRequestRow>[] = [
           :columns="columns"
           :loading="loading"
         >
+          <template #loading>
+            <ListSkeleton label="Loading sale requests…" />
+          </template>
           <template #empty>
             <ListEmptyState
               noun="sale requests"

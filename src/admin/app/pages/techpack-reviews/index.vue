@@ -5,7 +5,10 @@ import ReviewQueueScreen from '@/features/techpack-review/components/ReviewQueue
 <template>
   <UDashboardPanel>
     <template #header>
-      <UDashboardNavbar title="TechPack reviews" />
+      <UDashboardNavbar
+        icon="lucide:file-check"
+        title="TechPack reviews"
+      />
     </template>
 
     <template #body>

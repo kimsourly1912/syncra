@@ -1,7 +1,10 @@
 <template>
   <UDashboardPanel>
     <template #header>
-      <UDashboardNavbar title="Product Detail">
+      <UDashboardNavbar
+        icon="lucide:package"
+        title="Product Detail"
+      >
         <template #leading>
           <UButton
             icon="lucide:arrow-left"

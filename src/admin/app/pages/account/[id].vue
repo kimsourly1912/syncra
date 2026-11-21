@@ -53,7 +53,10 @@ const accountItems: ListDetail[] = [
 <template>
   <UDashboardPanel>
     <template #header>
-      <UDashboardNavbar title="Account Detail">
+      <UDashboardNavbar
+        icon="lucide:building-2"
+        title="Account Detail"
+      >
         <template #leading>
           <UButton
             icon="lucide:arrow-left"

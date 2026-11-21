@@ -1,4 +1,4 @@
-import { defineComponent, h, reactive, ref } from 'vue'
+import { defineComponent, h, nextTick, reactive, ref } from 'vue'
 import { flushPromises } from '@vue/test-utils'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 import { mockNuxtImport, mountSuspended } from '@nuxt/test-utils/runtime'
@@ -92,6 +92,38 @@ describe('useApiQuery', () => {
     await flushPromises()
     expect(fetcher).toHaveBeenCalledTimes(2)
     expect(query.data.value).toBe(2)
+  })
+
+  it('is loading, not refreshing, while a new key loads: the old data is another query\'s', async () => {
+    const page = ref(1)
+    let release!: () => void
+    const fetcher = vi.fn(() => page.value === 1
+      ? Promise.resolve('page 1')
+      : new Promise<string>((resolve) => {
+          release = () => resolve('page 2')
+        }))
+    const query = await inComponent(() => useApiQuery(() => `test:k${keySeq}:${page.value}`, fetcher))
+    await flushPromises()
+    expect(query.data.value).toBe('page 1')
+
+    page.value = 2
+    await flushPromises()
+    expect(query.data.value).toBeUndefined()
+    expect(query.loading.value).toBe(true)
+    expect(query.refreshing.value).toBe(false)
+
+    release()
+    await flushPromises()
+    expect(query.data.value).toBe('page 2')
+    expect(query.loading.value).toBe(false)
+
+    // The same key again is a refresh: its data stays on screen.
+    const again = query.refresh()
+    await nextTick()
+    expect(query.refreshing.value).toBe(true)
+    expect(query.data.value).toBe('page 2')
+    release()
+    await again
   })
 
   it('refreshes the matching queries on invalidate', async () => {

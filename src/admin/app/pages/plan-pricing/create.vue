@@ -4,7 +4,10 @@
 <template>
   <UDashboardPanel class="page-narrow">
     <template #header>
-      <UDashboardNavbar title="Create New Plan">
+      <UDashboardNavbar
+        icon="lucide:tags"
+        title="Create New Plan"
+      >
         <template #leading>
           <UButton
             icon="lucide:arrow-left"

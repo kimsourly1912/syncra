@@ -63,7 +63,10 @@ const columns: TableColumn<LeadRow>[] = [
 <template>
   <UDashboardPanel>
     <template #header>
-      <UDashboardNavbar title="Lead Inquiries" />
+      <UDashboardNavbar
+        icon="lucide:inbox"
+        title="Lead Inquiries"
+      />
 
       <UDashboardToolbar>
         <template #left>
@@ -125,6 +128,9 @@ const columns: TableColumn<LeadRow>[] = [
           :columns="columns"
           :loading="loading"
         >
+          <template #loading>
+            <ListSkeleton label="Loading leads…" />
+          </template>
           <template #empty>
             <ListEmptyState
               noun="leads"
