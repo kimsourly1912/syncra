@@ -35,9 +35,9 @@ Feature screen component         renders state, calls actions
    ↓
 Feature composable  use<Feature> owns useAsyncData reads, actions, pending flags, user feedback
    ↓
-Service  <resource>.service.ts   endpoint + method + query/body → typed promise; no UI, no stores
+Service  <resource>.service.ts   endpoint + method + query/body → typed promise; no UI, no stores (Admin: none, 0009)
    ↓
-useAPI → $api (app plugin)       base URL, credentials, 401 → refresh → retry once (Portal and Admin)
+useAPI / api (app client)        base URL, credentials, 401 → refresh → retry once (Portal and Admin)
    ↓
 External API                     authentication, authorization, business rules, persistence
 ```
@@ -50,7 +50,7 @@ Dependencies point down only. A service never imports a component, store, or fea
 | --- | --- | --- | --- |
 | Web | `src/web/app/plugins/api.ts`, no credentials | None | None. Links to Portal use `useURL`. |
 | Portal | `src/portal/app/plugins/api.client.ts`, `credentials: 'include'` | Cookies. `useAPI` refreshes once on 401 and logs out if that fails. The profile store (`useProfileStore`) holds the company, role, and feature flags. | `auth`, `guest`, and `onboarding` middleware; `usePermission` role map; `<ShowIf>`; `profileStore.isAdmin` |
-| Admin | `src/admin/app/plugins/api.client.ts`, `credentials: 'include'` | Cookies. `useAPI` refreshes on 401 and calls `useAuth().logoutProps().execute()` if that fails. | `auth` and `guest` middleware; no role map |
+| Admin | `src/admin/app/plugins/session.client.ts` configures `@/api`, `credentials: 'include'` | Cookies. `api` shares one renewal per tab (Web Locks across tabs), retries once, and calls `useSession().end('expired')` if renewal is refused ([0008](decisions/0008-admin-api-client-and-session.md)). | `access.global.ts` guard with `access` page meta; no role map |
 
 - Client checks decide what to show and where to navigate. They aren't authorization. The API must refuse what a role can't do. If a change depends on server behavior, record what needs confirming in [open questions](product/open-questions.md).
 - Portal's roles are `ADMIN` and `OPERATOR`. Invitations always create Operators. Account type (`COMPANY` or `MEMBER`) is a separate field from role. See [users and roles](product/scope.md#users-and-roles).

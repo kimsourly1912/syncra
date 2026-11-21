@@ -8,6 +8,7 @@ These are Admin's shared components, composables, and utilities. Components and 
 | --- | --- |
 | `LayoutContent` | The page container (`max-w-7xl`, vertical spacing) |
 | `LayoutHeading` | The page `title` and `description`. With `to`, it shows a back arrow. `#suffix` holds page actions. |
+| `LayoutNavMenu` | The sidebar menu (`items`, `signingOut`; emits `navigate` and `signOut`). Hides links to pages that don't exist. |
 | `CardWrapper` | A `UCard` with a `CardTitle` header (`title`) |
 | `CardTitle` | A card heading |
 | `CardBoxWrapper` + `CardBoxItem` | A stat grid (`cols`) of `items: CardBoxItem[]`. The types are in `types/components/card.ts`. |
@@ -23,11 +24,25 @@ These are Admin's shared components, composables, and utilities. Components and 
 
 | Composable | Use for |
 | --- | --- |
-| `useAPI<T>`, `useRawAPI<T>` | API calls ([data access](data-access.md#the-client-stack)) |
-| `useAppToast()` | `success(description)`, `failed(description)`, `exception(e)`, `base` |
-| `useAuth()` | `authState`, `isAuthenticated`, `onSuccess(fn)`, `logoutProps()` → `{ pending, execute }`, `setAuthState` |
-| `useProfile()` | `key`, `data`, `pending`, `refresh()`, `clear()` for the signed-in staff profile |
+| `useApiQuery(key, fetcher, { enabled })` | Reads: `data`, `loading`, `refreshing`, `pending`, `error` (`ApiError`), `refresh` ([reads](data-access.md#reads-useapiquery)) |
+| `useApiMutation(fn, { success, error, invalidate })` | Writes: `execute(input)` → `{ ok, data \| error }`, `pending`, `error` ([writes](data-access.md#writes-useapimutation)) |
+| `invalidateQueries(...prefixes)` | Refresh the queries on screen whose key starts with a prefix |
+| `useListQuery(choices)` | A list's filters and 1-based page in the URL ([lists](data-access.md#lists-uselistquery)) |
+| `useAppToast()` | `success(description, title?)`, `failed(description, title?)`, `error(e, title?)` (skips silent errors), `base` |
 | `useStorage()` | `preference` (sidebar collapsed) in `localStorage` |
+
+## API and session
+
+Imported explicitly, not auto-imported.
+
+| Export | From | Use for |
+| --- | --- | --- |
+| `api.get/post/put/patch/delete/download` | `@/api` | Every API call, with the spec's path (`'/admin/x/{id}'`) ([calling the API](data-access.md#calling-the-api)) |
+| `ApiError`, `errorMessage(e, fallback)` | `@/api` | Reading a thrown error; inline alert text |
+| `defineModel`, `parseData`, `Api.*`, `v*` | `@/api` | Feature models and request types |
+| `useSession()` | `@/features/session` | `status`, `staff`, `signedIn`, `load`, `reload`, `signIn`, `signOut`, `end` ([session](data-access.md#the-session)) |
+| `SESSION_PATHS`, `redirectTarget(value)` | `@/features/session` | Home and sign-in paths; a safe `?redirect=` target |
+| `useSignIn`, `useSignOut`, `useForgotPassword`, `useResetPassword` | `@/features/auth` | The auth forms and the Log Out button |
 
 ## Theme objects
 
@@ -40,9 +55,6 @@ These are Admin's shared components, composables, and utilities. Components and 
 
 | Export | File | Use for |
 | --- | --- | --- |
-| `buildEndPoint<Parts>(prefix, parts)` | `utils/api.ts` | Service paths |
-| `toRoute(path, ...segments)` | `utils/common.ts` | Typed links from `constants/route.ts` |
-| `tw`, `IS_DEV`, `IS_SERVER` | `utils/common.ts` | Class strings in TypeScript; environment checks |
+| `tw`, `IS_DEV` | `utils/common.ts` | Class strings in TypeScript; dev check |
+| `saveFile(blob, filename)` | `utils/file.ts` | Hand a downloaded file to the browser |
 | `validatePassword*`, `getPasswordValidationMessages` | `utils/validate.ts` | Password rules |
-| `routePublicMap`, `routePrivateMap`, `routeRules` | `constants/route.ts` | Protected routes (the "public" map) and guest routes (the "private" map); the generated rules |
-| `ASYNC_DATA`, `STATE`, `STATUS_CODE` | `constants/key.ts` | Data keys, state keys, `expiry: 401`, `tooManyRequest: 429` |

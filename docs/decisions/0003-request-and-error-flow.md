@@ -1,6 +1,6 @@
 # 0003: Service → feature composable → component, with both API failure paths handled
 
-- Status: Accepted. Shared result helper pending.
+- Status: Accepted for Portal and Web. Superseded for Admin by [0008](0008-admin-api-client-and-session.md): one thrown `ApiError` replaces the two failure paths.
 - Date: 2026-11-21
 - Scope: Portal, Admin, Web
 

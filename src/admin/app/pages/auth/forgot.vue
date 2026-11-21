@@ -5,6 +5,8 @@ import { forgotEmailSchema } from '@/schema/auth.schema'
 import type { IForgotEmailSchema } from '@/schema/auth.schema'
 import { useForgotPassword } from '@/features/auth'
 
+definePageMeta({ access: 'guest', layout: 'auth' })
+
 const { pending, sent: success, submit } = useForgotPassword()
 const data = reactive<IForgotEmailSchema>({
   email: '',
@@ -33,7 +35,7 @@ function onSubmit(evt: FormSubmitEvent<IForgotEmailSchema>) {
         <UButton
           label="Return to login"
           block
-          :to="toRoute('/auth/sign-in')"
+          to="/auth/sign-in"
         />
       </section>
     </template>

@@ -9,4 +9,3 @@ export type ExtractObjectValue<T> = DeepValue<T>
 export type SchemaToString<T> = {
   [K in keyof T]: K
 }
-export type AcceptLiteral<T extends string> = T | ({} & string)
