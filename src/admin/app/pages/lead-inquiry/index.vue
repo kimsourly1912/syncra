@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import type { TableColumn } from '@nuxt/ui'
-import { UBadge, UButton } from '#components'
+import { UBadge, ULink } from '#components'
 import type { CardStat } from '@/components/card/CardStats.vue'
 
 interface LeadTableData {
@@ -34,6 +34,11 @@ const leadTableColumn = computed(() => {
     {
       accessorKey: 'name',
       header: 'Name',
+      // The name opens the lead (no separate Review column).
+      cell({ row }) {
+        const { id, name } = row.original
+        return h(ULink, { to: `/lead-inquiry/${id}`, class: 'font-medium text-highlighted hover:text-primary' }, () => name)
+      },
     },
     {
       accessorKey: 'companyName',
@@ -53,14 +58,6 @@ const leadTableColumn = computed(() => {
       cell({ row }) {
         const { status } = row.original
         return h(UBadge, { color: 'primary', label: status, variant: 'soft', size: 'lg' })
-      },
-    },
-    {
-      id: 'action',
-      header: 'Action',
-      cell({ row }) {
-        const { id } = row.original
-        return h(UButton, { to: `/lead-inquiry/${id}`, label: 'Review' })
       },
     },
   ] satisfies TableColumn<LeadTableData>[]

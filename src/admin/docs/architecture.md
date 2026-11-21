@@ -23,8 +23,8 @@ src/admin/app/
 │       ├── models/ utils/       # response models; pure helpers (findings)
 │       └── index.ts
 ├── components/                  # shared, auto-registered WITH folder prefix (see below)
-│   └── card/ input/ list/ modal/ # CardStats, InputPassword, ListDetails, ModalConfirm; the rest is Nuxt UI
-├── composables/                 # useApiQuery, useApiMutation, useListQuery, useAppToast
+│   └── alert/ card/ input/ list/ modal/ # AlertApiError, CardStats, InputPassword, InputSearch, List* (Details, StatusTabs, Pagination, EmptyState, Refresh), ModalConfirm; the rest is Nuxt UI
+├── composables/                 # useApiQuery, useApiMutation, useListQuery, useUrlTab, useRefreshIndicator, useAppToast
 ├── api/                         # '@/api': client, errors, session recovery, contract helpers, generated/ (types, schemas, endpoint map; never edit)
 ├── utils/                       # file.ts (saveFile)
 ├── types/page-meta.d.ts         # the `access` page meta
@@ -59,19 +59,19 @@ There are no services: a composable calls `api` with a path from the spec and a 
 - **Redirects** go through `redirectTarget` (`features/session`), which accepts only an in-app path that isn't a guest page.
 - **Layouts:** `default` unless the page sets `layout`. Guest pages use `auth`.
 - Links are plain paths (`to="/auth/forgot"`). The session's own targets are `SESSION_PATHS`.
-- The sidebar is the `menuItems` array in `app/layouts/default.vue`, grouped by `type: 'label'` headings, rendered by `UNavigationMenu` inside `UDashboardSidebar` (collapsible on desktop, a slideover on mobile). Every page is a `UDashboardPanel` ([ui](ui.md#page-anatomy)). Links to pages that don't exist are hidden, and so is a heading left empty.
+- The sidebar is the `menuItems` array in `app/layouts/default.vue`, grouped by `type: 'label'` headings, rendered by `UNavigationMenu` inside `UDashboardSidebar` (collapsible on desktop, a slideover on mobile). Every page is a `UDashboardPanel` ([ui](ui.md#page-anatomy)). Links to pages that don't exist are hidden, and so is a heading left empty. The same visible links feed the `UDashboardSearch` palette (Ctrl/⌘+K), so a new sidebar entry is searchable without more work. The footer is the staff menu (from `useSession().staff`) and the color mode button.
 
 ## Reference code
 
 | Pattern | Reference | Why |
 | --- | --- | --- |
-| API-backed list | `features/techpack-review/composables/useReviewQueue.ts` + `ReviewQueueScreen.vue` | `useListQuery` (status and 1-based page in the URL) + `useApiQuery` keyed by them. Loading, empty, and error states are separate; a page past the end moves back. |
+| API-backed list | `features/techpack-review/composables/useReviewQueue.ts` + `ReviewQueueScreen.vue` | `useListQuery` (status and 1-based page in the URL) + `useApiQuery` keyed by them. `ListStatusTabs`, `AlertApiError`, skeleton rows, `ListRefresh`, `ListEmptyState`, `ListPagination`; the filename opens the record. A page past the end moves back. |
 | A screen split into panels | `useReviewDetail.ts` + `ReviewDetailScreen.vue` and its panels | Focused composables (record, PDF preview, inspection, actions) composed once and shared with panels through `createInjectionState`. |
 | Writes | `features/techpack-review/composables/useReviewActions.ts` | `useApiMutation` per action: toasts, pending, double-submit guard, `invalidate`. Each save sends the current `draftUuid`; a draft change clears the attestation. |
 | Form with Valibot + pending | `pages/auth/sign-in.vue` + `features/auth/composables/useSignIn.ts` | `UForm` + a feature schema (`features/auth/schemas/`) + `FIELD_NAME satisfies { [K in keyof IForm]: K }`. The composable wraps the request in `useApiMutation` and acts on `result.ok`. |
 | Request + model | `features/auth/composables/useForgotPassword.ts`, `features/auth/models/forgot-password.ts` | `api.post('/admin/auth/forgot-password', { body, auth: false, model })` |
 | Session-aware action | `features/session/composables/useSession.ts` | Shared state in `useState`, one in-flight load, idempotent `end()` |
-| Tabs in the URL | `pages/account/[id].vue` | `UTabs`; the `?tab=` value selects the tab |
+| Tabs in the URL | `pages/account/[id].vue` | `UTabs` bound to `useUrlTab`: an unknown `?tab=` reads as the first tab, and switching replaces the URL |
 | Page layout | `pages/product/create.vue` | `UDashboardPanel` → `UDashboardNavbar` (back button in `#leading`, actions in `#right`) → `UPageCard` |
 
 ## Legacy: don't copy

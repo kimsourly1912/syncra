@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import type { TableColumn } from '@nuxt/ui'
-import { UBadge, UButton } from '#components'
+import { UBadge, ULink } from '#components'
 import type { CardStat } from '@/components/card/CardStats.vue'
 
 interface OpenItem {
@@ -72,6 +72,11 @@ const columns = computed(() => {
     {
       accessorKey: 'name',
       header: 'User Name',
+      // The name opens the account (no separate Manage column).
+      cell({ row }) {
+        const { id, name } = row.original
+        return h(ULink, { to: `/account/${id}`, class: 'font-medium text-highlighted hover:text-primary' }, () => name)
+      },
     },
     {
       accessorKey: 'companyName',
@@ -96,14 +101,6 @@ const columns = computed(() => {
     {
       accessorKey: 'seat',
       header: 'Seat',
-    },
-    {
-      id: 'action',
-      header: 'Action',
-      cell({ row }) {
-        const { id } = row.original
-        return h(UButton, { label: 'Manage', to: `/account/${id}` })
-      },
     },
   ] satisfies TableColumn<Data>[]
 })

@@ -22,7 +22,7 @@ function onSubmit(evt: FormSubmitEvent<IForgotPasswordSchema>) {
 <template>
   <div class="p-4 max-w-lg w-full space-y-4">
     <template v-if="success">
-      <section class="bg-white flex flex-col items-center gap-6 rounded-lg p-6 text-center">
+      <section class="bg-default flex flex-col items-center gap-6 rounded-lg p-6 text-center">
         <UBadge
           icon="lucide:circle-check"
           size="xl"
@@ -41,7 +41,7 @@ function onSubmit(evt: FormSubmitEvent<IForgotPasswordSchema>) {
     </template>
 
     <template v-else>
-      <section class="bg-white rounded-lg p-6 space-y-6">
+      <section class="bg-default rounded-lg p-6 space-y-6">
         <header class="flex flex-col gap-2 items-center text-center">
           <h1 class="font-medium text-highlighted text-2xl">
             Forgot your Password?

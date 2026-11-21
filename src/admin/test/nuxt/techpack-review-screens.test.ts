@@ -55,9 +55,29 @@ describe('review queue screen', () => {
     const wrapper = await mountSuspended(ReviewQueueScreen)
     await flushPromises()
 
-    expect(wrapper.text()).toContain('sample-techpack.pdf')
+    // The filename is the link into the review.
+    const link = wrapper.find('a[href="/techpack-reviews/101"]')
+    expect(link.exists()).toBe(true)
+    expect(link.text()).toBe('sample-techpack.pdf')
     expect(wrapper.text()).toContain('Company 303 · Job 202')
-    expect(wrapper.text()).toContain('Open review')
+    expect(wrapper.find('[role="group"][aria-label="Review status"]').text()).toContain('In Review')
+  })
+
+  it('shows the status-specific empty message', async () => {
+    respondByEndpoint({ 'techpack-reviews': { success: true, data: { content: [], totalPages: 0 } } })
+    const wrapper = await mountSuspended(ReviewQueueScreen)
+    await flushPromises()
+
+    expect(wrapper.text()).toContain('No TechPacks are waiting for review.')
+    expect(wrapper.find('nav[aria-label="Pagination"]').exists()).toBe(false)
+  })
+
+  it('shows the pager when there is more than one page', async () => {
+    respondByEndpoint({ 'techpack-reviews': { success: true, data: { content: [item], totalPages: 3 } } })
+    const wrapper = await mountSuspended(ReviewQueueScreen)
+    await flushPromises()
+
+    expect(wrapper.find('nav[aria-label="Pagination"]').text()).toContain('Page 1 of 3')
   })
 
   it('shows the API reason when the list resolves with success: false', async () => {
@@ -66,7 +86,8 @@ describe('review queue screen', () => {
     await flushPromises()
 
     expect(wrapper.text()).toContain('Queue unavailable')
-    expect(wrapper.text()).not.toContain('Open review')
+    expect(wrapper.text()).toContain('Retry')
+    expect(wrapper.find('a[href^="/techpack-reviews/"]').exists()).toBe(false)
   })
 
   it('shows a contract error instead of an empty queue', async () => {

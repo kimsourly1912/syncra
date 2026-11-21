@@ -27,7 +27,7 @@ function onSubmit(evt: FormSubmitEvent<IResetPasswordSchema>) {
 <template>
   <div class="p-4 max-w-lg w-full space-y-4">
     <template v-if="success">
-      <section class="bg-white flex flex-col items-center gap-6 rounded-lg p-6 text-center">
+      <section class="bg-default flex flex-col items-center gap-6 rounded-lg p-6 text-center">
         <UBadge
           icon="lucide:circle-check"
           size="xl"
@@ -46,7 +46,7 @@ function onSubmit(evt: FormSubmitEvent<IResetPasswordSchema>) {
     </template>
 
     <template v-else>
-      <section class="bg-white rounded-lg p-6 space-y-8">
+      <section class="bg-default rounded-lg p-6 space-y-8">
         <header class="flex flex-col gap-4 items-center text-center">
           <img
             src="/img/syncra-logo.png"

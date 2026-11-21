@@ -20,10 +20,10 @@ const tabItems = [
     label: 'Seat',
     value: 'seat',
   },
-] satisfies TabsItem[]
+] as const satisfies TabsItem[]
 
-const route = useRoute()
-const selectedTab = shallowRef((route.query.tab as string) ?? tabItems[0]!.value)
+// The tab is in `?tab=`; switching replaces the URL, so Back leaves the page.
+const selectedTab = useUrlTab(tabItems.map(item => item.value))
 
 const accountItems: ListDetail[] = [
   {
@@ -48,12 +48,6 @@ const accountItems: ListDetail[] = [
     value: 'Dec 15,2025',
   },
 ]
-
-watch(selectedTab, (tab) => {
-  navigateTo({ query: {
-    tab,
-  } })
-}, { immediate: true })
 </script>
 
 <template>

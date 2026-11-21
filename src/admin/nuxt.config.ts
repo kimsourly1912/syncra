@@ -40,8 +40,10 @@ export default defineNuxtConfig({
     },
   },
   css: ['~/assets/css/tailwind.css'],
-  ui: {
-    colorMode: false,
+  // Light and dark, light by default: the system setting is ignored until staff pick a mode.
+  colorMode: {
+    preference: 'light',
+    fallback: 'light',
   },
   spaLoadingTemplate: true,
   runtimeConfig: {

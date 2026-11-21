@@ -85,9 +85,29 @@ list.page.value                            // 1-based, from the URL
 list.setFilters({ status: 'reviewed' })    // back to page 1
 list.setPage(2)
 list.clampPage(totalPages)                 // after a load: past the end → last page
+
+// A list whose endpoint takes `search` and `size`:
+const leads = useListQuery({ status: ['all', 'new'] as const }, { search: true, pageSizes: [20, 50, 100] })
+leads.search.value                         // trimmed `?search=`, '' when absent
+leads.pageSize.value                       // `?size=` if it's a choice, else the first choice
+leads.setSearch('acme')                    // replaces the URL entry, back to page 1
+leads.setPageSize(50)                      // back to page 1
+leads.isFiltered.value                     // a filter or the search hides rows
+leads.clearFilters()                       // defaults and no search; the page size stays
 ```
 
-The URL is the state (`/techpack-reviews?status=reviewed&page=2`), so reload, Back, and shared links keep the place, and defaults are left out of it. The Admin API's page is **zero-based**: send `page - 1`. `features/techpack-review/composables/useReviewQueue.ts` is the reference. Links into a record pass the list's query along, so the record's Back link returns to the same tab and page.
+The URL is the state (`/techpack-reviews?status=reviewed&page=2`), so reload, Back, and shared links keep the place, and defaults are left out of it. Filter, page, and page-size changes are history entries. A search replaces the current entry, so Back doesn't step through each search ([0011](../../../docs/decisions/0011-admin-list-toolkit-and-color-mode.md)). Only turn on `search` and `pageSizes` when the endpoint takes `search` and `size`. The TechPack review endpoint takes neither. The Admin API's page is **zero-based**: send `page - 1`, and send `pageSize` as `size`. `features/techpack-review/composables/useReviewQueue.ts` is the reference. Links into a record pass the list's query along, so the record's Back link returns to the same tab and page.
+
+Which endpoints take what (from the generated contract):
+
+| Endpoint | `search` | Filters | `sort` | `page` / `size` |
+| --- | --- | --- | --- | --- |
+| `GET /admin/docai/techpack-reviews` | – | `status` | – | `page` only |
+| `GET /admin/lead-inquiries` | ✓ | `status` | ✓ | ✓ |
+| `GET /admin/portal-users` | ✓ | – | ✓ | ✓ |
+| `GET /admin/sale-requests` | ✓ | `status`, `type` | ✓ | ✓ |
+
+The `sort` format, the largest `size`, and a status filter for portal users aren't confirmed ([open questions](../../../docs/product/open-questions.md#admin)).
 
 ## Errors
 
