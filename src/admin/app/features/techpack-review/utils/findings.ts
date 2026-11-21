@@ -25,6 +25,10 @@ export function findingColumn(finding: Pick<ReviewFinding, 'column'>) {
   return finding.column.toLowerCase().startsWith('tol') ? finding.column : 'Size ' + finding.column
 }
 
+export function findingLabel(finding: ReviewFinding) {
+  return `${finding.measurement || 'Measurement'} · ${findingColumn(finding)}`
+}
+
 // PDF findings always refer to the first sheet.
 export function pdfReviewFindings(inspection: WorkbookInspection | null): ReviewFinding[] {
   return (inspection?.findings ?? []).map(({ pdfValue, ...finding }, index) => ({

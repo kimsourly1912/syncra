@@ -1,5 +1,6 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 import { flushPromises } from '@vue/test-utils'
+import type { VueWrapper } from '@vue/test-utils'
 import { mockNuxtImport, mountSuspended } from '@nuxt/test-utils/runtime'
 import { clearNuxtData, useRouter } from '#imports'
 import ReviewQueueScreen from '../../app/features/techpack-review/components/ReviewQueueScreen.vue'
@@ -117,6 +118,14 @@ describe('review queue screen', () => {
   })
 })
 
+async function openReviewIssues(wrapper: VueWrapper) {
+  const trigger = wrapper.findAll('button').find(button => button.text().startsWith('Review issues ('))
+  expect(trigger).toBeDefined()
+  await trigger!.trigger('click')
+  await flushPromises()
+  return [...document.querySelectorAll<HTMLButtonElement>('ul[aria-label="Workbook findings"] button')]
+}
+
 describe('review detail screen', () => {
   it('refuses an invalid file id without calling the API', async () => {
     const wrapper = await mountSuspended(ReviewDetailScreen, { props: { fileId: 'abc' } })
@@ -132,19 +141,24 @@ describe('review detail screen', () => {
       'source-preview': { success: true, data: { pageCount: 2, pngBase64: 'iVBORw0KGgo=' } },
       'draft-inspection': { success: true, data: inspection },
     })
-    const wrapper = await mountSuspended(ReviewDetailScreen, { props: { fileId: '101' } })
+    const wrapper = await mountSuspended(ReviewDetailScreen, { props: { fileId: '101' }, attachTo: document.body })
     await flushPromises()
 
     expect(api).toHaveBeenCalledWith('/admin/docai/techpack-reviews/101/draft-inspection', expect.objectContaining({
       query: { draftUuid: item.draftUuid },
     }))
     expect(wrapper.text()).toContain('sample-techpack.pdf')
-    expect(wrapper.text()).toContain('PDF difference')
-    expect(wrapper.text()).toContain('Measurements · B1')
+    expect(wrapper.text()).toContain('Review issues (1)')
+    expect(wrapper.find('section[aria-label="Selected review issue"]').exists()).toBe(false)
+    const [pdf] = await openReviewIssues(wrapper)
+    expect(pdf?.textContent).toContain('PDF difference')
+    expect(pdf?.textContent).toContain('Measurements · B1')
     expect(wrapper.text()).toContain('Resolve the PDF differences before approving.')
 
     const approve = wrapper.findAll('button').find(button => button.text().includes('Approve and release'))
     expect(approve?.attributes('disabled')).toBeDefined()
+    expect(wrapper.find('[role="checkbox"]').exists()).toBe(false)
+    wrapper.unmount()
   })
 
   it('selects PDF and AI findings separately and saves a single correction for their shared cell', async () => {
@@ -161,31 +175,35 @@ describe('review detail screen', () => {
       'draft-inspection': ok(sharedCell),
       'draft-corrections': ok(null),
     })
-    const wrapper = await mountSuspended(ReviewDetailScreen, { props: { fileId: '104' } })
+    const wrapper = await mountSuspended(ReviewDetailScreen, { props: { fileId: '104' }, attachTo: document.body })
     await flushPromises()
 
-    const [pdf, ai] = wrapper.findAll('ul[aria-label="Workbook findings"] button')
-    await pdf!.trigger('click')
+    const [pdf] = await openReviewIssues(wrapper)
+    pdf!.click()
     await flushPromises()
-    expect(pdf!.attributes('aria-pressed')).toBe('true')
+    expect(wrapper.get('section[aria-label="Selected review issue"]').text()).toContain('PDF difference')
     expect(wrapper.find('[data-cell="0-1-1"]').classes()).toContain('active-cell')
     expect(api).toHaveBeenCalledWith('/admin/docai/techpack-reviews/104/source-preview', expect.objectContaining({ query: { page: 2 } }))
     await wrapper.findAll('button').find(button => button.text() === 'Use PDF value')!.trigger('click')
 
-    await ai!.trigger('click')
-    expect(ai!.attributes('aria-pressed')).toBe('true')
-    expect(pdf!.attributes('aria-pressed')).toBe('false')
+    const [selected, ai] = await openReviewIssues(wrapper)
+    expect(selected?.getAttribute('aria-pressed')).toBe('true')
+    ai!.click()
+    await flushPromises()
+    expect(wrapper.get('section[aria-label="Selected review issue"]').text()).toContain('AI flag')
     expect(wrapper.text()).toContain('AI read')
     expect(wrapper.findAll('button').some(button => button.text() === 'Use PDF value')).toBe(false)
     expect(wrapper.text()).toContain('1 unsaved correction')
     expect(wrapper.find('[data-cell="0-1-1"]').text()).toBe('52')
 
-    await wrapper.findAll('button').find(button => button.text() === 'Save corrections')!.trigger('click')
+    expect(wrapper.findAll('button').some(button => button.text() === 'Approve and release')).toBe(false)
+    await wrapper.findAll('button').find(button => button.text() === 'Save correction')!.trigger('click')
     await flushPromises()
     expect(api).toHaveBeenCalledWith('/admin/docai/techpack-reviews/104/draft-corrections', expect.objectContaining({
       method: 'POST',
       body: { draftUuid: item.draftUuid, corrections: [{ sheetIndex: 0, rowNumber: 1, columnIndex: 1, value: '52' }] },
     }))
+    wrapper.unmount()
   })
 
   // A draft the reviewer can approve: no differences, and the whole workbook shown.
@@ -199,13 +217,17 @@ describe('review detail screen', () => {
       'draft-inspection': ok(inspection),
       'draft-corrections': ok({ ...item, fileId: 102 }),
     })
-    const wrapper = await mountSuspended(ReviewDetailScreen, { props: { fileId: '102' } })
+    const wrapper = await mountSuspended(ReviewDetailScreen, { props: { fileId: '102' }, attachTo: document.body })
     await flushPromises()
 
-    await wrapper.findAll('button').find(button => button.text().includes('PDF difference'))!.trigger('click')
-    await wrapper.findAll('button').find(button => button.text() === 'Use PDF value')!.trigger('click')
+    const [pdf] = await openReviewIssues(wrapper)
+    pdf!.click()
+    await flushPromises()
+    await wrapper.get('section[aria-label="Selected review issue"] input').setValue('52')
     expect(wrapper.text()).toContain('1 unsaved correction')
-    await wrapper.findAll('button').find(button => button.text().includes('Save corrections'))!.trigger('click')
+    expect(wrapper.text()).toContain('Was 50')
+    expect(wrapper.findAll('button').some(button => button.text() === 'Use PDF value')).toBe(false)
+    await wrapper.findAll('button').find(button => button.text() === 'Save correction')!.trigger('click')
     await flushPromises()
 
     expect(api).toHaveBeenCalledWith('/admin/docai/techpack-reviews/102/draft-corrections', expect.objectContaining({
@@ -214,6 +236,7 @@ describe('review detail screen', () => {
     }))
     expect(api.mock.calls.filter(([url]) => url === '/admin/docai/techpack-reviews/102')).toHaveLength(2)
     expect(wrapper.text()).not.toContain('unsaved correction')
+    wrapper.unmount()
   })
 
   it('approves only after the attestation, then opens the Reviewed queue', async () => {
@@ -229,7 +252,8 @@ describe('review detail screen', () => {
 
     const approve = () => wrapper.findAll('button').find(button => button.text().includes('Approve and release'))!
     expect(approve().attributes('disabled')).toBeDefined()
-    expect(wrapper.find('[role="checkbox"]').attributes('disabled')).toBeDefined()
+    expect(wrapper.find('[role="checkbox"]').exists()).toBe(false)
+    expect(wrapper.text()).toContain('No issues found')
     expect(wrapper.text()).toContain('Wait for the source PDF to load.')
 
     await wrapper.get('img[alt^="Original TechPack PDF"]').trigger('load')

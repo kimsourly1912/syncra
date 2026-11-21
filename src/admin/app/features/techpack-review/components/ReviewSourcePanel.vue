@@ -90,7 +90,7 @@ watch(page, () => viewport.value?.scrollTo(0, 0), { flush: 'post' })
       </div>
     </div>
 
-    <div class="relative min-h-96 flex-1 bg-elevated @min-[72rem]:min-h-0">
+    <div class="relative min-h-96 flex-1 bg-elevated lg:@min-[46rem]:min-h-0">
       <div
         v-if="error"
         class="space-y-2 p-4 text-sm text-muted"

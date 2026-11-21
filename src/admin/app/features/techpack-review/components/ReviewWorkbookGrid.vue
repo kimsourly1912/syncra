@@ -52,7 +52,7 @@ onMounted(scrollToSelection)
 <template>
   <div
     ref="viewport"
-    class="h-96 min-h-0 flex-1 overflow-auto bg-default @min-[72rem]:h-auto"
+    class="h-96 min-h-0 flex-1 overflow-auto bg-default lg:@min-[46rem]:h-auto"
     tabindex="0"
     :aria-label="`${sheet.name} workbook preview`"
   >

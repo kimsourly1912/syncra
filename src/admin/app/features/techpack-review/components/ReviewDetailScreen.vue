@@ -1,7 +1,6 @@
 <script setup lang="ts">
 import { provideReviewDetail } from '../composables/useReviewDetail'
 import ReviewActionsBar from './ReviewActionsBar.vue'
-import ReviewFindingsList from './ReviewFindingsList.vue'
 import ReviewSourcePanel from './ReviewSourcePanel.vue'
 import ReviewWorkbookPanel from './ReviewWorkbookPanel.vue'
 
@@ -107,10 +106,9 @@ const metadata = computed(() => review.value ? `Company ${review.value.companyId
         aria-label="TechPack review workspace"
         class="@container flex min-w-0 flex-col gap-3 lg:min-h-0 lg:flex-1"
       >
-        <div class="grid gap-3 lg:min-h-0 lg:flex-1 lg:overflow-y-auto @min-[46rem]:grid-cols-2 @min-[72rem]:auto-rows-[minmax(26rem,1fr)] @min-[72rem]:grid-cols-[minmax(0,5fr)_minmax(0,6fr)_minmax(17rem,4fr)]">
+        <div class="grid gap-3 lg:min-h-0 lg:flex-1 lg:overflow-y-auto @min-[46rem]:grid-cols-[minmax(0,5fr)_minmax(0,6fr)] lg:@min-[46rem]:auto-rows-[minmax(26rem,1fr)]">
           <ReviewSourcePanel />
           <ReviewWorkbookPanel />
-          <ReviewFindingsList class="@min-[46rem]:col-span-2 @min-[72rem]:col-span-1" />
         </div>
         <ReviewActionsBar />
       </section>

@@ -22,7 +22,7 @@ src/admin/app/
 │   ├── auth/                    # sign-in, sign-out, forgot, reset forms: composables/, schemas/, components/, models/, index.ts
 │   ├── session/                 # who is signed in: useSession (+ renewSession), useSessionSync, staff-profile model, index.ts
 │   └── techpack-review/         # the reference feature
-│       ├── components/          # ReviewQueueScreen; ReviewDetailScreen + Source, Workbook, Findings, WorkbookGrid, WorkbookReplacement, ActionsBar
+│       ├── components/          # ReviewQueueScreen; ReviewDetailScreen + Source, Workbook, issue menu and editor, inspection details, WorkbookGrid, WorkbookReplacement, ActionsBar
 │       ├── composables/         # useReviewQueue; useReview, useSourcePreview, useDraftInspection, useWorkbookReview, useReviewActions → useReviewDetail
 │       ├── models/ utils/       # response models; pure helpers (findings)
 │       └── index.ts

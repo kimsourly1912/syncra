@@ -1,6 +1,9 @@
 <script setup lang="ts">
 import type { DropdownMenuItem } from '@nuxt/ui'
 import { useReviewDetail } from '../composables/useReviewDetail'
+import ReviewInspectionDetails from './ReviewInspectionDetails.vue'
+import ReviewIssueEditor from './ReviewIssueEditor.vue'
+import ReviewIssuesMenu from './ReviewIssuesMenu.vue'
 import ReviewWorkbookGrid from './ReviewWorkbookGrid.vue'
 import ReviewWorkbookReplacement from './ReviewWorkbookReplacement.vue'
 
@@ -33,26 +36,29 @@ const hasCheckedSheet = computed(() => sheets.value.some(sheet => sheet.gridHead
         />
         Draft workbook
       </h2>
-      <div class="flex items-center gap-1">
-        <UButton
-          label="Download workbook"
-          icon="lucide:download"
-          color="neutral"
-          variant="ghost"
-          size="sm"
-          :disabled="busy"
-          @click="actions.download('draft')"
-        />
-        <UDropdownMenu :items="workbookMenu">
+      <div class="flex flex-wrap items-center gap-1">
+        <ReviewIssuesMenu />
+        <div class="ms-auto flex shrink-0 items-center gap-1">
           <UButton
-            aria-label="Workbook actions"
-            icon="lucide:ellipsis"
+            label="Download workbook"
+            icon="lucide:download"
             color="neutral"
             variant="ghost"
             size="sm"
             :disabled="busy"
+            @click="actions.download('draft')"
           />
-        </UDropdownMenu>
+          <UDropdownMenu :items="workbookMenu">
+            <UButton
+              aria-label="Workbook actions"
+              icon="lucide:ellipsis"
+              color="neutral"
+              variant="ghost"
+              size="sm"
+              :disabled="busy"
+            />
+          </UDropdownMenu>
+        </div>
       </div>
     </header>
 
@@ -81,32 +87,40 @@ const hasCheckedSheet = computed(() => sheets.value.some(sheet => sheet.gridHead
       />
     </div>
 
+    <ReviewIssueEditor
+      v-if="selection"
+      :finding="selection"
+    />
+
     <div
       v-if="sheet"
       class="flex min-h-0 flex-1 flex-col"
     >
-      <div
-        class="flex items-center gap-1 overflow-x-auto border-b border-default px-2 py-1"
-        aria-label="Workbook sheets"
-        role="group"
-      >
-        <UButton
-          v-for="(tab, index) in sheets"
-          :key="tab.name"
-          :label="tab.name"
-          :variant="sheetIndex === index ? 'soft' : 'ghost'"
-          :color="sheetIndex === index ? 'primary' : 'neutral'"
-          :aria-pressed="sheetIndex === index"
-          size="sm"
-          class="shrink-0"
-          @click="workbook.selectSheet(index)"
-        />
-        <span
-          v-if="hasCheckedSheet && sheet.gridHeaderRow == null"
-          class="shrink-0 px-2 text-xs text-muted"
+      <div class="flex items-center justify-between gap-2 border-b border-default px-2 py-1">
+        <div
+          class="flex min-w-0 items-center gap-1 overflow-x-auto"
+          aria-label="Workbook sheets"
+          role="group"
         >
-          No size grid checks on this sheet
-        </span>
+          <UButton
+            v-for="(tab, index) in sheets"
+            :key="tab.name"
+            :label="tab.name"
+            :variant="sheetIndex === index ? 'soft' : 'ghost'"
+            :color="sheetIndex === index ? 'primary' : 'neutral'"
+            :aria-pressed="sheetIndex === index"
+            size="sm"
+            class="shrink-0"
+            @click="workbook.selectSheet(index)"
+          />
+          <span
+            v-if="hasCheckedSheet && sheet.gridHeaderRow == null"
+            class="shrink-0 px-2 text-xs text-muted"
+          >
+            No size grid checks on this sheet
+          </span>
+        </div>
+        <ReviewInspectionDetails />
       </div>
       <ReviewWorkbookGrid
         :sheet="sheet"
@@ -118,7 +132,7 @@ const hasCheckedSheet = computed(() => sheets.value.some(sheet => sheet.gridHead
     </div>
     <div
       v-else
-      class="min-h-72 flex-1 p-4 text-sm text-muted @min-[72rem]:min-h-0"
+      class="min-h-72 flex-1 p-4 text-sm text-muted lg:@min-[46rem]:min-h-0"
       role="status"
     >
       <p v-if="pending">
@@ -129,6 +143,10 @@ const hasCheckedSheet = computed(() => sheets.value.some(sheet => sheet.gridHead
       </p>
     </div>
 
+    <ReviewInspectionDetails
+      v-if="inspection && !sheet"
+      class="m-2 self-start"
+    />
     <ReviewWorkbookReplacement v-model:open="replacementOpen" />
   </section>
 </template>

@@ -1,26 +1,26 @@
 <script setup lang="ts">
 import { useReviewDetail } from '../composables/useReviewDetail'
 
-const { workbook, actions } = useReviewDetail()
+const { workbook, inspection, actions } = useReviewDetail()
 const { staged, discardEdits } = workbook
 const { confirmed, canEdit, canConfirm, approvalBlocker, savingCorrections, approving } = actions
 const canApprove = computed(() => canConfirm.value && confirmed.value)
-const reason = computed(() => approvalBlocker.value || (confirmed.value ? '' : 'Check the verification box to enable approval.'))
 const reasonId = useId()
 </script>
 
 <template>
-  <footer class="shrink-0 space-y-2 rounded-lg border border-default bg-default px-3 py-2.5">
-    <div
-      v-if="staged.length"
-      class="flex flex-wrap items-center justify-between gap-2 border-b border-default pb-2"
-    >
-      <span
+  <footer class="flex min-h-14 shrink-0 flex-wrap items-center justify-between gap-2 rounded-lg border border-default bg-default px-3 py-2">
+    <template v-if="staged.length || savingCorrections">
+      <p
         aria-live="polite"
-        class="text-sm font-semibold text-highlighted"
+        class="flex items-center gap-2 text-sm font-semibold text-highlighted"
       >
-        {{ staged.length }} unsaved {{ staged.length === 1 ? 'correction' : 'corrections' }}
-      </span>
+        <UIcon
+          name="lucide:circle"
+          class="size-3 shrink-0 fill-primary text-primary"
+        />
+        {{ savingCorrections ? 'Saving corrections…' : `${staged.length} unsaved ${staged.length === 1 ? 'correction' : 'corrections'}` }}
+      </p>
       <div class="flex flex-wrap gap-2">
         <UButton
           label="Discard changes"
@@ -30,33 +30,34 @@ const reasonId = useId()
           @click="discardEdits"
         />
         <UButton
-          label="Save corrections"
-          icon="lucide:save"
+          :label="staged.length > 1 ? 'Save corrections' : 'Save correction'"
           :disabled="!canEdit"
           :loading="savingCorrections"
           @click="actions.saveCorrections"
         />
       </div>
-    </div>
+    </template>
 
-    <div class="flex flex-wrap items-end justify-between gap-2">
-      <div class="space-y-1">
-        <p
-          v-if="reason"
-          :id="reasonId"
-          role="status"
-          class="text-sm"
-          :class="approvalBlocker ? 'font-medium text-highlighted' : 'text-muted'"
-        >
-          {{ reason }}
-        </p>
-        <UCheckbox
-          v-model="confirmed"
-          label="I verified the critical values and required rows and sizes against the source PDF."
-          :disabled="!canConfirm"
-          :aria-describedby="reason ? reasonId : undefined"
+    <template v-else>
+      <UCheckbox
+        v-if="canConfirm || approving"
+        v-model="confirmed"
+        label="I verified the critical values and required rows and sizes against the source PDF."
+        :disabled="!canConfirm"
+      />
+      <p
+        v-else
+        :id="reasonId"
+        role="status"
+        class="flex items-center gap-2 text-sm text-highlighted"
+      >
+        <UIcon
+          v-if="inspection.blocksApproval.value"
+          name="lucide:lock"
+          class="size-4 shrink-0 text-error"
         />
-      </div>
+        {{ approvalBlocker }}
+      </p>
       <UButton
         label="Approve and release"
         icon="lucide:check"
@@ -64,9 +65,9 @@ const reasonId = useId()
         :variant="canApprove ? 'solid' : 'soft'"
         :disabled="!canApprove"
         :loading="approving"
-        :aria-describedby="reason ? reasonId : undefined"
+        :aria-describedby="canConfirm || approving ? undefined : reasonId"
         @click="actions.approve"
       />
-    </div>
+    </template>
   </footer>
 </template>
