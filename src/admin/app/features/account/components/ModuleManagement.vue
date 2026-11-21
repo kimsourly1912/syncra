@@ -10,10 +10,10 @@
       <section class="flex gap-4 sm:flex-row flex-col">
         <section class="flex items-start justify-between gap-4">
           <div class="size-16 min-w-16 rounded-lg flex items-center justify-center bg-default">
-            <NuxtImg
+            <img
               src="/img/doc-ai.png"
               class="w-full"
-            />
+            >
           </div>
           <UBadge
             variant="subtle"

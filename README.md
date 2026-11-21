@@ -22,16 +22,16 @@ pnpm install
 
 ### Environment files
 
-Create an environment file in the directory of each app you need to run. The development commands above read `.env.dev`. Use `.env.local` with `pnpm dev:web:local`, `pnpm dev:portal:local`, or `pnpm dev:admin:local` when you want your own local configuration.
+Create an environment file in the directory of each app you need to run. The Web and Portal development commands above read `.env.dev`; Admin's reads `.env`. Use `.env.local` with `pnpm dev:web:local`, `pnpm dev:portal:local`, or `pnpm dev:admin:local` when you want your own local configuration.
 
-- Start with the [Portal environment example](src/portal/.env.example) for Portal. For Web and Admin, use the variable names in the [Web configuration](src/web/nuxt.config.ts) and [Admin configuration](src/admin/nuxt.config.ts).
-- Use the API URL and settings for your local or test environment. Portal and Admin can use a local API proxy when configured. Keep credentials and real customer files outside the repository.
+- Start with the [Portal environment example](src/portal/.env.example) for Portal and the [Admin environment example](src/admin/.env.example) for Admin. For Web, use the variable names in the [Web configuration](src/web/nuxt.config.ts).
+- Use the API URL and settings for your local or test environment. Portal can use a local API proxy when configured; Admin always proxies the API in development. Keep credentials and real customer files outside the repository.
 
 ### Run an app
 
 Run its development command from the repository root. For the customer Portal, use `pnpm dev:portal` and open [http://localhost:444](http://localhost:444).
 
-For internal Admin, use `pnpm dev:admin` and open [http://localhost:555](http://localhost:555).
+For internal Admin, use `pnpm dev:admin` and open [http://localhost:555](http://localhost:555). It also prints a Network URL you can open from a phone on the same Wi-Fi.
 
 The apps connect to a separately configured API. A loaded page verifies that the frontend is running. Sign-in, extraction, and other API-backed flows need a reachable service and an appropriate test account.
 

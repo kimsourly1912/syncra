@@ -1,8 +1,32 @@
 import { routeRules } from './app/constants/route'
 
+// The API only allows CORS from deployed *.syncra.app origins and scopes its session
+// cookies to .syncra.app, so in `nuxt dev` the browser calls this same-origin path and
+// Nitro forwards it to NUXT_PUBLIC_API_URL. Not `/api`: Nitro serves /api/_nuxt_icon.
+const devApiProxyPath = '/_api'
+const apiURL = process.env.NUXT_PUBLIC_API_URL || ''
+
 // https://nuxt.com/docs/api/configuration/nuxt-config
 export default defineNuxtConfig({
-  modules: ['@nuxt/eslint', '@nuxt/image', '@nuxt/ui'],
+  modules: ['@nuxt/eslint', '@nuxt/ui', '@nuxt/test-utils/module'],
+  $development: {
+    runtimeConfig: {
+      public: {
+        apiProxyPath: devApiProxyPath,
+      },
+    },
+    nitro: {
+      devProxy: {
+        [devApiProxyPath]: {
+          target: apiURL,
+          changeOrigin: true,
+          // The browser's localhost/LAN Origin would fail the API's CORS check.
+          headers: { origin: apiURL && new URL(apiURL).origin },
+          cookieDomainRewrite: { '*': '' },
+        },
+      },
+    },
+  },
   ssr: false,
   devtools: { enabled: true },
   app: {
@@ -24,27 +48,16 @@ export default defineNuxtConfig({
   spaLoadingTemplate: true,
   runtimeConfig: {
     public: {
-      imageURL: process.env.NUXT_PUBLIC_IMAGE_URL || '',
-      apiURL: process.env.PROXY_API_PATH || process.env.NUXT_PUBLIC_API_URL || '',
+      // Overridden at runtime by NUXT_PUBLIC_API_URL.
+      apiURL,
+      apiProxyPath: '',
     },
   },
   routeRules,
   devServer: {
-    host: '',
     port: 555,
   },
   compatibilityDate: '2025-07-15',
-  nitro: {
-    devProxy: process.env.PROXY_API_PATH
-      ? {
-          [process.env.PROXY_API_PATH]: {
-            changeOrigin: true,
-            cookieDomainRewrite: { '.syncra.app': '' },
-            target: process.env.PROXY_API_TARGET || process.env.NUXT_PUBLIC_API_URL,
-          },
-        }
-      : undefined,
-  },
   eslint: {
     config: {
       stylistic: true,
@@ -53,11 +66,8 @@ export default defineNuxtConfig({
   },
   icon: {
     provider: 'server',
-    customCollections: [
-      {
-        prefix: 'app',
-        dir: './app/assets/icons/app',
-      },
-    ],
+    clientBundle: {
+      scan: true,
+    },
   },
 })

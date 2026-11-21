@@ -1,20 +1,20 @@
-@import "tailwindcss";
-@import "@nuxt/ui";
+@import 'tailwindcss';
+@import '@nuxt/ui';
 
 @theme static {
-  --color-brand-50:  #ECF9F7;
-  --color-brand-100: #D2F0EC;
-  --color-brand-200: #A7E1DA;
-  --color-brand-300: #7AD2C7;
-  --color-brand-400: #56C2B5;
-  --color-brand-500: #4BB8AB;
-  --color-brand-600: #3FA196;
+  --color-brand-50: #ecf9f7;
+  --color-brand-100: #d2f0ec;
+  --color-brand-200: #a7e1da;
+  --color-brand-300: #7ad2c7;
+  --color-brand-400: #56c2b5;
+  --color-brand-500: #4bb8ab;
+  --color-brand-600: #3fa196;
   --color-brand-700: #338378;
-  --color-brand-800: #28665E;
-  --color-brand-900: #1F4D47;
-  --color-brand-950: #0E2F2B;
+  --color-brand-800: #28665e;
+  --color-brand-900: #1f4d47;
+  --color-brand-950: #0e2f2b;
 }
 
 @theme {
-  --font-sans: "League Spartan", sans-serif;
+  --font-sans: 'League Spartan', sans-serif;
 }

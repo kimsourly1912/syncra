@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { tableTheme } from '@/theme/table'
 import type { TableColumn } from '@nuxt/ui'
-import { UBadge, UButton, NuxtImg } from '#components'
+import { UBadge, UButton } from '#components'
 import { useSortable } from '@vueuse/integrations/useSortable'
 
 interface Data {
@@ -44,7 +44,7 @@ const columns = computed(() => {
         return h('div', {
           class: 'size-14 rounded-lg bg-muted flex items-center justify-center',
         },
-        h((NuxtImg as unknown as string), { src: icon, width: 56 }))
+        h('img', { src: icon, width: 56 }))
       },
     },
     {

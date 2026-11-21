@@ -17,7 +17,7 @@ const open = reactive<OpenItem>({
 const overviewItems: CardBoxItem[] = [
   {
     label: 'Account Registered',
-    icon: 'lucide:building-2',
+    icon: 'lucide:building-complex',
     value: '100',
     color: 'primary',
   },

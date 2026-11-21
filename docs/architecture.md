@@ -75,6 +75,6 @@ Run `pnpm install` from the root, using the Node and pnpm versions pinned in [`p
 | Portal | `pnpm dev:portal` | `pnpm dev:portal:local` | 444 | `@syncra/portal` |
 | Admin | `pnpm dev:admin` | `pnpm dev:admin:local` | 555 | `admin` |
 
-Portal and Admin can proxy the API in development. Set `PROXY_API_PATH` and `PROXY_API_TARGET` and the `nitro.devProxy` in each app's `nuxt.config.ts` handles it. Sign-in, extraction, and other API-backed flows need a reachable service and a suitable test account.
+Portal can proxy the API in development: set `PROXY_API_PATH` and `PROXY_API_TARGET` and the `nitro.devProxy` in its `nuxt.config.ts` handles it. Admin always proxies in development: it reads `.env`, its dev server forwards `/_api` to `NUXT_PUBLIC_API_URL`, and `pnpm dev:admin` listens on the network (`--public`) so you can open it from a phone on the same Wi-Fi ([Admin data access](../src/admin/docs/data-access.md)). Sign-in, extraction, and other API-backed flows need a reachable service and a suitable test account.
 
 Each app's `AGENTS.md` lists its checks, and its `docs/testing.md` explains them.
