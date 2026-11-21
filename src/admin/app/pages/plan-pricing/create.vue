@@ -2,7 +2,7 @@
 </script>
 
 <template>
-  <UDashboardPanel>
+  <UDashboardPanel class="page-narrow">
     <template #header>
       <UDashboardNavbar title="Create New Plan">
         <template #leading>

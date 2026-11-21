@@ -50,7 +50,7 @@ Screen tests mount components with a mocked API. They don't cover real layout, r
 
 | Area | Check |
 | --- | --- |
-| Shell | Sidebar collapses on desktop and opens as a slideover below `lg`. Ctrl/⌘+K and the Search button open page search. The staff menu shows the signed-in email and logs out. Light and dark both work, and a fresh browser starts in light. |
+| Shell | Sidebar collapses on desktop and opens as a slideover below `lg`. Ctrl/⌘+K and the Search button open page search. The staff menu shows the signed-in email and logs out. Light and dark both work, and a fresh browser starts in light. On a 1920px+ screen the title, toolbar, and content line up, centered at 1280px (forms 896px). A detail or create page keeps its section highlighted in the sidebar. At 390px the toolbar wraps and status tabs scroll. |
 | Wired lists (Account Management `/`, Lead Inquiry, Sale Requests) | Totals load, and their failure shows its own error. Search (typing, Enter, Clear; Back skips the typing), status tabs, the sale request type filter, rows per page, and paging all update the URL and the request. Clear filters on a filtered empty list. The error state with Retry. A name opens the account or lead. |
 | Static account screens | Account Detail: switching tabs (`?tab=` updates, Back leaves the page). It uses static data. |
 | TechPack review queue | Switch In Review and Reviewed, change pages, land on an empty page and get sent back, see the error state with Retry when the API fails, and Refresh (the list dims under a thin bar) |

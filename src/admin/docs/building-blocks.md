@@ -64,3 +64,11 @@ Imported explicitly, not auto-imported.
 | Export | File | Use for |
 | --- | --- | --- |
 | `saveFile(blob, filename)` | `utils/file.ts` | Hand a downloaded file to the browser |
+| `isSectionActive(path, to, also?)` | `utils/navigation.ts` | Whether a sidebar link is the current page's section (its page, pages under it, or under `also`). The layout uses it. |
+
+## CSS utilities
+
+| Class | File | Use for |
+| --- | --- | --- |
+| `page-narrow` | `assets/css/tailwind.css` | On a form or settings page's `UDashboardPanel`: caps the page at 56rem instead of 80rem ([page width](ui.md#page-width)) |
+| `scrollbar-none` | `assets/css/tailwind.css` | A row that scrolls sideways with no visible scrollbar |

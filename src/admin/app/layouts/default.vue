@@ -6,6 +6,12 @@ import { useSession } from '@/features/session'
 const signOut = useSignOut()
 const { staff } = useSession()
 const router = useRouter()
+const route = useRoute()
+
+/** Other paths whose pages belong to a sidebar section, besides the pages under its own link. */
+const SECTION_PATHS: Record<string, string[]> = {
+  '/': ['/account'],
+}
 
 const menuItems: NavigationMenuItem[] = [
   {
@@ -73,6 +79,11 @@ const routePaths = new Set(router.getRoutes().map(route => route.path))
 const links = menuItems.filter(item => item.type === 'label' || routePaths.has(item.to as string))
 const visibleItems = links.filter((item, index) => item.type !== 'label' || (links[index + 1] && links[index + 1]!.type !== 'label'))
 
+// The section stays highlighted on the pages under it (a review, an account, a create form).
+const sidebarItems = computed(() => visibleItems.map(item => (typeof item.to === 'string'
+  ? { ...item, active: isSectionActive(route.path, item.to, SECTION_PATHS[item.to]) }
+  : item)))
+
 // Ctrl/⌘+K or the sidebar's Search button: go to any page in the sidebar. Nuxt UI adds the
 // light/dark commands.
 const searchGroups: CommandPaletteGroup[] = [{
@@ -123,7 +134,7 @@ const staffMenu = computed<DropdownMenuItem[][]>(() => [
           class="bg-transparent ring-default"
         />
         <UNavigationMenu
-          :items="visibleItems"
+          :items="sidebarItems"
           :collapsed
           orientation="vertical"
           tooltip

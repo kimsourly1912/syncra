@@ -4,10 +4,17 @@ Admin is a dense desktop-first staff console. Use Nuxt UI components and Admin's
 
 ## Foundation
 
-- **Colors.** `app/app.config.ts` maps `primary` to the `brand` palette (`--color-brand-*` in `app/assets/css/tailwind.css`). Every other color is the Nuxt UI default. Use semantic utilities (`text-highlighted`, `text-muted`, `border-default`, `ring-default`). Don't add new hex values.
+- **Colors.** `app/app.config.ts` maps `primary` to the `brand` palette (`--color-brand-*` in `app/assets/css/tailwind.css`). Every other color is the Nuxt UI default. Use semantic utilities (`text-highlighted`, `text-muted`, `border-default`, `ring-default`). Don't add new hex values. **Light mode's primary is the 800 shade** (`--ui-primary` in `tailwind.css`): brand-500, Nuxt UI's default, is 2.4:1 on white, under WCAG AA's 4.5:1. brand-800 passes on white, on its own tint, and on `bg-elevated`. Dark mode keeps the 400 shade. Change the shade there, never per page.
 - **Light and dark.** `colorMode` in `nuxt.config.ts` starts every browser in light (`preference` and `fallback` are `light`, so the system setting is ignored) until staff pick a mode with `UColorModeButton` (sidebar footer, sign-in pages) or the search palette. Use semantic tokens (`bg-default`, `bg-elevated`, `text-highlighted`, `border-default`) so both modes work; don't add `bg-white` or `dark:` variants. The one exception is the TechPack source page, which stays white because it shows a paper PDF page.
 - **Font.** League Spartan (`--font-sans`).
-- **Nuxt UI defaults.** Use components with their default theme. There are no shared `:ui` objects or app-wide component overrides; pass `:ui` only for a one-off layout need.
+- **Nuxt UI defaults, plus a few app-wide layout rules.** Use components with their default theme. `app/app.config.ts` is the only place for app-wide overrides, and it holds only layout and overlay rules ([0012](../../../docs/decisions/0012-admin-page-width-and-layout-overrides.md)):
+  - the page gutter on `UDashboardNavbar`, `UDashboardToolbar`, and the panel body
+  - the toolbar wrapping on phones
+  - tab rows scrolling instead of cutting labels
+  - a black dim behind modals and slideovers
+
+  Pages never override color, size, radius, or shadow. There are no shared `:ui` objects; pass `:ui` only for a one-off layout need.
+- **Scrollbars** are thin everywhere (`tailwind.css`). `scrollbar-none` hides one on a row that scrolls sideways.
 - **Icons.** Lucide only (`lucide:*`, from `@iconify-json/lucide`). Write icon names as literal strings: `clientBundle.scan` bundles the icons it finds in the source at build time. Don't add custom SVG collections; pick an Iconify icon instead.
 
 ## Page anatomy
@@ -16,7 +23,7 @@ The `default` layout is `UDashboardGroup` with a collapsible `UDashboardSidebar`
 
 ```vue
 <template>
-  <UDashboardPanel>
+  <UDashboardPanel class="page-narrow">                    <!-- forms and settings only -->
     <template #header>
       <UDashboardNavbar title="Create New Product">
         <template #leading>                                <!-- detail and form pages only -->
@@ -42,7 +49,23 @@ The `default` layout is `UDashboardGroup` with a collapsible `UDashboardSidebar`
 
 The route file owns the panel, and feature screens (TechPack review) render inside `#body`. The exception is a list screen with a toolbar (Lead Inquiry, Account Management, Sale Requests): it renders the panel itself so the toolbar can bind to its list state. Page-level actions go in through a slot (`AccountListScreen` `#actions`). `UDashboardNavbar` shows its mobile sidebar toggle by itself.
 
-The sidebar (`layouts/default.vue`) has the logo and collapse button in its header, then a `UDashboardSearchButton` and the navigation. Its footer holds the staff menu (the signed-in email and Log Out) and a `UColorModeButton`. Ctrl/⌘+K opens `UDashboardSearch`, which lists every sidebar page plus Nuxt UI's light/dark commands.
+The sidebar (`layouts/default.vue`) has the logo and collapse button in its header, then a `UDashboardSearchButton` and the navigation. Its footer holds the staff menu (the signed-in email and Log Out) and a `UColorModeButton`. Ctrl/⌘+K opens `UDashboardSearch`, which lists every sidebar page plus Nuxt UI's light/dark commands. A section stays highlighted on the pages under it (`/techpack-reviews/101`, `/product/create`) through `isSectionActive`. When a section's pages live elsewhere, list them in the layout's `SECTION_PATHS` (Account Management is `/`, its details are `/account/<id>`).
+
+## Page width
+
+On a wide screen a page's content is centered and capped, so lines stay short. The navbar, the toolbar, and the body share one side padding, `--page-gutter` (`tailwind.css`, applied in `app.config.ts`), so the title, the search box, and the content line up on one edge. Borders and the toolbar still run the full width.
+
+| Page | Width | How |
+| --- | --- | --- |
+| Lists, tables, queues, detail pages (the default) | 80rem (1280px) | nothing |
+| Forms and settings (`product/create`, `plan-pricing/create`, `hero`, `setting`) | 56rem (896px) | `class="page-narrow"` on the page's `UDashboardPanel` |
+
+Pages set no `max-w-*` on their content and no breakpoints for width. Below the cap the side padding is Nuxt UI's own (1rem, 1.5rem from `sm`). The width is the panel's, so it holds with the sidebar open or collapsed.
+
+## Tabs and toolbars
+
+- A tab row that doesn't fit scrolls sideways with no visible scrollbar; a label is never cut or shortened.
+- On a phone, `UDashboardToolbar` wraps instead of scrolling: the search on one line, filters on the next. Give fixed-width controls a width that can shrink (`w-full max-w-sm`).
 
 
 ## Page patterns
@@ -77,6 +100,7 @@ A record's **name opens it**: a `ULink` (or a `UButton variant="link"` for an ov
 - [ ] Loading, refreshing, empty, error, and pending states all render.
 - [ ] It reads well in light and dark: semantic tokens only, no `bg-white` or hex.
 - [ ] Records open from their name, not a separate Manage column.
+- [ ] On a wide screen the title, toolbar, and content line up on one centered edge: no `max-w-*` on the content; a form or settings page has `page-narrow`.
 - [ ] It works at 1280px and up, and the sidebar collapses on desktop and opens as a slideover below `lg` without breaking the layout.
 - [ ] Keyboard focus is visible, icon-only buttons have an `aria-label`, and record actions show their disabled state.
 - [ ] Destructive actions use `<ModalConfirm>` and name the record.

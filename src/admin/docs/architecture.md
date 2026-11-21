@@ -30,7 +30,7 @@ src/admin/app/
 │   └── alert/ card/ input/ list/ modal/ # AlertApiError, CardStats, InputPassword, InputSearch, List* (Details, StatusTabs, Pagination, EmptyState, Refresh), ModalConfirm; the rest is Nuxt UI
 ├── composables/                 # useApiQuery, useApiMutation, useListQuery, useUrlTab, useRefreshIndicator, useAppToast
 ├── api/                         # '@/api': client, errors, session recovery, contract helpers, generated/ (types, schemas, endpoint map; never edit)
-├── utils/                       # file.ts (saveFile)
+├── utils/                       # file.ts (saveFile), navigation.ts (isSectionActive)
 ├── types/page-meta.d.ts         # the `access` page meta
 ├── middleware/                  # access.global.ts: loads the session, checks `access`
 ├── layouts/                     # default (UDashboardGroup + UDashboardSidebar), auth
@@ -40,7 +40,7 @@ src/admin/app/
 ### What gets imported automatically
 
 - **Components** use Nuxt's default naming, which **includes the folder**: `components/card/CardStats.vue` becomes `<CardStats>`. Every existing file already starts with its folder name, so keep that: `components/modal/ModalConfirm.vue`, not `components/modal/Confirm.vue`.
-- **No `schema/`, `theme/`, `constants/`, or shared `types/`.** Form schemas live in their feature and start from the generated request schema ([forms](forms.md)). Components use Nuxt UI defaults, with no shared `:ui` objects. A component's prop types live in its own `<script lang="ts">` block. `types/` holds only `page-meta.d.ts`.
+- **No `schema/`, `theme/`, `constants/`, or shared `types/`.** Form schemas live in their feature and start from the generated request schema ([forms](forms.md)). Components use Nuxt UI defaults, with no shared `:ui` objects; the few app-wide layout rules live in `app/app.config.ts`, and the page width and light-mode primary in `app/assets/css/tailwind.css` ([ui](ui.md#foundation), [0012](../../../docs/decisions/0012-admin-page-width-and-layout-overrides.md)). A component's prop types live in its own `<script lang="ts">` block. `types/` holds only `page-meta.d.ts`.
 - Composables and utils are auto-imported. Feature code, models, and `@/api` are imported explicitly.
 - **Session state** is two `useState` keys owned by `features/session` (`useSession`). There's no store library.
 

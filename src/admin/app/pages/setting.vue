@@ -1,5 +1,5 @@
 <template>
-  <UDashboardPanel>
+  <UDashboardPanel class="page-narrow">
     <template #header>
       <UDashboardNavbar title="Setting" />
     </template>

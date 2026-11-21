@@ -12,7 +12,7 @@ const tabs: ListStatusTab<ReviewQueueTab>[] = [
 </script>
 
 <template>
-  <section class="max-w-5xl space-y-4">
+  <section class="space-y-4">
     <div class="flex items-center justify-between gap-3 border-b border-default">
       <ListStatusTabs
         :model-value="tab"
