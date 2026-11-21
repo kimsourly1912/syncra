@@ -5,7 +5,7 @@ Admin uses Vitest, with the projects defined in `vitest.config.ts`:
 | Project | Files | Environment | Use for |
 | --- | --- | --- | --- |
 | `unit` | `test/unit/*.test.ts` | Node | Pure code: the API client, errors, and session recovery (`api-client.test.ts`), contract helpers, feature utils |
-| `nuxt` | `test/nuxt/*.test.ts` | Nuxt (`@nuxt/test-utils`, happy-dom) | Services, composables, the route guard, and mounted screens (`session.test.ts`, `auth-forms.test.ts`, `techpack-review-*.test.ts`) |
+| `nuxt` | `test/nuxt/*.test.ts` | Nuxt (`@nuxt/test-utils`, happy-dom) | Composables, the query and mutation helpers, the route guard, and mounted screens (`api-composables.test.ts`, `session.test.ts`, `auth-forms.test.ts`, `techpack-review-screens.test.ts`) |
 | `e2e` | `test/e2e/*.test.ts` | Node | None yet |
 
 ## Commands
@@ -34,8 +34,9 @@ pnpm dev:admin
 
 ## Writing tests
 
-- **Mock the transport, not the service.** `fakeApi({ 'GET admin/…': ok(data) })` from `test/fake-api.ts` replaces only the HTTP transport, so tests run the real client, envelopes, models, and errors. Unknown requests fail. `test/nuxt/techpack-review-service.test.ts` is the reference.
-- **Screens:** mount them with `mountSuspended`, answer each endpoint through `fakeApi`, and assert the visible states: data, a refused request, and a contract error. `test/nuxt/techpack-review-screens.test.ts` is the reference.
+- **Mock the transport only.** `fakeApi({ 'GET /admin/docai/techpack-reviews/101': ok(data) })` from `test/fake-api.ts` replaces the HTTP transport (keys use the filled-in path), so tests run the real client, envelopes, models, and errors. Unknown requests fail.
+- **Screens:** mount them with `mountSuspended`, answer each endpoint through `fakeApi`, drive them through the UI (click, then `flushPromises()`), and assert the visible states and the requests sent. Call `clearNuxtData()` in `beforeEach`: queries share data by key across tests. `test/nuxt/techpack-review-screens.test.ts` is the reference.
+- **A composable on its own:** run it inside a mounted component (`inComponent` in `test/nuxt/api-composables.test.ts`), because `useApiQuery` needs a component scope.
 - **The session:** reset it in `beforeEach` (`await useSession().load()`, then `clearNuxtState(['session:status', 'session:staff'])`). Spy on the real router (`vi.spyOn(useRouter(), 'push')`); mocking `useRouter` breaks the Nuxt boot. `test/nuxt/session.test.ts` is the reference.
 - **Cover the failures** for an action: a `success: false` envelope (`refused(reason)`), a thrown error (`httpError(status)`), and a response that breaks the model.
 - **Use sanitized fixtures** that are shaped like the API response. Never use real customer files, names, or credentials.

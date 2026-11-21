@@ -12,6 +12,7 @@ A decision record explains an architecture or documentation choice that had real
 | [0006](0006-product-evidence-and-standards.md) | Product evidence stays in product docs; standards stay prescriptive | Accepted |
 | [0007](0007-generated-api-contract.md) | Admin generates its API contract from OpenAPI and parses responses into feature models | Accepted. Envelope parsing moved into the client by 0008. |
 | [0008](0008-admin-api-client-and-session.md) | Admin API client with one failure path, a session feature, and page-meta route access | Accepted. Admin only. |
+| [0009](0009-admin-typed-endpoints-and-query-toolkit.md) | Admin endpoints typed from the spec, no service layer, and query, mutation, and list helpers | Accepted. Admin only. |
 
 ## Template
 

@@ -1,7 +1,7 @@
-import { ApiError } from '@/api'
+import { api, ApiError } from '@/api'
 import type { Api } from '@/api'
+import { staffProfileModel } from '../models/staff-profile'
 import type { StaffProfile } from '../models/staff-profile'
-import * as sessionService from '../services/session.service'
 import { SESSION_PATHS } from '../utils/paths'
 
 export type SessionStatus = 'unknown' | 'signed-in' | 'signed-out'
@@ -19,6 +19,14 @@ let announce: ((event: SessionEvent) => void) | undefined
 
 export function setSessionAnnouncer(fn: typeof announce) {
   announce = fn
+}
+
+/**
+ * Renews the session cookies; the API client calls it on a 401. Every expired request waits on
+ * it, so it times out instead of hanging. `auth: false`: its own 401 must not start a renewal.
+ */
+export function renewSession() {
+  return api.post('/admin/auth/refresh', { auth: false, timeout: 10_000 })
 }
 
 /**
@@ -42,7 +50,7 @@ export function useSession() {
   /** Loads the profile once. A profile that can't be loaded, for any reason, means signed out. */
   function load() {
     if (status.value !== 'unknown') return Promise.resolve()
-    loading ??= sessionService.getMe()
+    loading ??= api.get('/admin/users/me/profile', { model: staffProfileModel })
       .then((profile) => {
         staff.value = profile
         status.value = 'signed-in'
@@ -67,7 +75,8 @@ export function useSession() {
 
   /** Throws `ApiError` if the API refuses the credentials or the profile can't be loaded. */
   async function signIn(body: Api.SuperAdminLoginRequest) {
-    await sessionService.signIn(body)
+    // Sets the session cookies; `auth: false` so a refused login isn't treated as an expiry.
+    await api.post('/admin/auth/login', { body, auth: false })
     await reload()
     if (!signedIn.value) throw new ApiError({ kind: 'unknown', message: 'Signed in, but your profile could not be loaded. Please try again.' })
     announce?.('signed-in')
@@ -75,7 +84,7 @@ export function useSession() {
 
   /** Throws `ApiError` if the API didn't confirm the logout; the session is then kept. */
   async function signOut() {
-    await sessionService.signOut()
+    await api.post('/admin/auth/logout', { auth: false })
     clear()
     announce?.('signed-out')
     await router.push(SESSION_PATHS.signIn)

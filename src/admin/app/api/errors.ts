@@ -76,15 +76,25 @@ export class ApiError extends Error {
     this.silent = init.silent ?? init.kind === 'aborted'
   }
 
+  /** A failure of the connection or the server, worth trying again; not a refusal. */
+  get retryable() {
+    return this.kind === 'network' || this.kind === 'timeout' || this.kind === 'server'
+  }
+
   /** The same error, marked so no toast or alert shows it. */
   silenced() {
     return new ApiError({ ...this, message: this.message, silent: true, cause: this.cause })
   }
 
-  /** Normalizes anything thrown into an `ApiError`. */
+  /**
+   * Normalizes anything thrown into an `ApiError`. Walks the `cause` chain, because wrappers hide
+   * the original: `useAsyncData` rethrows failures through `createError`.
+   */
   static from(error: unknown, source?: string): ApiError {
-    if (error instanceof ApiError) return error
-    if (isFetchError(error)) return fromFetchError(error, source)
+    for (let e: unknown = error, depth = 0; e && depth < 6; e = (e as { cause?: unknown }).cause, depth++) {
+      if (e instanceof ApiError) return e
+      if (isFetchError(e)) return fromFetchError(e, source)
+    }
     return new ApiError({ kind: 'unknown', source, cause: error })
   }
 }

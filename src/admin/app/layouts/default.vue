@@ -113,40 +113,11 @@ const toggle = reactive({
           preference.sidebar ? 'hidden' : 'flex',
         ]"
       >
-        <ul>
-          <template
-            v-for="(o, idx) in menuItems"
-            :key="idx"
-          >
-            <li
-              v-if="o.type === 'label'"
-              class="py-2 px-4"
-            >
-              <span class="text-highlighted text-sm">{{ o.label }}</span>
-            </li>
-            <li v-if="o.type === 'link'">
-              <ULink
-                :to="o.to"
-                class="border-l-6 inline-flex py-2 px-4 w-full"
-                active-class="border-primary bg-white text-highlighted"
-                inactive-class="border-transparent text-secondary"
-              >
-                {{ o.label }}
-              </ULink>
-            </li>
-          </template>
-        </ul>
-
-        <footer class="p-2.5 flex-1 flex items-end">
-          <UButton
-            label="Log Out"
-            variant="outline"
-            block
-            color="neutral"
-            :loading="signOut.pending.value"
-            @click="signOut.submit"
-          />
-        </footer>
+        <LayoutNavMenu
+          :items="menuItems"
+          :signing-out="signOut.pending.value"
+          @sign-out="signOut.submit"
+        />
       </aside>
 
       <section class="h-[calc(100svh-var(--spacing)*16)] bg-[#F8F9FA] flex-1 px-4 pt-4 pb-10 md:px-6 md:pt-6 md:pb-14 overflow-y-auto">
@@ -157,7 +128,7 @@ const toggle = reactive({
     <UDrawer
       v-model:open="toggle.menu"
       direction="left"
-      title="qweqwe"
+      title="Menu"
       :handle-only="false"
       :handle="false"
       :close-threshold="0"
@@ -165,7 +136,6 @@ const toggle = reactive({
     >
       <template #title />
       <template #description />
-
       <template #content>
         <main class="w-64 flex flex-col">
           <header class="flex items-center gap-2 py-4 px-2">
@@ -176,11 +146,10 @@ const toggle = reactive({
               icon="lucide:menu"
               @click="toggle.menu = !toggle.menu"
             />
-
             <NuxtLink
               to="/"
               class="flex items-center gap-3 text-2xl font-semibold"
-              @click="toggle.menu =false"
+              @click="toggle.menu = false"
             >
               <img
                 src="/img/syncra-logo.png"
@@ -189,45 +158,12 @@ const toggle = reactive({
               Syncra
             </NuxtLink>
           </header>
-
-          <ul>
-            <template
-              v-for="(o, idx) in menuItems"
-              :key="idx"
-            >
-              <li
-                v-if="o.type === 'label'"
-                class="py-2 px-4"
-                @click="toggle.menu = false"
-              >
-                <span class="text-highlighted text-sm">{{ o.label }}</span>
-              </li>
-              <li
-                v-if="o.type === 'link'"
-                @click="toggle.menu = false"
-              >
-                <ULink
-                  :to="o.to"
-                  class="border-l-6 inline-flex py-2 px-4 w-full"
-                  active-class="border-primary bg-white text-highlighted"
-                  inactive-class="border-transparent text-secondary"
-                >
-                  {{ o.label }}
-                </ULink>
-              </li>
-            </template>
-          </ul>
-
-          <footer class="p-2.5 flex-1 flex items-end">
-            <UButton
-              label="Log Out"
-              variant="outline"
-              block
-              color="neutral"
-              :loading="signOut.pending.value"
-              @click="signOut.submit"
-            />
-          </footer>
+          <LayoutNavMenu
+            :items="menuItems"
+            :signing-out="signOut.pending.value"
+            @navigate="toggle.menu = false"
+            @sign-out="signOut.submit"
+          />
         </main>
       </template>
     </UDrawer>

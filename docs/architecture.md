@@ -35,7 +35,7 @@ Feature screen component         renders state, calls actions
    ↓
 Feature composable  use<Feature> owns useAsyncData reads, actions, pending flags, user feedback
    ↓
-Service  <resource>.service.ts   endpoint + method + query/body → typed promise; no UI, no stores
+Service  <resource>.service.ts   endpoint + method + query/body → typed promise; no UI, no stores (Admin: none, 0009)
    ↓
 useAPI / api (app client)        base URL, credentials, 401 → refresh → retry once (Portal and Admin)
    ↓

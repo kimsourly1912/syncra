@@ -114,6 +114,8 @@ export type SupplierListRes = BaseRes<PageRes<SupplierData>>
 
 ## Service files
 
+Portal and Web. Admin has no service files: its composables call a client typed from the spec ([decision 0009](decisions/0009-admin-typed-endpoints-and-query-toolkit.md)).
+
 `src/portal/app/services/glossary.service.ts` is the reference.
 
 ```ts

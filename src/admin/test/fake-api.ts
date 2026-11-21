@@ -6,8 +6,8 @@ type Responder = unknown | ((options: { method?: string, query?: unknown, body?:
 
 /**
  * Replaces the API transport, so tests run the real client, envelopes, and models without a
- * server. Keys are `METHOD endpoint`; a value is the response body, or a function returning
- * it. Throw from a function (or reject) to fail the request. Unknown requests fail loudly.
+ * server. Keys are `METHOD /admin/path` with the path filled in (`GET /admin/docai/techpack-reviews/101`).
+ * A value is the response body, or a function returning it. Throw from a function (or reject) to fail the request. Unknown requests fail loudly.
  */
 export function fakeApi(responses: Record<string, Responder> = {}) {
   const transport = vi.fn(async (endpoint: string, options: { method?: string } = {}) => {

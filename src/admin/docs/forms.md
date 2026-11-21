@@ -25,22 +25,17 @@ function onSubmit(evt: FormSubmitEvent<ISignInSchema>) {
 
 ```ts
 // features/auth/composables/useSignIn.ts (excerpt)
+const signIn = useApiMutation(
+  (form: ISignInSchema) => session.signIn({ email: form.email, password: form.password }),   // maps form → request body
+  { success: 'Welcome to Syncra', error: 'Could not sign in' },                              // toasts, both ways
+)
+
 async function submit(form: ISignInSchema) {
-  pending.value = true
-  try {
-    await session.signIn({ email: form.email, password: form.password })   // maps form → Api.SuperAdminLoginRequest
-    await router.push(redirectTarget(route.query.redirect))
-    toast.success('Welcome to Syncra')
-    return true
-  }
-  catch (e) {                                                             // every failure, as ApiError
-    toast.error(e)
-    return false
-  }
-  finally {
-    pending.value = false
-  }
+  const result = await signIn.execute(form)   // never throws
+  if (result.ok) await router.push(redirectTarget(route.query.redirect))
+  return result.ok
 }
+// returns { pending: signIn.pending, submit }
 ```
 
 ## Where the pieces go

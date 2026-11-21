@@ -26,80 +26,71 @@ Before you touch a static screen, add this to the PR or the feature spec:
 ## Files
 
 ```text
-app/features/product/models/product.ts    defineModel(vProductResponse, { required, optional }) + list model
-app/features/product/services/product.service.ts   PREFIX 'admin', buildEndPoint<Parts>, api.get/post with a model
-app/features/product/schemas/product-form.ts
-app/features/product/composables/useProducts.ts   list (URL state + abort), save, remove
+app/features/product/models/product.ts                 defineModel(vProductResponse, { required, optional }) + list model
+app/features/product/schemas/product-form.ts            form schema + toProductRequest(form)
+app/features/product/composables/useProductList.ts      useListQuery + useApiQuery
+app/features/product/composables/useProductActions.ts   useApiMutation per write
 app/features/product/components/ProductListScreen.vue
 app/features/product/components/ProductForm.vue
-app/pages/product/index.vue               thin: <ProductListScreen />
-app/pages/product/create.vue, [id].vue    thin: <ProductForm :product-id="…" />
+app/pages/product/index.vue                             thin: <ProductListScreen />
+app/pages/product/create.vue, [id].vue                  thin: <ProductForm :product-id="…" />
 ```
 
-Every page is staff-only by default (`middleware/access.global.ts`), so `/product/**` needs no guard setup. Add a sidebar entry in `layouts/default.vue` once the page exists.
+There is no service file: composables call `api` with the spec's paths. Every page is staff-only by default (`middleware/access.global.ts`), so `/product/**` needs no guard setup. The sidebar shows the Product link once a page exists.
 
 ## The list composable
 
 ```ts
-// app/features/product/composables/useProducts.ts (illustrative)
-import { errorMessage } from '@/api'
-import type { Product } from '../models/product'
-import * as productService from '../services/product.service'
+// app/features/product/composables/useProductList.ts (illustrative: confirm the real endpoint first)
+import { api, errorMessage } from '@/api'
+import { productPageModel } from '../models/product'
 
 export function useProductList() {
-  const route = useRoute()
+  const list = useListQuery({ status: ['active', 'archived'] as const })
 
-  const page = computed(() => {
-    const value = Number(route.query.page)
-    return Number.isInteger(value) && value > 0 ? value : 0
-  })
-  const items = ref<Product[]>([])
-  const totalPages = ref(0)
-  const loading = ref(false)
-  const error = ref('')
-  let request: AbortController | undefined
+  const products = useApiQuery(
+    () => `products:list:${list.filters.value.status}:${list.page.value}`,
+    ({ signal }) => api.get('/admin/products', {
+      query: { status: list.filters.value.status, page: list.page.value - 1 },   // the API's page is zero-based
+      signal,
+      model: productPageModel,
+    }),
+  )
+  watch(() => products.data.value?.totalPages, total => total !== undefined && list.clampPage(total))
 
-  async function load() {
-    request?.abort()
-    const current = new AbortController()
-    request = current
-    loading.value = true
-    error.value = ''
-    try {
-      const data = await productService.listProducts({ page: page.value }, current.signal)
-      if (current.signal.aborted) return
-      items.value = data.content
-      totalPages.value = data.totalPages
-    }
-    catch (e) {
-      if (current.signal.aborted) return
-      error.value = errorMessage(e, 'Could not load products.')
-    }
-    finally {
-      if (!current.signal.aborted) loading.value = false
-    }
+  return {
+    ...list,
+    items: computed(() => products.data.value?.content ?? []),
+    totalPages: computed(() => products.data.value?.totalPages ?? 0),
+    loading: products.loading,
+    error: computed(() => (products.error.value ? errorMessage(products.error.value, 'Could not load products.') : '')),
+    refresh: products.refresh,
   }
-
-  function showPage(next: number) {
-    return navigateTo({ path: '/product', query: next > 0 ? { page: String(next) } : {} })
-  }
-
-  watch(page, load)
-  onMounted(load)
-  onBeforeUnmount(() => request?.abort())
-
-  return { page, items, totalPages, loading, error, load, showPage }
 }
 ```
 
-The service takes the `signal` and passes it through: `api.get(endpoint, { query, signal, model: productPageModel })`. `features/techpack-review/services/techpack-review.service.ts` is the working reference.
-
 ## Writes
 
-Follow [data access → writes](data-access.md#writes): the action returns `true` only after a confirmed success, and the caller then navigates (`navigateTo('/product')`) or reloads. For review-style workflows, carry the record's version or draft identity (`draftUuid`) on every save, and reload after each save.
+```ts
+// app/features/product/composables/useProductActions.ts (illustrative)
+export function useProductActions() {
+  const router = useRouter()
+  const create = useApiMutation(
+    (form: IProductFormSchema) => api.post('/admin/products', { body: toProductRequest(form) }),
+    { success: 'Product saved', error: 'Could not save the product', invalidate: ['products'] },
+  )
+
+  async function save(form: IProductFormSchema) {
+    if ((await create.execute(form)).ok) await router.push('/product')
+  }
+  return { save, saving: create.pending }
+}
+```
+
+The action acts only on `result.ok`. For review-style workflows, carry the record's version or draft identity (`draftUuid`) on every save, and reload after each save ([data access → writes](data-access.md#writes-useapimutation)).
 
 ## Verify
 
 - `pnpm --filter admin exec eslint .`, `pnpm --filter admin test`, and `pnpm --filter admin build`
-- Add a `test/nuxt/<feature>-service.test.ts` that answers through `fakeApi` and covers the model, a refused request, and a contract error ([testing](testing.md))
+- Add a `test/nuxt/<feature>-screens.test.ts` that answers through `fakeApi` and covers the model, a refused request, a contract error, and the requests each action sends ([testing](testing.md))
 - In the browser: the list with data, empty, and with a failed request; creating, editing, and deleting a record; and page and filter changes, including Back

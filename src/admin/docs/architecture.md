@@ -14,18 +14,22 @@ src/admin/app/
 │   └── auth/                    # sign-in, forgot, reset (guest)
 ├── features/<feature>/          # one staff workflow (decision 0002)
 │   ├── account/components/      # CompanyInformation, ModuleManagement, TokenManagement, SeatManagement
-│   ├── auth/                    # sign-in, sign-out, forgot, reset forms: composables/, models/, services/, index.ts
-│   ├── session/                 # who is signed in: useSession, useSessionSync, session.service, staff-profile model, index.ts
-│   └── techpack-review/         # components/ (Queue, Detail screens), composables/, models/, services/, utils/, index.ts
+│   ├── auth/                    # sign-in, sign-out, forgot, reset forms: composables/, models/, index.ts
+│   ├── session/                 # who is signed in: useSession (+ renewSession), useSessionSync, staff-profile model, index.ts
+│   └── techpack-review/         # the reference feature
+│       ├── components/          # ReviewQueueScreen; ReviewDetailScreen + Source, Workbook, Findings, WorkbookGrid, ActionsBar panels
+│       ├── composables/         # useReviewQueue; useReview, useSourcePreview, useDraftInspection, useReviewActions → useReviewDetail
+│       ├── models/ utils/       # response models; pure helpers (findings)
+│       └── index.ts
 ├── components/                  # shared, auto-registered WITH folder prefix (see below)
 │   ├── base/ card/ form/ input/ layout/ list/ modal/ table/
-├── composables/                 # useAppToast, useStorage
-├── api/                         # '@/api': client, errors, session recovery, contract helpers, generated/ (never edit)
+├── composables/                 # useApiQuery, useApiMutation, useListQuery, useAppToast, useStorage
+├── api/                         # '@/api': client, errors, session recovery, contract helpers, generated/ (types, schemas, endpoint map; never edit)
 ├── types/components/            # UI prop types (card.ts, list.ts)
 ├── schema/                      # Valibot (auth, base)
 ├── theme/                       # shared :ui objects for Nuxt UI (tab.ts, table.ts)
 ├── constants/                   # regx.ts
-├── utils/                       # api.ts (buildEndPoint), common.ts (tw, IS_DEV), validate.ts
+├── utils/                       # common.ts (tw, IS_DEV), file.ts (saveFile), validate.ts
 ├── types/page-meta.d.ts         # the `access` page meta
 ├── middleware/                  # access.global.ts: loads the session, checks `access`
 ├── layouts/                     # default (staff sidebar shell), auth
@@ -35,7 +39,7 @@ src/admin/app/
 ### What gets imported automatically
 
 - **Components** use Nuxt's default naming, which **includes the folder**: `components/card/CardWrapper.vue` becomes `<CardWrapper>`. Every existing file already starts with its folder name, so keep that: `components/table/TableFilter.vue`, not `components/table/Filter.vue`.
-- Composables and utils are auto-imported. Feature code, services, models, `@/api`, and `theme/` are imported explicitly.
+- Composables and utils are auto-imported. Feature code, models, `@/api`, and `theme/` are imported explicitly.
 - **Session state** is two `useState` keys owned by `features/session` (`useSession`). There's no store library.
 
 ## Layers
@@ -43,10 +47,10 @@ src/admin/app/
 These are the same layers as the rest of Syncra ([workspace architecture](../../../docs/architecture.md#request-flow-inside-an-app)):
 
 ```text
-pages/<route>.vue → features/<f>/components/<F>Screen.vue → features/<f>/composables/use<F>.ts → features/<f>/services/<r>.service.ts → api (@/api)
+pages/<route>.vue → features/<f>/components/<F>Screen.vue → features/<f>/composables/use<F>.ts (useApiQuery / useApiMutation) → api (@/api)
 ```
 
-Services pass a model from `features/<f>/models/`, and the client parses the response into it ([data access](data-access.md#the-api-contract)). The session is a feature too. App wiring (the plugin, the route guard, the layout) uses its public `index.ts`; shared components, composables, and utils still never import features ([0008](../../../docs/decisions/0008-admin-api-client-and-session.md)). TechPack review is the reference. Its route files hold only `definePageMeta` and the screen.
+There are no services: a composable calls `api` with a path from the spec and a model from `features/<f>/models/`, and the client parses the response into it ([data access](data-access.md#the-flow), [0009](../../../docs/decisions/0009-admin-typed-endpoints-and-query-toolkit.md)). The session is a feature too. App wiring (the plugin, the route guard, the layout) uses its public `index.ts`; shared components, composables, and utils still never import features ([0008](../../../docs/decisions/0008-admin-api-client-and-session.md)). TechPack review is the reference. Its route files hold only `definePageMeta` and the screen.
 
 ## Routes, guards, and the sidebar
 
@@ -57,16 +61,17 @@ Services pass a model from `features/<f>/models/`, and the client parses the res
 - **Redirects** go through `redirectTarget` (`features/session`), which accepts only an in-app path that isn't a guest page.
 - **Layouts:** `default` unless the page sets `layout`. Guest pages use `auth`.
 - Links are plain paths (`to="/auth/forgot"`). The session's own targets are `SESSION_PATHS`.
-- The sidebar is the `menuItems` array in `app/layouts/default.vue`, grouped by `type: 'label'` headings: Customer Portal, Website Management, System. Add an entry only when its page exists.
+- The sidebar is the `menuItems` array in `app/layouts/default.vue`, grouped by `type: 'label'` headings, rendered by `LayoutNavMenu` for both the desktop sidebar and the mobile drawer. Links to pages that don't exist are hidden, and so is a heading left empty.
 
 ## Reference code
 
 | Pattern | Reference | Why |
 | --- | --- | --- |
-| API-backed list | `features/techpack-review/composables/useReviewQueue.ts` + `ReviewQueueScreen.vue` | Status and zero-based page come from the URL query and are bounded. Stale requests are aborted with `AbortController`. Loading, empty, and error states are separate. It steps back to the last valid page when the current one is empty. |
-| Stateful writes | `features/techpack-review/composables/useReviewDetail.ts` | Separate flows for inline corrections and replacement workbooks. Each save uses the current `draftUuid` and reloads the inspection. Approval is gated on attestation. |
-| Form with Valibot + pending | `pages/auth/sign-in.vue` + `features/auth/composables/useSignIn.ts` | `UForm` + schema + `FIELD_NAME satisfies SchemaToString`. The composable owns `pending`, and one `catch` shows every failure. |
-| Service + model | `features/auth/services/auth.service.ts`, `features/auth/models/forgot-password.ts` | `buildEndPoint<Parts>` + `api.post(endpoint, { body, model })` with `Api.*` request types |
+| API-backed list | `features/techpack-review/composables/useReviewQueue.ts` + `ReviewQueueScreen.vue` | `useListQuery` (status and 1-based page in the URL) + `useApiQuery` keyed by them. Loading, empty, and error states are separate; a page past the end moves back. |
+| A screen split into panels | `useReviewDetail.ts` + `ReviewDetailScreen.vue` and its panels | Focused composables (record, PDF preview, inspection, actions) composed once and shared with panels through `createInjectionState`. |
+| Writes | `features/techpack-review/composables/useReviewActions.ts` | `useApiMutation` per action: toasts, pending, double-submit guard, `invalidate`. Each save sends the current `draftUuid`; a draft change clears the attestation. |
+| Form with Valibot + pending | `pages/auth/sign-in.vue` + `features/auth/composables/useSignIn.ts` | `UForm` + schema + `FIELD_NAME satisfies SchemaToString`. The composable wraps the request in `useApiMutation` and acts on `result.ok`. |
+| Request + model | `features/auth/composables/useForgotPassword.ts`, `features/auth/models/forgot-password.ts` | `api.post('/admin/auth/forgot-password', { body, auth: false, model })` |
 | Session-aware action | `features/session/composables/useSession.ts` | Shared state in `useState`, one in-flight load, idempotent `end()` |
 | Tabs in the URL | `pages/account/[id].vue` | `UTabs` with `tabTheme`; the `?tab=` value selects the tab |
 | Page layout | `pages/product/create.vue` | `LayoutContent` → `LayoutHeading` (with a `#suffix` for actions) → `CardWrapper` |
@@ -81,6 +86,6 @@ Services pass a model from `features/<f>/models/`, and the client parses the res
 
 ## Known gaps
 
-- The sidebar links to `/sale-request`, `/community`, and `/setting`, but no pages exist for them ([open question](../../../docs/product/open-questions.md#admin)).
+- The sidebar lists `/sale-request`, `/community`, and `/setting`, but no pages exist for them, so they're hidden ([open question](../../../docs/product/open-questions.md#admin)).
 - Account Management, Account Detail, and the module card show static data.
 - Tests cover the API client, the session and route guard, auth composables, and TechPack review, but not pages ([testing](testing.md)).

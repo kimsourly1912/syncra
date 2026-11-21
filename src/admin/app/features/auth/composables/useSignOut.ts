@@ -2,25 +2,12 @@ import { useSession } from '@/features/session'
 
 export function useSignOut() {
   const session = useSession()
-  const toast = useAppToast()
-  const pending = shallowRef(false)
 
-  async function submit() {
-    pending.value = true
-    try {
-      await session.signOut()
-    }
-    catch (e) {
-      // The API didn't confirm the logout, so the session is kept.
-      toast.error(e)
-    }
-    finally {
-      pending.value = false
-    }
-  }
+  // If the API doesn't confirm the logout, the session is kept and the toast says why.
+  const signOut = useApiMutation(() => session.signOut(), { error: 'Could not sign out' })
 
   return {
-    pending,
-    submit,
+    pending: signOut.pending,
+    submit: () => signOut.execute(),
   }
 }

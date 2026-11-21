@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { useReviewQueue } from '../composables/useReviewQueue'
 
-const { status, page, items, totalPages, loading, listError, load, showStatus, showPage } = useReviewQueue()
+const { status, page, listQuery, items, totalPages, loading, pending, listError, refresh, showStatus, showPage } = useReviewQueue()
 </script>
 
 <template>
@@ -14,22 +14,22 @@ const { status, page, items, totalPages, loading, listError, load, showStatus, s
       <UButton
         label="In Review"
         :variant="status === 'IN_REVIEW' ? 'solid' : 'outline'"
-        :disabled="loading"
-        @click="showStatus('IN_REVIEW')"
+        :disabled="pending"
+        @click="showStatus('in-review')"
       />
       <UButton
         label="Reviewed"
         :variant="status === 'REVIEWED' ? 'solid' : 'outline'"
-        :disabled="loading"
-        @click="showStatus('REVIEWED')"
+        :disabled="pending"
+        @click="showStatus('reviewed')"
       />
       <UButton
         label="Refresh"
         icon="lucide:refresh-cw"
         color="neutral"
         variant="ghost"
-        :loading="loading"
-        @click="load"
+        :loading="pending"
+        @click="refresh"
       />
     </div>
 
@@ -73,7 +73,7 @@ const { status, page, items, totalPages, loading, listError, load, showStatus, s
             v-if="item.draftUuid"
             label="Open review"
             variant="subtle"
-            :to="{ path: '/techpack-reviews/' + item.fileId, query: page ? { page: String(page) } : {} }"
+            :to="{ path: '/techpack-reviews/' + item.fileId, query: listQuery }"
           />
           <span
             v-else-if="item.reviewedAt"
@@ -92,14 +92,14 @@ const { status, page, items, totalPages, loading, listError, load, showStatus, s
       <UButton
         label="Previous"
         variant="outline"
-        :disabled="loading || page === 0"
+        :disabled="pending || page <= 1"
         @click="showPage(page - 1)"
       />
-      <span class="text-sm text-muted">Page {{ page + 1 }} of {{ totalPages }}</span>
+      <span class="text-sm text-muted">Page {{ page }} of {{ totalPages }}</span>
       <UButton
         label="Next"
         variant="outline"
-        :disabled="loading || page + 1 >= totalPages"
+        :disabled="pending || page >= totalPages"
         @click="showPage(page + 1)"
       />
     </div>

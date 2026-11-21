@@ -14,7 +14,7 @@ const { navigate, toast } = vi.hoisted(() => ({
 mockNuxtImport('navigateTo', () => navigate)
 mockNuxtImport('useToast', () => () => toast)
 
-const ME = 'GET admin/users/me/profile'
+const ME = 'GET /admin/users/me/profile'
 const profile = ok({ id: 7, username: 'sample-staff' })
 const router = { push: vi.fn() }
 

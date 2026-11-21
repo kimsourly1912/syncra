@@ -14,8 +14,8 @@ mockNuxtImport('useRoute', () => () => route)
 mockNuxtImport('useToast', () => () => toast)
 
 const form = { email: 'staff@example.test', password: 'not-a-real-password' }
-const LOGIN = 'POST admin/auth/login'
-const ME = 'GET admin/users/me/profile'
+const LOGIN = 'POST /admin/auth/login'
+const ME = 'GET /admin/users/me/profile'
 const profile = ok({ id: 7, username: 'sample-staff', email: 'staff@example.test' })
 const router = { push: vi.fn() }
 
@@ -34,7 +34,7 @@ describe('sign-in', () => {
     const { submit } = useSignIn()
 
     expect(await submit(form)).toBe(true)
-    expect(transport).toHaveBeenCalledWith('admin/auth/login', expect.objectContaining({ method: 'POST', body: form }))
+    expect(transport).toHaveBeenCalledWith('/admin/auth/login', expect.objectContaining({ method: 'POST', body: form }))
     expect(useSession().staff.value).toMatchObject({ id: 7 })
     expect(router.push).toHaveBeenCalledWith('/')
   })
@@ -73,7 +73,7 @@ describe('sign-in', () => {
 
 describe('sign-out', () => {
   it('clears the session after the API confirms', async () => {
-    fakeApi({ [ME]: profile, 'POST admin/auth/logout': ok() })
+    fakeApi({ [ME]: profile, 'POST /admin/auth/logout': ok() })
     await useSession().load()
 
     await useSignOut().submit()
@@ -85,7 +85,7 @@ describe('sign-out', () => {
   it('keeps the session when the logout isn\'t confirmed', async () => {
     fakeApi({
       [ME]: profile,
-      'POST admin/auth/logout': () => {
+      'POST /admin/auth/logout': () => {
         throw Object.assign(new Error('offline'), { name: 'FetchError', cause: new TypeError('Failed to fetch') })
       },
     })
@@ -100,7 +100,7 @@ describe('sign-out', () => {
 })
 
 describe('forgot password', () => {
-  const FORGOT = 'POST admin/auth/forgot-password'
+  const FORGOT = 'POST /admin/auth/forgot-password'
 
   it('shows the sent state only when the API says the link was sent', async () => {
     fakeApi({ [FORGOT]: ok({ sent: true }) })
@@ -125,12 +125,12 @@ describe('forgot password', () => {
 
     expect(await submit({ email: form.email })).toBe(false)
     expect(sent.value).toBe(false)
-    expect(toast.add).toHaveBeenCalledWith(expect.objectContaining({ description: expect.stringMatching(/^Unexpected response from POST admin\/auth\/forgot-password/) }))
+    expect(toast.add).toHaveBeenCalledWith(expect.objectContaining({ description: expect.stringMatching(/^Unexpected response from POST \/admin\/auth\/forgot-password/) }))
   })
 })
 
 describe('reset password', () => {
-  const CONFIRM = 'POST admin/auth/forgot-password/confirm'
+  const CONFIRM = 'POST /admin/auth/forgot-password/confirm'
   const passwords = { newPassword: 'Sample-Passw0rd', confirmPassword: 'Sample-Passw0rd' }
 
   it('does not call the API without a token', async () => {
@@ -147,7 +147,7 @@ describe('reset password', () => {
 
     expect(await submit('sample-token', passwords)).toBe(true)
     expect(success.value).toBe(true)
-    expect(transport).toHaveBeenCalledWith('admin/auth/forgot-password/confirm', expect.objectContaining({
+    expect(transport).toHaveBeenCalledWith('/admin/auth/forgot-password/confirm', expect.objectContaining({
       method: 'POST', body: { token: 'sample-token', newPassword: 'Sample-Passw0rd' },
     }))
     expect(useSession().signedIn.value).toBe(true)

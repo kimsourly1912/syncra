@@ -10,7 +10,7 @@
     "preview": "nuxt preview",
     "postinstall": "nuxt prepare",
     "api:pull": "node --env-file-if-exists=.env scripts/pull-openapi.mjs",
-    "api:gen": "openapi-ts",
+    "api:gen": "openapi-ts && node scripts/gen-endpoints.mjs",
     "test": "vitest run",
     "typecheck": "nuxt typecheck",
     "lint": "eslint .",

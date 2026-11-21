@@ -1,76 +1,44 @@
-import { errorMessage } from '@/api'
-import type { ReviewItem, ReviewStatus } from '../models/review-item'
-import { listReviews } from '../services/techpack-review.service'
+import { api, errorMessage } from '@/api'
+import { reviewPageModel } from '../models/review-item'
+import type { ReviewStatus } from '../models/review-item'
 
-const QUEUE_PATH = '/techpack-reviews'
+const STATUS = {
+  'in-review': 'IN_REVIEW',
+  'reviewed': 'REVIEWED',
+} as const satisfies Record<string, ReviewStatus>
 
-function queueQuery(status: ReviewStatus, page: number) {
-  return {
-    status: status === 'REVIEWED' ? 'reviewed' : undefined,
-    page: page > 0 ? String(page) : undefined,
-  }
-}
-
-/** The review queue. Status and the zero-based page live in the URL. */
+/** The review queue. The status tab and the page live in the URL (`?status=reviewed&page=2`). */
 export function useReviewQueue() {
   const route = useRoute()
+  const list = useListQuery({ status: ['in-review', 'reviewed'] as const })
+  const status = computed(() => STATUS[list.filters.value.status])
 
-  const status = computed<ReviewStatus>(() => route.query.status === 'reviewed' ? 'REVIEWED' : 'IN_REVIEW')
-  const page = computed(() => {
-    const value = Number(route.query.page)
-    return Number.isInteger(value) && value > 0 && value <= 2147483647 ? value : 0
+  const reviews = useApiQuery(
+    () => `techpack-reviews:list:${status.value}:${list.page.value}`,
+    ({ signal }) => api.get('/admin/docai/techpack-reviews', {
+      query: { status: status.value, page: list.page.value - 1 }, // the API's page is zero-based
+      signal,
+      model: reviewPageModel,
+    }),
+  )
+
+  // A page past the end (its last review was just approved) moves back to the last page.
+  watch(() => reviews.data.value?.totalPages, (totalPages) => {
+    if (totalPages !== undefined) list.clampPage(totalPages)
   })
-  const items = ref<ReviewItem[]>([])
-  const totalPages = ref(0)
-  const loading = ref(false)
-  const listError = ref('')
-  let listRequest: AbortController | undefined
-
-  async function load() {
-    listRequest?.abort()
-    const request = new AbortController()
-    listRequest = request
-    loading.value = true
-    listError.value = ''
-    try {
-      const data = await listReviews({ status: status.value, page: page.value }, request.signal)
-      if (request.signal.aborted) return
-      items.value = data.content
-      totalPages.value = data.totalPages
-      if (!items.value.length && page.value > 0) {
-        await navigateTo({ path: QUEUE_PATH, query: queueQuery(status.value, Math.max(0, data.totalPages - 1)) }, { replace: true })
-      }
-    }
-    catch (error) {
-      if (request.signal.aborted) return
-      listError.value = errorMessage(error, 'Could not load TechPack reviews.')
-    }
-    finally {
-      if (!request.signal.aborted) loading.value = false
-    }
-  }
-
-  function showStatus(next: ReviewStatus) {
-    return navigateTo({ path: QUEUE_PATH, query: queueQuery(next, 0) })
-  }
-
-  function showPage(next: number) {
-    return navigateTo({ path: QUEUE_PATH, query: queueQuery(status.value, next) })
-  }
-
-  watch([status, page], load)
-  onMounted(load)
-  onBeforeUnmount(() => listRequest?.abort())
 
   return {
     status,
-    page,
-    items,
-    totalPages,
-    loading,
-    listError,
-    load,
-    showStatus,
-    showPage,
+    page: list.page,
+    /** The list's URL query, kept by links into a review so Back returns here. */
+    listQuery: computed(() => route.query),
+    items: computed(() => reviews.data.value?.content ?? []),
+    totalPages: computed(() => reviews.data.value?.totalPages ?? 0),
+    loading: reviews.loading,
+    pending: reviews.pending,
+    listError: computed(() => (reviews.error.value ? errorMessage(reviews.error.value, 'Could not load TechPack reviews.') : '')),
+    refresh: reviews.refresh,
+    showStatus: (next: 'in-review' | 'reviewed') => list.setFilters({ status: next }),
+    showPage: list.setPage,
   }
 }

@@ -1,9 +1,10 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 import { flushPromises } from '@vue/test-utils'
 import { mockNuxtImport, mountSuspended } from '@nuxt/test-utils/runtime'
+import { clearNuxtData, useRouter } from '#imports'
 import ReviewQueueScreen from '../../app/features/techpack-review/components/ReviewQueueScreen.vue'
 import ReviewDetailScreen from '../../app/features/techpack-review/components/ReviewDetailScreen.vue'
-import { fakeApi } from '../fake-api'
+import { fakeApi, ok } from '../fake-api'
 
 const { navigate } = vi.hoisted(() => ({ navigate: vi.fn() }))
 
@@ -42,6 +43,8 @@ function respondByEndpoint(responses: Record<string, unknown>) {
 }
 
 beforeEach(() => {
+  // Screens share loaded data by key; every test starts from nothing loaded.
+  clearNuxtData()
   api = fakeApi().transport
   navigate.mockReset()
 })
@@ -71,7 +74,7 @@ describe('review queue screen', () => {
     const wrapper = await mountSuspended(ReviewQueueScreen)
     await flushPromises()
 
-    expect(wrapper.text()).toContain('Unexpected response from GET admin/docai/techpack-reviews')
+    expect(wrapper.text()).toContain('Unexpected response from GET /admin/docai/techpack-reviews')
     expect(wrapper.text()).not.toContain('No TechPacks are waiting for review.')
   })
 })
@@ -94,7 +97,7 @@ describe('review detail screen', () => {
     const wrapper = await mountSuspended(ReviewDetailScreen, { props: { fileId: '101' } })
     await flushPromises()
 
-    expect(api).toHaveBeenCalledWith('admin/docai/techpack-reviews/101/draft-inspection', expect.objectContaining({
+    expect(api).toHaveBeenCalledWith('/admin/docai/techpack-reviews/101/draft-inspection', expect.objectContaining({
       query: { draftUuid: item.draftUuid },
     }))
     expect(wrapper.text()).toContain('sample-techpack.pdf')
@@ -104,5 +107,57 @@ describe('review detail screen', () => {
 
     const approve = wrapper.findAll('button').find(button => button.text().includes('Approve and release'))
     expect(approve?.attributes('disabled')).toBeDefined()
+  })
+
+  // A draft the reviewer can approve: no differences, and the whole workbook shown.
+  const clean = { ...inspection, findings: [], sourceCheck: { verified: true, blocksApproval: false, comparedCells: 1, notes: [] } }
+  const preview = ok({ pageCount: 1, pngBase64: 'iVBORw0KGgo=' })
+
+  it('saves inline corrections against the current draftUuid, then reloads the review', async () => {
+    respondByEndpoint({
+      'techpack-reviews/102': ok({ ...item, fileId: 102 }),
+      'source-preview': preview,
+      'draft-inspection': ok(inspection),
+      'draft-corrections': ok({ ...item, fileId: 102 }),
+    })
+    const wrapper = await mountSuspended(ReviewDetailScreen, { props: { fileId: '102' } })
+    await flushPromises()
+
+    await wrapper.findAll('button').find(button => button.text().includes('PDF 52'))!.trigger('click')
+    await wrapper.findAll('button').find(button => button.text() === 'Use PDF value')!.trigger('click')
+    expect(wrapper.text()).toContain('1 unsaved correction')
+    await wrapper.findAll('button').find(button => button.text().includes('Save corrections'))!.trigger('click')
+    await flushPromises()
+
+    expect(api).toHaveBeenCalledWith('/admin/docai/techpack-reviews/102/draft-corrections', expect.objectContaining({
+      method: 'POST',
+      body: { draftUuid: item.draftUuid, corrections: [{ sheetIndex: 0, rowNumber: 1, columnIndex: 1, value: '52' }] },
+    }))
+    expect(api.mock.calls.filter(([url]) => url === '/admin/docai/techpack-reviews/102')).toHaveLength(2)
+    expect(wrapper.text()).not.toContain('unsaved correction')
+  })
+
+  it('approves only after the attestation, then opens the Reviewed queue', async () => {
+    const replace = vi.spyOn(useRouter(), 'replace').mockResolvedValue(undefined)
+    respondByEndpoint({
+      'techpack-reviews/103': ok({ ...item, fileId: 103 }),
+      'source-preview': preview,
+      'draft-inspection': ok(clean),
+      'approve': ok(null),
+    })
+    const wrapper = await mountSuspended(ReviewDetailScreen, { props: { fileId: '103' } })
+    await flushPromises()
+
+    const approve = () => wrapper.findAll('button').find(button => button.text().includes('Approve and release'))!
+    expect(approve().attributes('disabled')).toBeDefined()
+    await wrapper.find('[role="checkbox"]').trigger('click')
+    expect(approve().attributes('disabled')).toBeUndefined()
+    await approve().trigger('click')
+    await flushPromises()
+
+    expect(api).toHaveBeenCalledWith('/admin/docai/techpack-reviews/103/approve', expect.objectContaining({
+      method: 'POST', body: { draftUuid: item.draftUuid, sourceVerified: true },
+    }))
+    expect(replace).toHaveBeenCalledWith({ path: '/techpack-reviews', query: { status: 'reviewed' } })
   })
 })

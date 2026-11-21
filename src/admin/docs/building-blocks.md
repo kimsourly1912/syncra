@@ -8,6 +8,7 @@ These are Admin's shared components, composables, and utilities. Components and 
 | --- | --- |
 | `LayoutContent` | The page container (`max-w-7xl`, vertical spacing) |
 | `LayoutHeading` | The page `title` and `description`. With `to`, it shows a back arrow. `#suffix` holds page actions. |
+| `LayoutNavMenu` | The sidebar menu (`items`, `signingOut`; emits `navigate` and `signOut`). Hides links to pages that don't exist. |
 | `CardWrapper` | A `UCard` with a `CardTitle` header (`title`) |
 | `CardTitle` | A card heading |
 | `CardBoxWrapper` + `CardBoxItem` | A stat grid (`cols`) of `items: CardBoxItem[]`. The types are in `types/components/card.ts`. |
@@ -23,7 +24,11 @@ These are Admin's shared components, composables, and utilities. Components and 
 
 | Composable | Use for |
 | --- | --- |
-| `useAppToast()` | `success(description)`, `failed(description)`, `error(e)` (skips silent errors), `base` |
+| `useApiQuery(key, fetcher, { enabled })` | Reads: `data`, `loading`, `refreshing`, `pending`, `error` (`ApiError`), `refresh` ([reads](data-access.md#reads-useapiquery)) |
+| `useApiMutation(fn, { success, error, invalidate })` | Writes: `execute(input)` → `{ ok, data \| error }`, `pending`, `error` ([writes](data-access.md#writes-useapimutation)) |
+| `invalidateQueries(...prefixes)` | Refresh the queries on screen whose key starts with a prefix |
+| `useListQuery(choices)` | A list's filters and 1-based page in the URL ([lists](data-access.md#lists-uselistquery)) |
+| `useAppToast()` | `success(description, title?)`, `failed(description, title?)`, `error(e, title?)` (skips silent errors), `base` |
 | `useStorage()` | `preference` (sidebar collapsed) in `localStorage` |
 
 ## API and session
@@ -32,7 +37,7 @@ Imported explicitly, not auto-imported.
 
 | Export | From | Use for |
 | --- | --- | --- |
-| `api.get/post/put/patch/delete/download` | `@/api` | Every API call ([data access](data-access.md#the-client)) |
+| `api.get/post/put/patch/delete/download` | `@/api` | Every API call, with the spec's path (`'/admin/x/{id}'`) ([calling the API](data-access.md#calling-the-api)) |
 | `ApiError`, `errorMessage(e, fallback)` | `@/api` | Reading a thrown error; inline alert text |
 | `defineModel`, `parseData`, `Api.*`, `v*` | `@/api` | Feature models and request types |
 | `useSession()` | `@/features/session` | `status`, `staff`, `signedIn`, `load`, `reload`, `signIn`, `signOut`, `end` ([session](data-access.md#the-session)) |
@@ -50,6 +55,6 @@ Imported explicitly, not auto-imported.
 
 | Export | File | Use for |
 | --- | --- | --- |
-| `buildEndPoint<Parts>(prefix, parts)` | `utils/api.ts` | Service paths |
 | `tw`, `IS_DEV` | `utils/common.ts` | Class strings in TypeScript; dev check |
+| `saveFile(blob, filename)` | `utils/file.ts` | Hand a downloaded file to the browser |
 | `validatePassword*`, `getPasswordValidationMessages` | `utils/validate.ts` | Password rules |
