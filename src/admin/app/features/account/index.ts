@@ -1,3 +1,4 @@
+export { default as AccountListScreen } from './components/AccountListScreen.vue'
 export { default as CompanyInformation } from './components/CompanyInformation.vue'
 export { default as ModuleManagement } from './components/ModuleManagement.vue'
 export { default as SeatManagement } from './components/SeatManagement.vue'

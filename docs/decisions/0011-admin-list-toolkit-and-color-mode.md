@@ -32,3 +32,7 @@ The patterns were taken from another of the owner's Nuxt UI admin apps and adapt
 - Connecting a list to the API is now mostly binding: `useListQuery` → `useApiQuery` → the toolbar components.
 - `InputSearch`, page sizes, and count badges have no API-backed screen yet. Lead Inquiry, Account Management, and Sale Requests are the next lists to connect. The `sort` format, the largest `size`, and a portal-user status filter are [open questions](../product/open-questions.md#admin).
 - Every new surface must read well in both modes; `bg-white` and hex colors are review failures.
+
+## Follow-up
+
+- 2026-11-21: Lead Inquiry, Account Management, and Sale Requests now read their list and summary endpoints with search and rows per page. These list screens render their own `UDashboardPanel`, so the toolbar binds to the list state. Count badges stay unused until the totals' mapping to statuses is confirmed ([open questions](../product/open-questions.md#admin)).

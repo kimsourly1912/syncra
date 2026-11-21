@@ -12,15 +12,24 @@ const props = defineProps<{
   pageCount: number
   /** Rows-per-page choices. Leave out when the API has a fixed page size. */
   pageSizes?: readonly number[]
+  pageSize?: number
   /** A load is running: the controls would change what's loading. */
   disabled?: boolean
 }>()
 
+// Declared, not `defineModel`: an optional model would type its update as `number | undefined`.
+const emit = defineEmits<{ 'update:pageSize': [size: number] }>()
+
 const page = defineModel<number>('page', { required: true })
-const pageSize = defineModel<number>('pageSize')
+const pageSize = computed({
+  get: () => props.pageSize,
+  set: (size) => {
+    if (size !== undefined) emit('update:pageSize', size)
+  },
+})
 
 const sizes = computed(() => (props.pageSizes ?? []).map(size => ({ label: String(size), value: size })))
-const shown = computed(() => props.pageCount > 1 || (sizes.value.length > 0 && pageSize.value !== sizes.value[0]!.value))
+const shown = computed(() => props.pageCount > 1 || (sizes.value.length > 0 && props.pageSize !== sizes.value[0]!.value))
 </script>
 
 <template>

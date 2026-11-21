@@ -40,7 +40,7 @@ The `default` layout is `UDashboardGroup` with a collapsible `UDashboardSidebar`
 </template>
 ```
 
-The route file owns the panel. Feature screens (TechPack review) render inside `#body`. `UDashboardNavbar` shows its mobile sidebar toggle by itself.
+The route file owns the panel, and feature screens (TechPack review) render inside `#body`. The exception is a list screen with a toolbar (Lead Inquiry, Account Management, Sale Requests): it renders the panel itself so the toolbar can bind to its list state. Page-level actions go in through a slot (`AccountListScreen` `#actions`). `UDashboardNavbar` shows its mobile sidebar toggle by itself.
 
 The sidebar (`layouts/default.vue`) has the logo and collapse button in its header, then a `UDashboardSearchButton` and the navigation. Its footer holds the staff menu (the signed-in email and Log Out) and a `UColorModeButton`. Ctrl/⌘+K opens `UDashboardSearch`, which lists every sidebar page plus Nuxt UI's light/dark commands.
 
@@ -50,7 +50,7 @@ The sidebar (`layouts/default.vue`) has the logo and collapse button in its head
 | Pattern | Reference | Shape |
 | --- | --- | --- |
 | Queue or list | `features/techpack-review/components/ReviewQueueScreen.vue` | `ListStatusTabs` (status in the URL) + Refresh → `AlertApiError` on error → skeleton rows on the first load → `ListRefresh` around a `UCard` with `ListEmptyState` or the rows → `ListPagination` |
-| Overview + table | `pages/index.vue` (static) | `InputSearch` and filters in `UDashboardToolbar` → `CardStats` → `UTable` → `ListPagination` |
+| Overview + table | `features/lead-inquiry/components/LeadListScreen.vue` | `InputSearch` and filters in `UDashboardToolbar` → `CardStats` from the summary endpoint (or its `AlertApiError`) → `ListStatusTabs` → `AlertApiError` or `ListRefresh` around `UTable :loading` with `ListEmptyState` in `#empty` → `ListPagination` with rows per page |
 | Detail with tabs | `pages/account/[id].vue` | Back button in the navbar `#leading` → `UTabs :content="false"` in `UDashboardToolbar`, the tab from `useUrlTab` → the body renders the selected feature panel |
 | Review workspace | `features/techpack-review/components/ReviewDetailScreen.vue` | Source and workbook side by side, findings, a correction form, a replacement upload, an attestation checkbox, then Approve |
 | Create or edit form | `pages/product/create.vue` (UI only) | Cancel and Save in the navbar `#right` → `UPageCard` → `UForm` |

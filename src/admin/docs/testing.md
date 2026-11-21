@@ -51,7 +51,8 @@ Screen tests mount components with a mocked API. They don't cover real layout, r
 | Area | Check |
 | --- | --- |
 | Shell | Sidebar collapses on desktop and opens as a slideover below `lg`. Ctrl/⌘+K and the Search button open page search. The staff menu shows the signed-in email and logs out. Light and dark both work, and a fresh browser starts in light. |
-| Static account screens | Account Management → a user's name → Account Detail, and switching tabs (`?tab=` updates, Back leaves the page). These work without an API, using static data. |
+| Wired lists (Account Management `/`, Lead Inquiry, Sale Requests) | Totals load, and their failure shows its own error. Search (typing, Enter, Clear; Back skips the typing), status tabs, the sale request type filter, rows per page, and paging all update the URL and the request. Clear filters on a filtered empty list. The error state with Retry. A name opens the account or lead. |
+| Static account screens | Account Detail: switching tabs (`?tab=` updates, Back leaves the page). It uses static data. |
 | TechPack review queue | Switch In Review and Reviewed, change pages, land on an empty page and get sent back, see the error state with Retry when the API fails, and Refresh (the list dims under a thin bar) |
 | TechPack review detail | Load it, save a correction, upload a replacement, check that attestation resets when the draft changes, approve, and return to the queue |
 | Auth and session | Signed out on a deep link → sign-in → back to the link. Sign out, also with a second tab open. An expired session (refresh refused) → "Session expired" and sign-in. An API outage during renewal keeps the session. Forgot and reset password. |
