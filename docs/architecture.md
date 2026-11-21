@@ -1,39 +1,80 @@
-# Syncra architecture
+# Workspace architecture
 
-Syncra is a pnpm workspace with three Nuxt single-page applications. There are no shared workspace packages; each app owns its constants and reference data. Each app reads its API configuration from its own Nuxt config. The checkout shows frontend contracts and client behavior. Extraction workers, the database, and authorization inside the API belong to the external service.
+Syncra is a pnpm workspace with three Nuxt 4 single-page apps. They share no packages: each app owns its constants, reference data, API client, services, DTOs, and components. All three call one external API. Extraction workers, storage, billing, and server authorization belong to that service and aren't in this repository.
 
-## Application ownership
+```text
+                    ┌──────────────── external Syncra API ────────────────┐
+                    │  identity · companies · Doc AI · tokens · catalog   │
+                    └───────▲──────────────────▲──────────────────▲───────┘
+                            │ public, no cookies│ cookies + refresh │ cookies + refresh
+                     ┌──────┴─────┐     ┌──────┴──────┐     ┌──────┴──────┐
+                     │  src/web   │────▶│ src/portal  │     │  src/admin  │
+                     │  :333      │ link│  :444       │     │  :555       │
+                     └────────────┘     └─────────────┘     └─────────────┘
+                       visitors          customer companies    Syncra staff
+```
 
-| Area | Responsibility | Entry points |
+## App ownership
+
+| App | Owns | Doesn't own |
 | --- | --- | --- |
-| `src/web` | Public marketing website, product catalog and pricing, and sales inquiries | [Web coding guide](../src/web/docs/coding-standards.md), [Nuxt config](../src/web/nuxt.config.ts) |
-| `src/portal` | Customer workspace, processing and results, team and company administration, token activity, and Bookkeeping | [Portal coding guide](../src/portal/docs/coding-standards.md), [Nuxt config](../src/portal/nuxt.config.ts) |
-| `src/admin` | Internal staff screens for company configuration, seats and tokens, leads, plans, products, and TechPack review | [Admin coding guide](../src/admin/docs/coding-standards.md), [Nuxt config](../src/admin/nuxt.config.ts) |
+| [`src/web`](../src/web/AGENTS.md) | Public marketing pages, product catalog and detail, pricing, sales inquiries, links to Portal sign-in | Customer accounts; catalog editing (Admin) |
+| [`src/portal`](../src/portal/AGENTS.md) | Customer sign-in and onboarding, Doc AI processing and results, POM glossary, team management, company and account settings, token activity, company activity log, Bookkeeping | Staff review and release; catalog content |
+| [`src/admin`](../src/admin/AGENTS.md) | Staff sign-in, company accounts (company info, modules, tokens, seats), lead inquiries, hero, products, plans and pricing, TechPack review and release | Customer self-service |
 
-For the folder trees and placement rules, see feature architecture for [Portal](../src/portal/docs/coding-standards.md#feature-architecture), [Web](../src/web/docs/coding-standards.md#feature-architecture), and [Admin](../src/admin/docs/coding-standards.md#feature-architecture). Each app owns its UI, forms, query state, writes, and implementation examples in its coding guide. Use the [screen map](project-scope.md#feature-inventory-and-screen-map) for browser evidence and source links.
+Work on one workflow that spans apps, such as Doc AI processing in Portal and workbook review in Admin: the product contract lives in [`docs/features/`](features/doc-ai.md), and each app's docs own its implementation.
 
-## How to trace a change
+## Request flow inside an app
 
-Find the workflow in the [project scope](project-scope.md#feature-inventory-and-screen-map), then start in the owning app's coding guide. Trace the page, its client and DTO, and the relevant test. When a workflow spans apps, keep its product contract in the root feature reference and use the local guides for implementation. [Doc AI](features/doc-ai.md) links customer processing in Portal and workbook review in Admin.
+Every app uses the same layers ([decision 0003](decisions/0003-request-and-error-flow.md)):
+
+```text
+Route file (app/pages)           thin: definePageMeta, route params → renders the feature screen
+   ↓
+Feature screen component         renders state, calls actions
+   ↓
+Feature composable  use<Feature> owns useAsyncData reads, actions, pending flags, user feedback
+   ↓
+Service  <resource>.service.ts   endpoint + method + query/body → typed promise; no UI, no stores
+   ↓
+useAPI → $api (app plugin)       base URL, credentials, 401 → refresh → retry once (Portal and Admin)
+   ↓
+External API                     authentication, authorization, business rules, persistence
+```
+
+Dependencies point down only. A service never imports a component, store, or feature. Shared folders never import features ([decision 0002](decisions/0002-feature-folders-and-public-api.md)).
 
 ## Sessions and permissions
 
-Web has a public API client and links to Portal for customer sign-in. Portal and Admin use separate credentialed clients. Portal derives company context and the Admin or Operator role from its profile. Internal Admin has its own staff auth and route guards. Each app guide links the actual client and route code.
+| App | Client | Session | Client-side access control |
+| --- | --- | --- | --- |
+| Web | `src/web/app/plugins/api.ts`, no credentials | None | None. Links to Portal use `useURL`. |
+| Portal | `src/portal/app/plugins/api.client.ts`, `credentials: 'include'` | Cookies. `useAPI` refreshes once on 401 and logs out if that fails. The profile store (`useProfileStore`) holds the company, role, and feature flags. | `auth`, `guest`, and `onboarding` middleware; `usePermission` role map; `<ShowIf>`; `profileStore.isAdmin` |
+| Admin | `src/admin/app/plugins/api.client.ts`, `credentials: 'include'` | Cookies. `useAPI` refreshes on 401 and calls `useAuth().logoutProps().execute()` if that fails. | `auth` and `guest` middleware; no role map |
 
-Keep company ID, internal job ID, display ID, and file ID distinct where a workflow spans Portal and Admin. Check the owning service for API authorization, entitlements, and release rules.
+- Client checks decide what to show and where to navigate. They aren't authorization. The API must refuse what a role can't do. If a change depends on server behavior, record what needs confirming in [open questions](product/open-questions.md).
+- Portal's roles are `ADMIN` and `OPERATOR`. Invitations always create Operators. Account type (`COMPANY` or `MEMBER`) is a separate field from role. See [users and roles](product/scope.md#users-and-roles).
 
-## Local development and verification
+## IDs that cross apps
 
-Run `pnpm install` from the root with the version pinned in [package.json](../package.json). See the [README](../README.md#environment-files) for environment filenames. Portal includes a [sample environment file](../src/portal/.env.example) with variable names for the external API, optional local proxy, images, and auth UI flags.
-
-| App | Run with `.env.dev` | Default port |
+| ID | Meaning | Rule |
 | --- | --- | --- |
-| Web | `pnpm dev:web` | 333 |
-| Portal | `pnpm dev:portal` | 444 |
-| Admin | `pnpm dev:admin` | 555 |
+| `companyId` | The tenant | Portal takes it from the profile store. Services reject `<= 0`. Never read it from the URL. |
+| `jobId` | Internal extraction job ID | Used for API calls and detail routes (`/workspace/activity-history/[id]`) |
+| `formattedId` | Display ID (`PID-0174`) | For display only. Never send it as an identifier. |
+| `fileId` | One file within a job | Invoice finalization sends the reviewed `expectedFileId`. Admin review routes use `/techpack-reviews/[fileId]`. |
+| `draftUuid` | Admin review draft | Saves and approval use the current draft. |
 
-Use the matching `dev:<app>:local` root shortcut with `.env.local`.
+## Local development
 
-Use the [Web](../src/web/docs/coding-standards.md#verification), [Portal](../src/portal/docs/coding-standards.md#verification), and [Admin](../src/admin/docs/coding-standards.md#verification) guides for app checks.
+Run `pnpm install` from the root, using the Node and pnpm versions pinned in [`package.json`](../package.json). Environment files are described in the [README](../README.md#environment-files).
 
-On Windows with Node.js 24.22.1 and pnpm 12.21.0, a clean frozen install, all three builds, and all 81 Portal tests passed. The app lint and Vue type-check findings matched the pnpm 10 baseline. The Web sample test failed on both versions. Treat this as a compatibility snapshot. Rerun the affected checks on the current checkout.
+| App | Dev command (`.env.dev`) | With `.env.local` | Port | Package filter |
+| --- | --- | --- | --- | --- |
+| Web | `pnpm dev:web` | `pnpm dev:web:local` | 333 | `@syncra/web` |
+| Portal | `pnpm dev:portal` | `pnpm dev:portal:local` | 444 | `@syncra/portal` |
+| Admin | `pnpm dev:admin` | `pnpm dev:admin:local` | 555 | `admin` |
+
+Portal and Admin can proxy the API in development. Set `PROXY_API_PATH` and `PROXY_API_TARGET` and the `nitro.devProxy` in each app's `nuxt.config.ts` handles it. Sign-in, extraction, and other API-backed flows need a reachable service and a suitable test account.
+
+Each app's `AGENTS.md` lists its checks, and its `docs/testing.md` explains them.

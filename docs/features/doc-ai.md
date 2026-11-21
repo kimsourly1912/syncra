@@ -1,12 +1,8 @@
 # Doc AI
 
-Doc AI helps customer teams extract usable data from supply-chain documents. This reference describes the current frontend and where to verify it. See [product scope](../project-scope.md) for the original Brave inspection and [architecture](../architecture.md) for the service boundary.
+Doc AI helps customer teams extract usable data from supply-chain documents. This reference is the product contract for a workflow that spans apps: processing and results in Portal, and workbook review in Admin. Each app's docs own the implementation. See [product scope](../product/scope.md) for roles and screens, and [architecture](../architecture.md#ids-that-cross-apps) for the IDs that cross apps.
 
-**Observed in Brave.** A company Admin could open TechPack and Invoice, switch Invoice modes, and reach the cost confirmation for an existing TechPack draft. The history was empty. The glossary launcher appeared active while the destination showed unavailable. The session stopped before uploading new files or finalizing a job.
-
-**Observed in a local compatibility check.** With a simulated API and company Admin profile, the rebuilt Portal opened Application → Doc AI Workspace → Invoice. Switching to Separate files showed the invoice PDF, packing list PDF or XLSX, and optional fabric rolls PDF fields. Process stayed disabled with no files selected.
-
-**Source-backed.** The code and tests describe staging, retries, status polling, results, glossary changes, and internal workbook review. The internal review screens were reviewed in source. Workflow completion and backend behavior require a configured environment and suitable test data.
+**Evidence.** A browser session (Observed) confirmed the entry points, the Invoice mode switch, and the TechPack cost confirmation. Code and tests (Source) describe staging, retries, polling, results, glossary changes, and internal review. Completing a workflow end to end, and backend behavior, need a configured environment and a test company. Labels are defined in the [product scope](../product/scope.md#evidence-labels).
 
 ## Ownership and entry points
 
@@ -18,7 +14,7 @@ Doc AI helps customer teams extract usable data from supply-chain documents. Thi
 | POM Glossary | Portal `/workspace/glossary` and `/workspace/glossary/uploads/[id]`. See [glossary pages](../../src/portal/app/pages/workspace/glossary), [service](../../src/portal/app/services/glossary.service.ts), and [DTOs](../../src/portal/app/types/dto/glossary.dto.ts). |
 | Verify a workbook | Internal Admin `/techpack-reviews` → `/techpack-reviews/[fileId]`. See the [review queue](../../src/admin/app/pages/techpack-reviews/index.vue), [review detail](../../src/admin/app/pages/techpack-reviews/%5BfileId%5D.vue), and [review DTO](../../src/admin/app/types/dto/techpack-review.dto.ts). |
 
-Company entitlement and processor responses determine which entry points are offered. The Portal role map includes workspace access for Admin and Operator. The glossary management controls require Portal Admin in the client. Confirm the actual permissions for deep links, operations, and file downloads against the backend. Purchase Order appears in the history filter and the wizard recognizes its type, but Brave showed no launch card for it. [Portal role map](../../src/portal/app/composables/usePermission.ts)
+Company entitlement and processor responses determine which entry points are offered. The Portal role map includes workspace access for Admin and Operator. The glossary management controls require Portal Admin in the client. Confirm the actual permissions for deep links, operations, and file downloads against the backend. Purchase Order appears in the history filter and the wizard recognizes its type, but no launch card was observed for it. [Portal role map](../../src/portal/app/composables/usePermission.ts)
 
 ## Upload and processing
 
@@ -60,7 +56,7 @@ The glossary supports English and Simplified Chinese measurement terms. Source s
 
 ## Acceptance and verification
 
-These are checks for the frontend behaviors above. Use [the verification commands](../architecture.md#local-development-and-verification) and a test company with sanitized documents for service checks.
+These are checks for the frontend behaviors above. Use the Portal and Admin verification commands ([Portal testing](../../src/portal/docs/testing.md), [Admin testing](../../src/admin/docs/testing.md)) and a test company with sanitized documents for service checks.
 
 | Scenario | Expected outcome | Existing coverage or verification |
 | --- | --- | --- |
@@ -74,7 +70,4 @@ These are checks for the frontend behaviors above. Use [the verification command
 
 ## Open questions
 
-- Which companies and roles can use each processor, and is Purchase Order an active or legacy module?
-- What are the supported TechPack formats and aggregate job limits on the server? Which Invoice layouts, attachments, and backend validation cases are supported?
-- What are the backend charging, refund, retention, and release policies, including when verification is required and who can approve release?
-- Which companies can use glossary translation and ERP export? What is glossary precedence, and what constitutes a safe ERP retry?
+Doc AI's unresolved questions are in [open questions → Doc AI contracts](../product/open-questions.md#doc-ai-contracts): server file limits, release, charging and retention policy, ERP eligibility and safe retry, and glossary precedence.
