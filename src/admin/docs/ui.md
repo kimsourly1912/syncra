@@ -4,46 +4,54 @@ Admin is a dense desktop-first staff console. Use Nuxt UI components and Admin's
 
 ## Foundation
 
-- **Colors.** `app/app.config.ts` maps `primary` to the `brand` palette (`--color-brand-*` in `app/assets/css/tailwind.css`), `info` to cyan, and `secondary` and `neutral` to neutral. Use semantic utilities (`text-highlighted`, `text-muted`, `border-default`, `ring-default`). Don't add new hex values.
+- **Colors.** `app/app.config.ts` maps `primary` to the `brand` palette (`--color-brand-*` in `app/assets/css/tailwind.css`). Every other color is the Nuxt UI default. Use semantic utilities (`text-highlighted`, `text-muted`, `border-default`, `ring-default`). Don't add new hex values.
 - **Light only.** `ui.colorMode` is `false`, so there's no dark mode. Some surfaces use `bg-white` on purpose. Don't add dark variants.
 - **Font.** League Spartan (`--font-sans`).
-- **Default sizes.** Buttons, inputs, selects, badges, and switches default to `size: 'lg'` in `app.config.ts`. Don't set `size="lg"` again on each component.
-- **Shared `:ui` objects.** `theme/table.ts` (`tableTheme`, a primary header row) and `theme/tab.ts` (`tabTheme`). Pass them as `:ui="tableTheme"` on every `UTable`, and `:ui="tabTheme"` on page-level `UTabs`.
+- **Nuxt UI defaults.** Use components with their default theme. There are no shared `:ui` objects or app-wide component overrides; pass `:ui` only for a one-off layout need.
 - **Icons.** Lucide only (`lucide:*`, from `@iconify-json/lucide`). Write icon names as literal strings: `clientBundle.scan` bundles the icons it finds in the source at build time. Don't add custom SVG collections; pick an Iconify icon instead.
 
 ## Page anatomy
 
-The `default` layout renders the header and sidebar, and the page fills the main area. Most pages follow this shape (`pages/product/create.vue`, `pages/index.vue`):
+The `default` layout is `UDashboardGroup` with a collapsible `UDashboardSidebar` (`UNavigationMenu`); each page is one `UDashboardPanel` beside it ([0010](../../../docs/decisions/0010-admin-nuxt-ui-dashboard-shell.md)). Most pages follow this shape (`pages/product/create.vue`, `pages/index.vue`):
 
 ```vue
 <template>
-  <div>
-    <LayoutContent>                                      <!-- max-w-7xl, vertical spacing -->
-      <LayoutHeading title="Product Management" description="Manage Syncra product listing" to="/product">
-        <template #suffix>
-          <UButton label="Create product" icon="lucide:plus" />
+  <UDashboardPanel>
+    <template #header>
+      <UDashboardNavbar title="Create New Product">
+        <template #leading>                                <!-- detail and form pages only -->
+          <UButton icon="lucide:arrow-left" color="neutral" variant="ghost" to="/product" aria-label="Back to products" />
         </template>
-      </LayoutHeading>
+        <template #right>
+          <UButton label="Save" />
+        </template>
+      </UDashboardNavbar>
+      <UDashboardToolbar>                                  <!-- list filters or page tabs, optional -->
+        <template #left><UInput icon="lucide:search" placeholder="Search" class="w-full max-w-sm" /></template>
+      </UDashboardToolbar>
+    </template>
 
-      <CardWrapper title="Product Listing Information">  <!-- UCard + CardTitle -->
+    <template #body>
+      <UPageCard title="Product Listing Information" variant="outline">
         <!-- content -->
-      </CardWrapper>
-    </LayoutContent>
-  </div>
+      </UPageCard>
+    </template>
+  </UDashboardPanel>
 </template>
 ```
 
-`LayoutHeading` with `to` shows a back arrow. The TechPack pages use a plain `<section class="max-w-5xl space-y-5">` instead. Use `LayoutContent` and `LayoutHeading` for new pages.
+The route file owns the panel. Feature screens (TechPack review) render inside `#body`. `UDashboardNavbar` shows its mobile sidebar toggle by itself.
+
 
 ## Page patterns
 
 | Pattern | Reference | Shape |
 | --- | --- | --- |
 | Queue or list | `features/techpack-review/components/ReviewQueueScreen.vue` | Status buttons in the URL → refresh → `UAlert` on error → `UCard` with loading, empty, or list → Previous/Next pager with "Page n of N" |
-| Overview + table | `pages/index.vue` (static) | `CardBoxWrapper :cols` with `CardBoxItem` stats → search and filter grid → `UTable :ui="tableTheme"` |
-| Detail with tabs | `pages/account/[id].vue` | `LayoutHeading` with a back link → `UTabs :ui="tabTheme"`, one slot per tab, the tab in `?tab=` → each tab renders a feature panel |
+| Overview + table | `pages/index.vue` (static) | Search and filter in `UDashboardToolbar` → `CardStats` → `UTable` |
+| Detail with tabs | `pages/account/[id].vue` | Back button in the navbar `#leading` → `UTabs :content="false"` in `UDashboardToolbar`, the tab in `?tab=` → the body renders the selected feature panel |
 | Review workspace | `features/techpack-review/components/ReviewDetailScreen.vue` | Source and workbook side by side, findings, a correction form, a replacement upload, an attestation checkbox, then Approve |
-| Create or edit form | `pages/product/create.vue` (UI only) | `LayoutHeading` with Cancel and Save in `#suffix` → `CardWrapper` → `UForm` |
+| Create or edit form | `pages/product/create.vue` (UI only) | Cancel and Save in the navbar `#right` → `UPageCard` → `UForm` |
 
 ## Required states
 
@@ -58,9 +66,9 @@ The `default` layout renders the header and sidebar, and the page fills the main
 
 ## Review checklist
 
-- [ ] The page uses `LayoutContent` and `LayoutHeading`, and its tables use `tableTheme`.
+- [ ] The page is a `UDashboardPanel` with a `UDashboardNavbar`.
 - [ ] Loading, empty, error, and pending states all render.
-- [ ] It works at 1280px and up, and the sidebar toggles below `xl` without breaking the layout.
+- [ ] It works at 1280px and up, and the sidebar collapses on desktop and opens as a slideover below `lg` without breaking the layout.
 - [ ] Keyboard focus is visible, icon-only buttons have an `aria-label`, and record actions show their disabled state.
 - [ ] Destructive actions use `<ModalConfirm>` and name the record.
 - [ ] No new sidebar link points to a page that doesn't exist.

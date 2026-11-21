@@ -1,8 +1,7 @@
 <script setup lang="ts">
 import type { TableColumn } from '@nuxt/ui'
 import { UBadge, UButton } from '#components'
-import type { CardBoxItem } from '@/types/components/card'
-import { tableTheme } from '@/theme/table'
+import type { CardStat } from '@/components/card/CardStats.vue'
 
 interface LeadTableData {
   id: string
@@ -67,7 +66,7 @@ const leadTableColumn = computed(() => {
   ] satisfies TableColumn<LeadTableData>[]
 })
 
-const overviewItems: CardBoxItem[] = [
+const overviewItems: CardStat[] = [
   {
     label: 'Lead Received',
     icon: 'lucide:inbox',
@@ -102,38 +101,35 @@ const overviewItems: CardBoxItem[] = [
 </script>
 
 <template>
-  <div>
-    <LayoutContent>
-      <LayoutHeading
-        title="Lead Inquiries"
-        description="Manage and Track incoming leads inquiries"
-      />
+  <UDashboardPanel>
+    <template #header>
+      <UDashboardNavbar title="Lead Inquiries" />
 
-      <CardBoxWrapper :cols="5">
-        <CardBoxItem :items="overviewItems" />
-      </CardBoxWrapper>
-
-      <section class="space-y-4">
-        <section class="grid grid-cols-1 sm:grid-cols-12 gap-4">
+      <UDashboardToolbar>
+        <template #left>
           <UInput
             icon="lucide:search"
             placeholder="Search"
-            class="lg:col-span-9 sm:col-span-6"
+            class="w-full max-w-sm"
           />
-
+        </template>
+        <template #right>
           <USelect
             placeholder="Onboarding Status"
             :items="['Completed', 'Pending']"
-            class="lg:col-span-3 sm:col-span-6"
+            class="w-48"
           />
-        </section>
+        </template>
+      </UDashboardToolbar>
+    </template>
 
-        <UTable
-          :data="leadTableData"
-          :columns="leadTableColumn"
-          :ui="tableTheme"
-        />
-      </section>
-    </LayoutContent>
-  </div>
+    <template #body>
+      <CardStats :items="overviewItems" />
+
+      <UTable
+        :data="leadTableData"
+        :columns="leadTableColumn"
+      />
+    </template>
+  </UDashboardPanel>
 </template>

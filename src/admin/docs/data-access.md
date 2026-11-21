@@ -161,5 +161,3 @@ session.signedIn   // computed
 **Tabs stay in step.** `useSessionSync` (started by the plugin) broadcasts sign-in and sign-out. Another tab reloads its profile, or ends its session.
 
 **State tied to the staff session.** If you add `useState` that belongs to the signed-in staff member, clear it in `useSession`'s `clear()`.
-
-`useStorage()` keeps UI preferences (sidebar state) in `localStorage`. Never store records or personal data there.

@@ -37,7 +37,7 @@ NUK Cafe has no service layer: feature composables call `apiFetch` inside `useAp
 5. **`useListQuery(choices)`.** Filters and the page live in the URL, and the page is 1-based there. Each filter is one of its choices, and the first choice is the default, left out of the URL. A filter change goes back to page 1, and `clampPage` moves a page past the end back to the last one.
 6. **`ApiError.from` walks the `cause` chain**, and `ApiError` gains `retryable` (`network`, `timeout`, `server`).
 7. **TechPack review is the reference again.** It's split into `useReview`, `useSourcePreview`, `useDraftInspection`, and `useReviewActions`, composed by `useReviewDetail`. The panels (`ReviewSourcePanel`, `ReviewWorkbookPanel`, `ReviewFindingsList`, `ReviewWorkbookGrid`, `ReviewActionsBar`) read it through VueUse's `createInjectionState`. A change of `draftUuid` clears the staged edits and the attestation.
-8. **The layout menu is one component** (`LayoutNavMenu`). It hides links to pages that don't exist, using the route table, so the router logs no warnings.
+8. **The layout menu is one component** (`LayoutNavMenu`; superseded by [0010](0010-admin-nuxt-ui-dashboard-shell.md), which uses `UNavigationMenu` in the layout). It hides links to pages that don't exist, using the route table, so the router logs no warnings.
 
 ## Alternatives
 

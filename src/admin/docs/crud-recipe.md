@@ -20,7 +20,6 @@ Before you touch a static screen, add this to the PR or the feature spec:
 | Failures | A resolved `success: false` and a thrown error | One thrown `ApiError` ([errors](data-access.md#errors)) |
 | List state | `reactive` query + `useAsyncData` watch | Query in the URL (`route.query`) + an aborted request on change. See the [list rules](data-access.md#lists). |
 | Confirm dialog | `<ModalConfirmation>` with `loading` | `<ModalConfirm>` emits `confirm` and `cancel`, and has no loading prop. Disable the trigger while pending, and close the dialog after the request. |
-| Tables | Nuxt UI defaults | `:ui="tableTheme"` from `@/theme/table` |
 | Text | i18n | English only |
 
 ## Files

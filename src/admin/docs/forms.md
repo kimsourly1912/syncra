@@ -7,20 +7,28 @@ Admin forms use the same rules as the shared [form conventions](../../../docs/co
 ```vue
 <script setup lang="ts">
 import type { FormSubmitEvent } from '@nuxt/ui'
-import type { SchemaToString } from '@/types/common'
-import { signInSchema } from '@/schema/auth.schema'
-import type { ISignInSchema } from '@/schema/auth.schema'
-import { useSignIn } from '@/features/auth'
+import { signInSchema, useSignIn } from '@/features/auth'
+import type { ISignInSchema } from '@/features/auth'
 
 const { pending, submit } = useSignIn()
 
 const data = reactive<ISignInSchema>({ email: '', password: '' })
-const FIELD_NAME = { email: 'email', password: 'password' } satisfies SchemaToString<ISignInSchema>
+const FIELD_NAME = { email: 'email', password: 'password' } satisfies { [K in keyof ISignInSchema]: K }
 
 function onSubmit(evt: FormSubmitEvent<ISignInSchema>) {
   return submit(evt.data)
 }
 </script>
+```
+
+```ts
+// features/auth/schemas/sign-in-form.ts: fields start from the generated request schema
+const { email, password } = vSuperAdminLoginRequest.entries
+
+export const signInSchema = v.object({
+  email: v.pipe(v.nonNullish(email), v.nonEmpty('This field is required'), v.email('Invalid email')),
+  password: v.pipe(v.nonNullish(password), v.nonEmpty('This field is required')),
+})
 ```
 
 ```ts
@@ -42,8 +50,7 @@ async function submit(form: ISignInSchema) {
 
 | Piece | Location |
 | --- | --- |
-| Schema + `I<Name>Schema` type | `app/features/<feature>/schemas/<name>-form.ts` (new). `app/schema/` holds the existing auth and base schemas. |
-| Field building blocks | `app/schema/base.schema.ts` |
+| Schema + `I<Name>Schema` type | `app/features/<feature>/schemas/<name>-form.ts`. Start each field from the generated request schema (`v<Request>.entries.<field>` in `v.nonNullish`), then add the form rules as Valibot actions. Don't add regex constants or a shared base schema. |
 | Form → request mapping | A pure function next to the schema |
 | Submit action | The feature composable |
 
@@ -51,7 +58,7 @@ async function submit(form: ISignInSchema) {
 
 | Need | Use |
 | --- | --- |
-| Password with strength hints | `<InputPassword>` + `<FormPasswordSuggestion>`, using the rules in `app/utils/validate.ts` |
+| Password with strength hints | `<InputPassword>` + `<PasswordSuggestion>` from `@/features/auth`. The rules are Valibot schemas in `features/auth/schemas/reset-password-form.ts`, shared by the checklist and `resetPasswordSchema`. |
 | Upload (workbook or image) | `UFileUpload` or a file input. Validate type and size on the client, and always show the server's verdict. |
 | Attestation | `UCheckbox`. Reset it when the thing being attested changes (`confirmed.value = false` in the review detail). |
 
@@ -59,4 +66,4 @@ async function submit(form: ISignInSchema) {
 
 - Disable the fields and the submit button while `pending` is true. Keep the form open until the request finishes.
 - Show the API reason with `toast.failed` or `toast.exception`, and keep the input as entered.
-- Pages with Save and Cancel in a `LayoutHeading #suffix` (products, plans) put the form outside `UForm`'s submit button. Bind Save to the form with a template ref, or move the button inside the form. Don't leave Save unconnected, as the current shells do.
+- Pages with Save and Cancel in the `UDashboardNavbar #right` slot (products, plans) put the form outside `UForm`'s submit button. Bind Save to the form with a template ref, or move the button inside the form. Don't leave Save unconnected, as the current shells do.

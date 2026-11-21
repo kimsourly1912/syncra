@@ -1,4 +1,4 @@
-import type { ISignInSchema } from '@/schema/auth.schema'
+import type { ISignInSchema } from '../schemas/sign-in-form'
 import { redirectTarget, useSession } from '@/features/session'
 
 export function useSignIn() {

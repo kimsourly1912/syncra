@@ -6,10 +6,6 @@ const { status, page, listQuery, items, totalPages, loading, pending, listError,
 
 <template>
   <section class="max-w-5xl space-y-5">
-    <h1 class="text-2xl font-semibold text-highlighted">
-      TechPack reviews
-    </h1>
-
     <div class="flex flex-wrap gap-2">
       <UButton
         label="In Review"

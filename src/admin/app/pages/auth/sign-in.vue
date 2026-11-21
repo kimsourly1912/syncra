@@ -1,9 +1,7 @@
 <script setup lang="ts">
 import type { FormSubmitEvent } from '@nuxt/ui'
-import { signInSchema } from '@/schema/auth.schema'
-import type { SchemaToString } from '@/types/common'
-import type { ISignInSchema } from '@/schema/auth.schema'
-import { useSignIn } from '@/features/auth'
+import { signInSchema, useSignIn } from '@/features/auth'
+import type { ISignInSchema } from '@/features/auth'
 
 definePageMeta({ access: 'guest', layout: 'auth' })
 
@@ -17,7 +15,7 @@ const data = reactive<ISignInSchema>({
 const FIELD_NAME = {
   email: 'email',
   password: 'password',
-} satisfies SchemaToString<ISignInSchema>
+} satisfies { [K in keyof ISignInSchema]: K }
 
 function onSubmit(evt: FormSubmitEvent<ISignInSchema>) {
   return submit(evt.data)

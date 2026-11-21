@@ -1,7 +1,9 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 import { mockNuxtImport } from '@nuxt/test-utils/runtime'
 import { clearNuxtState, useRouter } from '#imports'
-import { useForgotPassword, useResetPassword, useSignIn, useSignOut } from '../../app/features/auth'
+import * as v from 'valibot'
+import { resetPasswordSchema, signInSchema, useForgotPassword, useResetPassword, useSignIn, useSignOut } from '../../app/features/auth'
+import { checkPasswordRules } from '../../app/features/auth/schemas/reset-password-form'
 import { useSession } from '../../app/features/session'
 import { fakeApi, ok, refused } from '../fake-api'
 
@@ -26,6 +28,30 @@ beforeEach(async () => {
   // Let the app's own first load settle, then start every test signed out.
   await useSession().load()
   clearNuxtState(['session:status', 'session:staff'])
+})
+
+describe('form schemas', () => {
+  const messages = (schema: v.GenericSchema, input: unknown) =>
+    v.safeParse(schema, input).issues?.map(issue => issue.message) ?? []
+
+  it('requires a valid email and a password to sign in', () => {
+    expect(messages(signInSchema, form)).toEqual([])
+    // UForm shows each field's first message.
+    expect(messages(signInSchema, { email: '', password: '' })).toEqual(['This field is required', 'Invalid email', 'This field is required'])
+    expect(messages(signInSchema, { email: 'not-an-email', password: 'x' })).toEqual(['Invalid email'])
+  })
+
+  it('checks each password rule on its own', () => {
+    expect(checkPasswordRules('abc def').map(rule => rule.valid)).toEqual([false, false, false, false])
+    expect(checkPasswordRules('Sample-Passw0rd').map(rule => rule.valid)).toEqual([true, true, true, true])
+    expect(checkPasswordRules('samplepassw0rd!').map(rule => rule.valid)).toEqual([true, true, false, true])
+  })
+
+  it('rejects a weak or mismatched new password', () => {
+    expect(messages(resetPasswordSchema, { newPassword: 'Sample-Passw0rd', confirmPassword: 'Sample-Passw0rd' })).toEqual([])
+    expect(messages(resetPasswordSchema, { newPassword: 'weak', confirmPassword: 'weak' })).toEqual(['Password too weak'])
+    expect(messages(resetPasswordSchema, { newPassword: 'Sample-Passw0rd', confirmPassword: 'Other-Passw0rd' })).toEqual(['Passwords do not match.'])
+  })
 })
 
 describe('sign-in', () => {

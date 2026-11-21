@@ -1,8 +1,6 @@
 <script setup lang="ts">
 import type { TableColumn } from '@nuxt/ui'
-import type { CardBoxItem } from '@/types/components/card'
-import CardTitle from '~/components/card/CardTitle.vue'
-import { tableTheme } from '@/theme/table'
+import type { CardStat } from '@/components/card/CardStats.vue'
 
 interface TokenTableData {
   activity: string
@@ -13,7 +11,7 @@ interface TokenTableData {
   date: string
 }
 
-const tokenItems: CardBoxItem[] = [
+const tokenItems: CardStat[] = [
   {
     label: 'Current Token Balance',
     value: '10.000',
@@ -74,10 +72,12 @@ const tokenTableColumn = computed(() => {
 </script>
 
 <template>
-  <header class="flex items-center gap-4 justify-between flex-wrap">
-    <CardTitle title="Token Balance" />
-
-    <div class="flex gap-4 flex-wrap">
+  <UPageCard
+    title="Token Balance"
+    variant="naked"
+    orientation="horizontal"
+  >
+    <div class="flex gap-2 flex-wrap lg:justify-end">
       <UButton
         label="Deduct Token"
         icon="lucide:minus"
@@ -89,45 +89,40 @@ const tokenTableColumn = computed(() => {
         icon="lucide:plus"
       />
     </div>
-  </header>
+  </UPageCard>
 
-  <CardBoxWrapper :cols="3">
-    <CardBoxItem :items="tokenItems">
-      <template #bottom="{ theme, item }">
-        <section :class="[theme.title, 'flex items-center gap-2']">
-          <div class="rounded-full bg-default border-4 border-primary/25 inline-flex items-center justify-center">
-            <img
-              src="/img/coin.png"
-              class="size-6"
-            >
-          </div>
-          {{ item.value }}
-        </section>
-      </template>
-    </CardBoxItem>
-  </CardBoxWrapper>
+  <CardStats :items="tokenItems">
+    <template #value="{ item }">
+      <div class="rounded-full bg-default border-4 border-primary/25 inline-flex items-center justify-center">
+        <img
+          src="/img/coin.png"
+          class="size-6"
+        >
+      </div>
+      {{ item.value }}
+    </template>
+  </CardStats>
 
-  <section class="space-y-4">
-    <CardTitle title="Token Transaction History" />
-
-    <section class="grid grid-cols-1 sm:grid-cols-12 gap-4">
+  <UPageCard
+    title="Token Transaction History"
+    variant="naked"
+  >
+    <div class="flex flex-wrap items-center justify-between gap-2">
       <UInput
         icon="lucide:search"
         placeholder="Search"
-        class="lg:col-span-9 sm:col-span-6"
+        class="w-full max-w-sm"
       />
-
       <USelect
         placeholder="Activity"
         :items="['Completed', 'Pending']"
-        class="lg:col-span-3 sm:col-span-6"
+        class="w-48"
       />
-    </section>
+    </div>
 
     <UTable
       :data="tokenTableData"
       :columns="tokenTableColumn"
-      :ui="tableTheme"
     />
-  </section>
+  </UPageCard>
 </template>

@@ -1,24 +1,29 @@
 # Admin building blocks
 
-These are Admin's shared components, composables, and utilities. Components and composables are auto-imported. Component names include their folder: `card/CardWrapper.vue` becomes `<CardWrapper>`. When you add or change a shared block, update this page in the same change.
+These are Admin's shared components, composables, and utilities. Components and composables are auto-imported. Component names include their folder: `card/CardStats.vue` becomes `<CardStats>`. When you add or change a shared block, update this page in the same change.
+
+## Nuxt UI first
+
+Page chrome, cards, and states come straight from Nuxt UI ([0010](../../../docs/decisions/0010-admin-nuxt-ui-dashboard-shell.md)). Don't wrap these in Admin components:
+
+| Need | Use |
+| --- | --- |
+| Page shell | `UDashboardPanel` → `#header`: `UDashboardNavbar` (`title`, back button in `#leading`, actions in `#right`) + optional `UDashboardToolbar` (list filters, page tabs) → `#body` |
+| Titled card | `UPageCard title variant="outline"` |
+| Section heading with actions | `UPageCard title variant="naked" orientation="horizontal"`, actions in the default slot |
+| Empty or placeholder state | `UEmpty` |
+| Round icon | `UBadge icon square class="rounded-full p-3"` |
 
 ## Components
 
+Only what Nuxt UI doesn't provide and two or more screens use:
+
 | Component | Use for |
 | --- | --- |
-| `LayoutContent` | The page container (`max-w-7xl`, vertical spacing) |
-| `LayoutHeading` | The page `title` and `description`. With `to`, it shows a back arrow. `#suffix` holds page actions. |
-| `LayoutNavMenu` | The sidebar menu (`items`, `signingOut`; emits `navigate` and `signOut`). Hides links to pages that don't exist. |
-| `CardWrapper` | A `UCard` with a `CardTitle` header (`title`) |
-| `CardTitle` | A card heading |
-| `CardBoxWrapper` + `CardBoxItem` | A stat grid (`cols`) of `items: CardBoxItem[]`. The types are in `types/components/card.ts`. |
-| `ListWrapper` + `ListItem` | A label and value list (`items: ListItem[]`, with types `text` or `badge`). The types are in `types/components/list.ts`. |
-| `TableFilter` | The filter row above a table |
-| `ModalConfirm` | A confirmation dialog. `v-model` opens it. Props: `title` (default "Are you sure?") and `description` (or the `#description` slot). Emits `confirm` and `cancel`. **It has no loading prop.** |
-| `BaseIconBadge` | A round colored icon (`icon`, `size`, `color`) |
-| `BaseLink` | `ULink` with Admin styles (takes `LinkProps`) |
+| `CardStats` | A stat grid of `items: CardStat[]` (`label`, `value`, `icon`, `color`), built on `UPageGrid` + `UPageCard`. Columns follow the item count. `#value="{ item }"` replaces the value. The `CardStat` type is exported from `CardStats.vue`. |
+| `ListDetails` | A label and value list (`items: ListDetail[]`; `type` is `text` by default or `badge`). The `ListDetail` type is exported from `ListDetails.vue`. |
+| `ModalConfirm` | A `UModal` confirmation. `v-model` opens it. Props: `title` (default "Are you sure?") and `description` (or the `#description` slot). Emits `confirm` and `cancel`. **It has no loading prop.** |
 | `InputPassword` | A password field with a show/hide toggle |
-| `FormPasswordSuggestion` | A live password rule checklist |
 
 ## Composables
 
@@ -29,7 +34,6 @@ These are Admin's shared components, composables, and utilities. Components and 
 | `invalidateQueries(...prefixes)` | Refresh the queries on screen whose key starts with a prefix |
 | `useListQuery(choices)` | A list's filters and 1-based page in the URL ([lists](data-access.md#lists-uselistquery)) |
 | `useAppToast()` | `success(description, title?)`, `failed(description, title?)`, `error(e, title?)` (skips silent errors), `base` |
-| `useStorage()` | `preference` (sidebar collapsed) in `localStorage` |
 
 ## API and session
 
@@ -43,18 +47,10 @@ Imported explicitly, not auto-imported.
 | `useSession()` | `@/features/session` | `status`, `staff`, `signedIn`, `load`, `reload`, `signIn`, `signOut`, `end` ([session](data-access.md#the-session)) |
 | `SESSION_PATHS`, `redirectTarget(value)` | `@/features/session` | Home and sign-in paths; a safe `?redirect=` target |
 | `useSignIn`, `useSignOut`, `useForgotPassword`, `useResetPassword` | `@/features/auth` | The auth forms and the Log Out button |
+| `signInSchema`, `forgotPasswordSchema`, `resetPasswordSchema`, `PasswordSuggestion` | `@/features/auth` | Auth form schemas; the live password rule checklist |
 
-## Theme objects
-
-| Export | File | Use on |
-| --- | --- | --- |
-| `tableTheme` | `theme/table.ts` | Every `UTable` (`:ui="tableTheme"`) |
-| `tabTheme` | `theme/tab.ts` | Page-level `UTabs` (`:ui="tabTheme"`) |
-
-## Utilities and constants
+## Utilities
 
 | Export | File | Use for |
 | --- | --- | --- |
-| `tw`, `IS_DEV` | `utils/common.ts` | Class strings in TypeScript; dev check |
 | `saveFile(blob, filename)` | `utils/file.ts` | Hand a downloaded file to the browser |
-| `validatePassword*`, `getPasswordValidationMessages` | `utils/validate.ts` | Password rules |

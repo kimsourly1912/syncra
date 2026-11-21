@@ -2,13 +2,19 @@
 </script>
 
 <template>
-  <div>
-    <LayoutContent>
-      <LayoutHeading
-        title="Create New Product"
-        to="/product"
-      >
-        <template #suffix>
+  <UDashboardPanel>
+    <template #header>
+      <UDashboardNavbar title="Create New Product">
+        <template #leading>
+          <UButton
+            icon="lucide:arrow-left"
+            color="neutral"
+            variant="ghost"
+            to="/product"
+            aria-label="Back"
+          />
+        </template>
+        <template #right>
           <UButton
             label="Cancel"
             variant="outline"
@@ -18,9 +24,14 @@
             label="Save"
           />
         </template>
-      </LayoutHeading>
+      </UDashboardNavbar>
+    </template>
 
-      <CardWrapper title="Product Listing Information">
+    <template #body>
+      <UPageCard
+        title="Product Listing Information"
+        variant="outline"
+      >
         <UForm class="space-y-5">
           <UFormField
             label="Product Icon"
@@ -76,9 +87,12 @@
             </div>
           </UFormField>
         </UForm>
-      </CardWrapper>
+      </UPageCard>
 
-      <CardWrapper title="Product Detail Page">
+      <UPageCard
+        title="Product Detail Page"
+        variant="outline"
+      >
         <UForm>
           <UFormField
             label="Coming Soon"
@@ -92,7 +106,7 @@
             </div>
           </UFormField>
         </UForm>
-      </CardWrapper>
-    </LayoutContent>
-  </div>
+      </UPageCard>
+    </template>
+  </UDashboardPanel>
 </template>

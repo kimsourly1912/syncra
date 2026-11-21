@@ -1,5 +1,4 @@
 <script setup lang="ts">
-import { tableTheme } from '@/theme/table'
 import type { TableColumn } from '@nuxt/ui'
 import { UBadge, UButton } from '#components'
 
@@ -63,35 +62,36 @@ const columns = computed(() => {
 </script>
 
 <template>
-  <div>
-    <LayoutContent>
-      <LayoutHeading
-        title="Plan & Pricing Management"
-        description="Manage Syncra Plan & Pricing"
-      >
-        <template #suffix>
+  <UDashboardPanel>
+    <template #header>
+      <UDashboardNavbar title="Plan & Pricing Management">
+        <template #right>
           <UButton
             label="Create New Plan"
             to="/plan-pricing/create"
           />
         </template>
-      </LayoutHeading>
+      </UDashboardNavbar>
 
-      <section class="space-y-4">
-        <UInput
-          icon="lucide:search"
-          placeholder="Search"
-          class="max-w-sm w-full"
-        />
-        <UTable
-          :column-pinning="{
-            right: ['action'],
-          }"
-          :data
-          :columns
-          :ui="tableTheme"
-        />
-      </section>
-    </LayoutContent>
-  </div>
+      <UDashboardToolbar>
+        <template #left>
+          <UInput
+            icon="lucide:search"
+            placeholder="Search"
+            class="w-full max-w-sm"
+          />
+        </template>
+      </UDashboardToolbar>
+    </template>
+
+    <template #body>
+      <UTable
+        :column-pinning="{
+          right: ['action'],
+        }"
+        :data
+        :columns
+      />
+    </template>
+  </UDashboardPanel>
 </template>
