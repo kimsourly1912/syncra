@@ -96,10 +96,10 @@ const tokenTableColumn = computed(() => {
       <template #bottom="{ theme, item }">
         <section :class="[theme.title, 'flex items-center gap-2']">
           <div class="rounded-full bg-default border-4 border-primary/25 inline-flex items-center justify-center">
-            <NuxtImg
+            <img
               src="/img/coin.png"
               class="size-6"
-            />
+            >
           </div>
           {{ item.value }}
         </section>

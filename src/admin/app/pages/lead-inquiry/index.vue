@@ -76,7 +76,7 @@ const overviewItems: CardBoxItem[] = [
   },
   {
     label: 'New',
-    icon: 'app:new-box',
+    icon: 'lucide:badge-plus',
     value: '10',
     color: 'info',
   },

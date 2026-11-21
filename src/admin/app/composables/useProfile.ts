@@ -1,11 +1,11 @@
-import { ASYNC_DATA } from '~/constants/key'
-import type { ProfileData } from '@/types/dto/profile.dto'
+import { ASYNC_DATA } from '@/constants/key'
+import type { StaffProfile } from '@/models/staff-profile'
 
 export function useProfile() {
   const key = ASYNC_DATA.profile
   const nuxtApp = useNuxtApp()
 
-  const nuxtData = useNuxtData<ProfileData>(key)
+  const nuxtData = useNuxtData<StaffProfile>(key)
   const clear = () => clearNuxtData(key)
   const refresh = () => refreshNuxtData(key)
 

@@ -1,5 +1,5 @@
 import { STATE } from '@/constants/key'
-import { logout } from '@/services/auth.service'
+import { logout } from '@/services/session.service'
 
 type AuthStatus = 'UNKNOWN' | 'AUTHENTICATED' | 'UNAUTHENTICATED'
 
@@ -9,10 +9,12 @@ export function useAuth() {
   const authState = useState<AuthStatus>(STATE.auth, () => 'UNKNOWN')
   const isAuthenticated = computed(() => authState.value === 'AUTHENTICATED')
 
-  async function onSuccess(fn: () => void) {
+  async function onSuccess(fn: () => void | Promise<void>) {
     await profile.refresh()
+    // refreshNuxtData doesn't throw, so confirm the profile actually loaded.
+    if (!profile.data.value) throw new Error('Signed in, but your profile could not be loaded. Please try again.')
     setAuthState('AUTHENTICATED')
-    fn()
+    await fn()
   }
 
   function logoutProps() {

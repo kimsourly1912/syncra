@@ -1,9 +1,10 @@
 export default defineNuxtPlugin((_) => {
-  const { public: { apiURL } } = useRuntimeConfig()
+  const { public: { apiURL, apiProxyPath } } = useRuntimeConfig()
 
   // fetch instace provide only essential option
   const api = $fetch.create({
-    baseURL: apiURL,
+    // apiProxyPath is only set in `nuxt dev` (see nuxt.config.ts)
+    baseURL: apiProxyPath || apiURL,
     credentials: 'include',
   })
 

@@ -1,7 +1,7 @@
 import type { FetchError } from 'ofetch'
 import { Mutex, withTimeout } from 'async-mutex'
 import type { NitroFetchOptions, NitroFetchRequest } from 'nitropack/types'
-import { refreshToken } from '@/services/auth.service'
+import { refreshToken } from '@/services/session.service'
 import { STATUS_CODE } from '@/constants/key'
 
 let isRefreshing = false
@@ -18,8 +18,8 @@ export async function useAPI<T, R extends NitroFetchRequest = NitroFetchRequest>
   }
 
   async function tryRefreshToken() {
-    const { data } = await refreshToken()
-    return data
+    // A resolved `success: false` falls through to the retry, whose 401 then logs out.
+    await refreshToken()
   }
 
   async function ensureRefreshOnce() {

@@ -120,7 +120,7 @@
                 <UButton
                   variant="ghost"
                   color="error"
-                  icon="lucide:trash-2"
+                  icon="lucide:trash"
                 />
               </section>
             </UFormField>

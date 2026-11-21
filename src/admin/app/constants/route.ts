@@ -1,4 +1,5 @@
-import type { AcceptLiteral } from '@/types/common'
+// Relative on purpose: nuxt.config.ts imports this file, and the `@/` alias doesn't exist there yet.
+import type { AcceptLiteral } from '../types/common'
 import type { NitroRouteConfig } from 'nitropack/types'
 
 export type IRoutes = RoutePublic | RoutePrivate

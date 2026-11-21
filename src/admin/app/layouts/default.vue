@@ -97,10 +97,10 @@ const toggle = reactive({
           to="/"
           class="flex items-center gap-3 text-2xl font-semibold"
         >
-          <NuxtImg
+          <img
             src="/img/syncra-logo.png"
             class="max-w-8"
-          />
+          >
           Syncra
         </NuxtLink>
       </section>
@@ -182,10 +182,10 @@ const toggle = reactive({
               class="flex items-center gap-3 text-2xl font-semibold"
               @click="toggle.menu =false"
             >
-              <NuxtImg
+              <img
                 src="/img/syncra-logo.png"
                 class="max-w-8"
-              />
+              >
               Syncra
             </NuxtLink>
           </header>

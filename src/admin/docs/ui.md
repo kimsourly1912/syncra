@@ -9,7 +9,7 @@ Admin is a dense desktop-first staff console. Use Nuxt UI components and Admin's
 - **Font.** League Spartan (`--font-sans`).
 - **Default sizes.** Buttons, inputs, selects, badges, and switches default to `size: 'lg'` in `app.config.ts`. Don't set `size="lg"` again on each component.
 - **Shared `:ui` objects.** `theme/table.ts` (`tableTheme`, a primary header row) and `theme/tab.ts` (`tabTheme`). Pass them as `:ui="tableTheme"` on every `UTable`, and `:ui="tabTheme"` on page-level `UTabs`.
-- **Icons.** `lucide:*`, plus the custom `app:*` collection from `app/assets/icons/app`.
+- **Icons.** Lucide only (`lucide:*`, from `@iconify-json/lucide`). Write icon names as literal strings: `clientBundle.scan` bundles the icons it finds in the source at build time. Don't add custom SVG collections; pick an Iconify icon instead.
 
 ## Page anatomy
 
@@ -39,10 +39,10 @@ The `default` layout renders the header and sidebar, and the page fills the main
 
 | Pattern | Reference | Shape |
 | --- | --- | --- |
-| Queue or list | `pages/techpack-reviews/index.vue` | Status buttons in the URL → refresh → `UAlert` on error → `UCard` with loading, empty, or list → Previous/Next pager with "Page n of N" |
+| Queue or list | `features/techpack-review/components/ReviewQueueScreen.vue` | Status buttons in the URL → refresh → `UAlert` on error → `UCard` with loading, empty, or list → Previous/Next pager with "Page n of N" |
 | Overview + table | `pages/index.vue` (static) | `CardBoxWrapper :cols` with `CardBoxItem` stats → search and filter grid → `UTable :ui="tableTheme"` |
 | Detail with tabs | `pages/account/[id].vue` | `LayoutHeading` with a back link → `UTabs :ui="tabTheme"`, one slot per tab, the tab in `?tab=` → each tab renders a feature panel |
-| Review workspace | `pages/techpack-reviews/[fileId].vue` | Source and workbook side by side, findings, a correction form, a replacement upload, an attestation checkbox, then Approve |
+| Review workspace | `features/techpack-review/components/ReviewDetailScreen.vue` | Source and workbook side by side, findings, a correction form, a replacement upload, an attestation checkbox, then Approve |
 | Create or edit form | `pages/product/create.vue` (UI only) | `LayoutHeading` with Cancel and Save in `#suffix` → `CardWrapper` → `UForm` |
 
 ## Required states
