@@ -1,8 +1,10 @@
 <script setup lang="ts">
-import type { NavigationMenuItem } from '@nuxt/ui'
+import type { CommandPaletteGroup, DropdownMenuItem, NavigationMenuItem } from '@nuxt/ui'
 import { useSignOut } from '@/features/auth'
+import { useSession } from '@/features/session'
 
 const signOut = useSignOut()
+const { staff } = useSession()
 const router = useRouter()
 
 const menuItems: NavigationMenuItem[] = [
@@ -70,6 +72,23 @@ const menuItems: NavigationMenuItem[] = [
 const routePaths = new Set(router.getRoutes().map(route => route.path))
 const links = menuItems.filter(item => item.type === 'label' || routePaths.has(item.to as string))
 const visibleItems = links.filter((item, index) => item.type !== 'label' || (links[index + 1] && links[index + 1]!.type !== 'label'))
+
+// Ctrl/⌘+K or the sidebar's Search button: go to any page in the sidebar. Nuxt UI adds the
+// light/dark commands.
+const searchGroups: CommandPaletteGroup[] = [{
+  id: 'pages',
+  label: 'Go to',
+  items: visibleItems
+    .filter(item => item.type !== 'label')
+    .map(item => ({ label: item.label, icon: item.icon as string | undefined, to: item.to })),
+}]
+
+// The signed-in staff member's menu, at the bottom of the sidebar.
+const staffName = computed(() => staff.value?.username || staff.value?.email || 'Account')
+const staffMenu = computed<DropdownMenuItem[][]>(() => [
+  [{ label: staff.value?.email ?? staffName.value, type: 'label' }],
+  [{ label: 'Log Out', icon: 'lucide:log-out', disabled: signOut.pending.value, onSelect: () => void signOut.submit() }],
+])
 </script>
 
 <template>
@@ -98,6 +117,11 @@ const visibleItems = links.filter((item, index) => item.type !== 'label' || (lin
       </template>
 
       <template #default="{ collapsed }">
+        <UDashboardSearchButton
+          :collapsed
+          label="Search"
+          class="bg-transparent ring-default"
+        />
         <UNavigationMenu
           :items="visibleItems"
           :collapsed
@@ -107,19 +131,39 @@ const visibleItems = links.filter((item, index) => item.type !== 'label' || (lin
       </template>
 
       <template #footer="{ collapsed }">
-        <UButton
-          :label="collapsed ? undefined : 'Log Out'"
-          :aria-label="collapsed ? 'Log Out' : undefined"
-          icon="lucide:log-out"
-          color="neutral"
-          variant="ghost"
-          block
-          :loading="signOut.pending.value"
-          @click="signOut.submit"
-        />
+        <div
+          class="flex w-full items-center gap-1"
+          :class="{ 'flex-col': collapsed }"
+        >
+          <UDropdownMenu
+            :items="staffMenu"
+            :content="{ align: 'start', side: 'top' }"
+            class="min-w-0 flex-1"
+          >
+            <UButton
+              :label="collapsed ? undefined : staffName"
+              :aria-label="collapsed ? staffName : undefined"
+              icon="lucide:circle-user"
+              color="neutral"
+              variant="ghost"
+              block
+              :square="collapsed"
+              :loading="signOut.pending.value"
+              class="justify-start"
+            />
+          </UDropdownMenu>
+          <UColorModeButton />
+        </div>
       </template>
     </UDashboardSidebar>
 
     <slot />
+
+    <UDashboardSearch
+      :groups="searchGroups"
+      placeholder="Search pages…"
+      title="Search"
+      description="Go to a page in Syncra Admin"
+    />
   </UDashboardGroup>
 </template>

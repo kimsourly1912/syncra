@@ -13,7 +13,8 @@ A decision record explains an architecture or documentation choice that had real
 | [0007](0007-generated-api-contract.md) | Admin generates its API contract from OpenAPI and parses responses into feature models | Accepted. Envelope parsing moved into the client by 0008. |
 | [0008](0008-admin-api-client-and-session.md) | Admin API client with one failure path, a session feature, and page-meta route access | Accepted. Admin only. |
 | [0009](0009-admin-typed-endpoints-and-query-toolkit.md) | Admin endpoints typed from the spec, no service layer, and query, mutation, and list helpers | Accepted. Admin only. Item 8 superseded by 0010. |
-| [0010](0010-admin-nuxt-ui-dashboard-shell.md) | Admin pages use Nuxt UI dashboard and page components; few shared components | Accepted. Admin only. |
+| [0010](0010-admin-nuxt-ui-dashboard-shell.md) | Admin pages use Nuxt UI dashboard and page components; few shared components | Accepted. Admin only. Shared components extended by 0011. |
+| [0011](0011-admin-list-toolkit-and-color-mode.md) | Admin list toolkit (search, page size, status tabs, pager, states), page search, and light/dark mode | Accepted. Admin only. |
 
 ## Template
 

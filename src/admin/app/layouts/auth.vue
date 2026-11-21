@@ -4,6 +4,7 @@
 
 <template>
   <main>
+    <UColorModeButton class="fixed top-4 right-4" />
     <section class="min-h-screen flex items-center justify-center">
       <slot />
     </section>

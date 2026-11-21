@@ -24,7 +24,7 @@ function onSubmit(evt: FormSubmitEvent<ISignInSchema>) {
 
 <template>
   <div class="p-4 max-w-lg w-full">
-    <section class="bg-white rounded-lg p-6 space-y-8">
+    <section class="bg-default rounded-lg p-6 space-y-8">
       <header class="flex flex-col gap-4 items-center text-center">
         <img
           src="/img/syncra-logo.png"

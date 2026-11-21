@@ -1,4 +1,4 @@
-import { api, errorMessage } from '@/api'
+import { api } from '@/api'
 import { reviewPageModel } from '../models/review-item'
 import type { ReviewStatus } from '../models/review-item'
 
@@ -7,9 +7,12 @@ const STATUS = {
   'reviewed': 'REVIEWED',
 } as const satisfies Record<string, ReviewStatus>
 
+export type ReviewQueueTab = keyof typeof STATUS
+
 /** The review queue. The status tab and the page live in the URL (`?status=reviewed&page=2`). */
 export function useReviewQueue() {
   const route = useRoute()
+  // The API has a fixed page size and no search.
   const list = useListQuery({ status: ['in-review', 'reviewed'] as const })
   const status = computed(() => STATUS[list.filters.value.status])
 
@@ -28,6 +31,7 @@ export function useReviewQueue() {
   })
 
   return {
+    tab: computed(() => list.filters.value.status),
     status,
     page: list.page,
     /** The list's URL query, kept by links into a review so Back returns here. */
@@ -35,10 +39,11 @@ export function useReviewQueue() {
     items: computed(() => reviews.data.value?.content ?? []),
     totalPages: computed(() => reviews.data.value?.totalPages ?? 0),
     loading: reviews.loading,
+    refreshing: reviews.refreshing,
     pending: reviews.pending,
-    listError: computed(() => (reviews.error.value ? errorMessage(reviews.error.value, 'Could not load TechPack reviews.') : '')),
+    error: reviews.error,
     refresh: reviews.refresh,
-    showStatus: (next: 'in-review' | 'reviewed') => list.setFilters({ status: next }),
+    showStatus: (next: ReviewQueueTab) => list.setFilters({ status: next }),
     showPage: list.setPage,
   }
 }
