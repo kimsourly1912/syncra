@@ -28,7 +28,7 @@ src/admin/app/
 │       └── index.ts
 ├── components/                  # shared, auto-registered WITH folder prefix (see below)
 │   └── alert/ card/ input/ list/ modal/ # AlertApiError, CardStats, InputPassword, InputSearch, List* (Details, StatusTabs, Pagination, EmptyState, Refresh, Skeleton), ModalConfirm; the rest is Nuxt UI
-├── composables/                 # useApiQuery, useApiMutation, useListQuery, useUrlTab, useRefreshIndicator, useAppToast
+├── composables/                 # useApiQuery, useApiMutation, useListQuery, useUrlTab, useCenteredTab, useRefreshIndicator, useAppToast
 ├── api/                         # '@/api': client, errors, session recovery, contract helpers, generated/ (types, schemas, endpoint map; never edit)
 ├── utils/                       # file.ts (saveFile), navigation.ts (isSectionActive)
 ├── types/page-meta.d.ts         # the `access` page meta
@@ -70,13 +70,13 @@ There are no services: a composable calls `api` with a path from the spec and a 
 | Pattern | Reference | Why |
 | --- | --- | --- |
 | API-backed list | `features/techpack-review/composables/useReviewQueue.ts` + `ReviewQueueScreen.vue` | `useListQuery` (status and 1-based page in the URL) + `useApiQuery` keyed by them. `ListStatusTabs`, `AlertApiError`, skeleton rows, `ListRefresh`, `ListEmptyState`, `ListPagination`; the filename opens the record. A page past the end moves back. |
-| Searchable table list with totals | `features/lead-inquiry/composables/useLeadList.ts` + `LeadListScreen.vue` | `useListQuery` with `search` and `pageSizes`; `envelope: false` for this endpoint; a separate summary query feeds `CardStats` (skeleton while loading, its own error). The screen owns the `UDashboardPanel`, so the toolbar can bind to the list state. Extra filters: `useSaleRequestList` (type select); navbar actions through a slot: `AccountListScreen`. |
+| Searchable table list with totals | `features/lead-inquiry/composables/useLeadList.ts` + `LeadListScreen.vue` | `useListQuery` with `search` and `pageSizes`; `envelope: false` for this endpoint; a separate summary query feeds the `ListStatusTabs` counts (its own error above the tabs). The screen owns the `UDashboardPanel`, so the toolbar can bind to the list state. Extra filters: `useSaleRequestList` (type select); navbar actions through a slot: `AccountListScreen`. |
 | A screen split into panels | `useReviewDetail.ts` + `ReviewDetailScreen.vue` and its panels | Focused composables (record, PDF preview, inspection, actions) composed once and shared with panels through `createInjectionState`. |
 | Writes | `features/techpack-review/composables/useReviewActions.ts` | `useApiMutation` per action: toasts, pending, double-submit guard, `invalidate`. Each save sends the current `draftUuid`; a draft change clears the attestation. |
 | Form with Valibot + pending | `pages/auth/sign-in.vue` + `features/auth/composables/useSignIn.ts` | `UForm` + a feature schema (`features/auth/schemas/`) + `FIELD_NAME satisfies { [K in keyof IForm]: K }`. The composable wraps the request in `useApiMutation` and acts on `result.ok`. |
 | Request + model | `features/auth/composables/useForgotPassword.ts`, `features/auth/models/forgot-password.ts` | `api.post('/admin/auth/forgot-password', { body, auth: false, model })` |
 | Session-aware action | `features/session/composables/useSession.ts` | Shared state in `useState`, one in-flight load, idempotent `end()` |
-| Tabs in the URL | `pages/account/[id].vue` | `UTabs` bound to `useUrlTab`: an unknown `?tab=` reads as the first tab, and switching replaces the URL |
+| Tabs in the URL | `pages/account/[id].vue` | `ListToolbarTabs` bound to `useUrlTab`: an unknown `?tab=` reads as the first tab, and switching replaces the URL |
 | Page layout | `pages/product/create.vue` | `UDashboardPanel` → `UDashboardNavbar` (back button in `#leading`, actions in `#right`) → `UPageCard` |
 
 ## Legacy: don't copy

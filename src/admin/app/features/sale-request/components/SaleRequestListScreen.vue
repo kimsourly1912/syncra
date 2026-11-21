@@ -1,7 +1,6 @@
 <script setup lang="ts">
 import type { TableColumn } from '@nuxt/ui'
 import { UBadge } from '#components'
-import type { CardStat } from '@/components/card/CardStats.vue'
 import type { ListStatusTab } from '@/components/list/ListStatusTabs.vue'
 import { SALE_REQUEST_PAGE_SIZES, useSaleRequestList } from '../composables/useSaleRequestList'
 import type { SaleRequestStatusTab, SaleRequestTypeFilter } from '../composables/useSaleRequestList'
@@ -10,16 +9,8 @@ import { formatSubmitDate, SALE_REQUEST_SOURCE, SALE_REQUEST_STATUS, SALE_REQUES
 
 const {
   tab, type, search, page, pageSize, isFiltered, items, totalPages, loading, refreshing, pending, error, refresh,
-  summary, summaryLoading, summaryError, refreshSummary, showStatus, showType, setSearch, showPage, setPageSize, clearFilters,
+  summary, summaryError, refreshSummary, showStatus, showType, setSearch, showPage, setPageSize, clearFilters,
 } = useSaleRequestList()
-
-const tabs: ListStatusTab<SaleRequestStatusTab>[] = [
-  { label: 'All', value: 'all' },
-  { label: 'Pending', value: 'pending' },
-  { label: 'Approved', value: 'approved' },
-  { label: 'Rejected', value: 'rejected' },
-  { label: 'Completed', value: 'completed' },
-]
 
 const typeItems: { label: string, value: SaleRequestTypeFilter }[] = [
   { label: 'All types', value: 'all' },
@@ -28,14 +19,13 @@ const typeItems: { label: string, value: SaleRequestTypeFilter }[] = [
   { label: 'Seat', value: 'seat' },
 ]
 
-const count = (value: number | null | undefined) => (value == null ? '—' : value.toLocaleString())
-
-// The API's own totals, with its own names: they aren't mapped onto the status tabs.
-const stats = computed<CardStat[]>(() => [
-  { label: 'Total requests', icon: 'lucide:inbox', value: count(summary.value?.total), color: 'primary' },
-  { label: 'Pending', icon: 'lucide:clock', value: count(summary.value?.pending), color: 'warning' },
-  { label: 'Approved', icon: 'lucide:circle-check', value: count(summary.value?.approved), color: 'info' },
-  { label: 'Rejected', icon: 'lucide:circle-x', value: count(summary.value?.rejected), color: 'error' },
+// The API's totals become the tab counts. It has none for Completed, which shows no badge.
+const tabs = computed<ListStatusTab<SaleRequestStatusTab>[]>(() => [
+  { label: 'All', value: 'all', icon: 'lucide:inbox', count: summary.value?.total },
+  { label: 'Pending', value: 'pending', icon: 'lucide:clock', count: summary.value?.pending },
+  { label: 'Approved', value: 'approved', icon: 'lucide:circle-check', count: summary.value?.approved },
+  { label: 'Rejected', value: 'rejected', icon: 'lucide:circle-x', count: summary.value?.rejected },
+  { label: 'Completed', value: 'completed', icon: 'lucide:badge-check' },
 ])
 
 // No sale request detail page exists yet, so rows don't open.
@@ -55,7 +45,7 @@ const columns: TableColumn<SaleRequestRow>[] = [
     header: 'Status',
     cell: ({ row }) => {
       const status = row.original.status ? SALE_REQUEST_STATUS[row.original.status] : undefined
-      return status ? h(UBadge, { label: status.label, color: status.color, variant: 'soft' }) : '—'
+      return status ? h(UBadge, { label: status.label, color: status.color, variant: 'subtle' }) : '—'
     },
   },
 ]
@@ -96,20 +86,6 @@ const columns: TableColumn<SaleRequestRow>[] = [
         title="Could not load sale request totals"
         @retry="refreshSummary"
       />
-      <CardStats
-        v-else
-        :items="stats"
-      >
-        <template #value="{ item }">
-          <USkeleton
-            v-if="summaryLoading"
-            class="h-8 w-16"
-          />
-          <template v-else>
-            {{ item.value }}
-          </template>
-        </template>
-      </CardStats>
 
       <div class="border-b border-default">
         <ListStatusTabs

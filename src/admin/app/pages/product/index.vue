@@ -67,7 +67,7 @@ const columns = computed(() => {
       header: 'Status',
       cell({ row }) {
         const { status } = row.original
-        return h(UBadge, { label: status, color: 'success', size: 'lg', variant: 'soft' })
+        return h(UBadge, { label: status, color: 'success', variant: 'subtle' })
       },
     },
     {

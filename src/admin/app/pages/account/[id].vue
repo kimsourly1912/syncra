@@ -69,11 +69,9 @@ const accountItems: ListDetail[] = [
       </UDashboardNavbar>
 
       <UDashboardToolbar>
-        <UTabs
+        <ListToolbarTabs
           v-model="selectedTab"
           :items="tabItems"
-          :content="false"
-          variant="link"
         />
       </UDashboardToolbar>
     </template>

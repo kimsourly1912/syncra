@@ -75,8 +75,8 @@ Pages set no `max-w-*` on their content and no breakpoints for width. Below the 
 | Pattern | Reference | Shape |
 | --- | --- | --- |
 | Queue or list | `features/techpack-review/components/ReviewQueueScreen.vue` | `ListStatusTabs` (status in the URL) + Refresh → `AlertApiError` on error → skeleton rows on the first load → `ListRefresh` around a `UCard` with `ListEmptyState` or the rows → `ListPagination` |
-| Overview + table | `features/lead-inquiry/components/LeadListScreen.vue` | `InputSearch` and filters in `UDashboardToolbar` → `CardStats` from the summary endpoint (or its `AlertApiError`) → `ListStatusTabs` → `AlertApiError` or `ListRefresh` around `UTable :loading` with `ListEmptyState` in `#empty` → `ListPagination` with rows per page |
-| Detail with tabs | `pages/account/[id].vue` | Back button in the navbar `#leading` → `UTabs :content="false"` in `UDashboardToolbar`, the tab from `useUrlTab` → the body renders the selected feature panel |
+| Overview + table | `features/lead-inquiry/components/LeadListScreen.vue` | `InputSearch` and filters in `UDashboardToolbar` → the summary endpoint's totals as the counts on `ListStatusTabs` (or its `AlertApiError` above them) → `AlertApiError` or `ListRefresh` around `UTable :loading` with `ListEmptyState` in `#empty` → `ListPagination` with rows per page |
+| Detail with tabs | `pages/account/[id].vue` | Back button in the navbar `#leading` → `ListToolbarTabs` in `UDashboardToolbar`, the tab from `useUrlTab` → the body renders the selected feature panel |
 | Review workspace | `features/techpack-review/components/ReviewDetailScreen.vue` | Source and workbook side by side, findings, a correction form, a replacement upload, an attestation checkbox, then Approve |
 | Create or edit form | `pages/product/create.vue` (UI only) | Cancel and Save in the navbar `#right` → `UPageCard` → `UForm` |
 

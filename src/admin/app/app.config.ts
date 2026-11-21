@@ -30,6 +30,10 @@ export default defineAppConfig({
       slots: { list: 'overflow-x-auto scrollbar-none', trigger: 'shrink-0', label: 'overflow-visible whitespace-nowrap' },
       compoundVariants: [{ orientation: 'horizontal', variant: 'link', class: { indicator: 'bottom-0' } }],
     },
+    // A column title never wraps ("User name" stays on one line); a table wider than its box scrolls.
+    table: {
+      slots: { th: 'whitespace-nowrap' },
+    },
     // Behind a modal or slideover the page is dimmed with black in both modes; Nuxt UI's light
     // `bg-elevated/75` barely dims it.
     // The modal's own dim comes from its `overlay` variant, applied after this slot class: `!` wins.

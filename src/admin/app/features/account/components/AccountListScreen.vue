@@ -48,7 +48,7 @@ const columns: TableColumn<PortalUserRow>[] = [
     header: 'Onboarding status',
     cell: ({ row }) => {
       const status = row.original.onboardingStatus ? ONBOARDING[row.original.onboardingStatus] : undefined
-      return status ? h(UBadge, { label: status.label, color: status.color, variant: 'soft' }) : '—'
+      return status ? h(UBadge, { label: status.label, color: status.color, variant: 'subtle' }) : '—'
     },
   },
   { id: 'modules', header: 'Modules active', cell: ({ row }) => count(row.original.moduleActiveCount) },

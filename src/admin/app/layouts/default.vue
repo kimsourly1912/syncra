@@ -109,7 +109,7 @@ const staffMenu = computed<DropdownMenuItem[][]>(() => [
       resizable
       :default-size="17"
       :max-size="24"
-      :ui="{ footer: 'lg:border-t lg:border-default' }"
+      :ui="{ header: 'lg:border-b lg:border-default', footer: 'lg:border-t lg:border-default' }"
     >
       <template #header="{ collapsed }">
         <NuxtLink
@@ -138,6 +138,7 @@ const staffMenu = computed<DropdownMenuItem[][]>(() => [
           :collapsed
           orientation="vertical"
           tooltip
+          :ui="{ label: 'mt-3 pb-1 [li:first-child>&]:mt-0' }"
         />
       </template>
 

@@ -1,7 +1,6 @@
 <script setup lang="ts">
 import type { TableColumn } from '@nuxt/ui'
 import { UBadge, ULink } from '#components'
-import type { CardStat } from '@/components/card/CardStats.vue'
 import type { ListStatusTab } from '@/components/list/ListStatusTabs.vue'
 import { LEAD_PAGE_SIZES, useLeadList } from '../composables/useLeadList'
 import type { LeadStatusTab } from '../composables/useLeadList'
@@ -10,25 +9,17 @@ import { LEAD_STATUS } from '../utils/status'
 
 const {
   tab, search, page, pageSize, isFiltered, items, totalPages, loading, refreshing, pending, error, refresh,
-  summary, summaryLoading, summaryError, refreshSummary, showStatus, setSearch, showPage, setPageSize, clearFilters,
+  summary, summaryError, refreshSummary, showStatus, setSearch, showPage, setPageSize, clearFilters,
 } = useLeadList()
 
-const tabs: ListStatusTab<LeadStatusTab>[] = [
-  { label: 'All', value: 'all' },
-  { label: 'New', value: 'new' },
-  { label: 'Contacted', value: 'contacted' },
-  { label: 'Converted', value: 'converted' },
-  { label: 'Not interested', value: 'not-interested' },
-]
-
-const count = (value: number | null | undefined) => (value == null ? '—' : value.toLocaleString())
-
-// The API's own totals, with its own names: they aren't mapped onto the status tabs.
-const stats = computed<CardStat[]>(() => [
-  { label: 'Leads received', icon: 'lucide:inbox', value: count(summary.value?.leadReceived), color: 'primary' },
-  { label: 'Contacted', icon: 'lucide:phone', value: count(summary.value?.contacted), color: 'warning' },
-  { label: 'Converted', icon: 'lucide:circle-check', value: count(summary.value?.converted), color: 'success' },
-  { label: 'Rejected', icon: 'lucide:circle-x', value: count(summary.value?.rejected), color: 'error' },
+// The API's totals become the tab counts. It has none for New, and its "rejected" total isn't
+// confirmed to be the Not interested status (open question), so those two show no badge.
+const tabs = computed<ListStatusTab<LeadStatusTab>[]>(() => [
+  { label: 'All', value: 'all', icon: 'lucide:inbox', count: summary.value?.leadReceived },
+  { label: 'New', value: 'new', icon: 'lucide:sparkles' },
+  { label: 'Contacted', value: 'contacted', icon: 'lucide:phone', count: summary.value?.contacted },
+  { label: 'Converted', value: 'converted', icon: 'lucide:circle-check', count: summary.value?.converted },
+  { label: 'Not interested', value: 'not-interested', icon: 'lucide:circle-x' },
 ])
 
 const columns: TableColumn<LeadRow>[] = [
@@ -54,7 +45,7 @@ const columns: TableColumn<LeadRow>[] = [
     header: 'Status',
     cell: ({ row }) => {
       const status = row.original.status ? LEAD_STATUS[row.original.status] : undefined
-      return status ? h(UBadge, { label: status.label, color: status.color, variant: 'soft' }) : '—'
+      return status ? h(UBadge, { label: status.label, color: status.color, variant: 'subtle' }) : '—'
     },
   },
 ]
@@ -87,20 +78,6 @@ const columns: TableColumn<LeadRow>[] = [
         title="Could not load lead totals"
         @retry="refreshSummary"
       />
-      <CardStats
-        v-else
-        :items="stats"
-      >
-        <template #value="{ item }">
-          <USkeleton
-            v-if="summaryLoading"
-            class="h-8 w-16"
-          />
-          <template v-else>
-            {{ item.value }}
-          </template>
-        </template>
-      </CardStats>
 
       <div class="border-b border-default">
         <ListStatusTabs

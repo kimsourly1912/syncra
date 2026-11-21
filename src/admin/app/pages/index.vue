@@ -19,13 +19,13 @@ const open = reactive<OpenItem>({
     <AccountListScreen>
       <template #actions>
         <UButton
-          label="Add Member to Company"
+          label="Add Member"
           variant="outline"
-          color="info"
+          color="neutral"
           @click="open.create = true"
         />
         <UButton
-          label="Create Company Admin"
+          label="Create Admin"
           @click="open.success = true"
         />
       </template>

@@ -12,7 +12,7 @@ Page chrome, cards, and states come straight from Nuxt UI ([0010](../../../docs/
 | Titled card | `UPageCard title variant="outline"` |
 | Section heading with actions | `UPageCard title variant="naked" orientation="horizontal"`, actions in the default slot |
 | Placeholder page | `UEmpty` (an empty *list* uses `ListEmptyState`, below) |
-| Page tabs | `UTabs :content="false" variant="link"` in `UDashboardToolbar`, bound to `useUrlTab` |
+| Page tabs | `ListToolbarTabs` in `UDashboardToolbar` (it drops the tabs' own line so only the toolbar's shows), bound to `useUrlTab` |
 | Page search | `UDashboardSearch` in the layout (Ctrl/⌘+K); don't add another palette |
 | Round icon | `UBadge icon square class="rounded-full p-3"` |
 
@@ -28,7 +28,8 @@ Only what Nuxt UI doesn't provide and two or more screens use:
 | `InputPassword` | A password field with a show/hide toggle |
 | `InputSearch` | A list toolbar's search box. `v-model` gets the trimmed text 300 ms after typing stops (`delay`), or at once on Enter or Clear. `/` focuses it; set `:shortcut="false"` on a page's second search box. The browser's own clear button is hidden. Bind it as `:model-value="list.search.value" @update:model-value="list.setSearch"`. Every search box uses it, including on static pages. |
 | `ListSkeleton` | Placeholder rows while a list has nothing to show for its query (`loading`): in `UTable`'s `#loading` slot, or in place of a list. Props: `label` (for screen readers), `rows` (default 5). |
-| `ListStatusTabs` | A status filter as link tabs with optional count badges. `items: ListStatusTab[]` (`label`, `value`, `count`), `v-model` the status, `disabled` while loading, and an `aria-label`. There's no implicit "All": add it as an item if the API has one. The `ListStatusTab` type is exported from the file. |
+| `ListStatusTabs` | A status filter as link tabs with an optional icon and count badge, which replace a row of stat cards. A row that does not fit scrolls, the chosen tab centered by `useCenteredTab`. `items: ListStatusTab[]` (`label`, `value`, `icon`, `count`), `v-model` the status, `disabled` while loading, and an `aria-label`. There's no implicit "All": add it as an item if the API has one. The `ListStatusTab` type is exported from the file. |
+| `ListToolbarTabs` | Page tabs in a `UDashboardToolbar`: the tabs drop their own bottom line and sit on the toolbar's. `items` (with `value`) and `v-model`. A row that does not fit scrolls sideways and the chosen tab is centered by `useCenteredTab`. |
 | `ListPagination` | The pager: "Page n of N", optional rows per page, and `UPagination` with first and last. Props: `pageCount` (the API's `totalPages`), `pageSizes` (leave out for a fixed API page size), `disabled`. Models: `page`, `pageSize`. Hidden while one page holds everything. |
 | `ListEmptyState` | An empty list, built on `UEmpty`. Props: `noun` ("leads"), `filtered` ("No leads match your filters" + Clear filters, emits `clear`), `createLabel` ("No leads yet" + a create button, emits `create`), and `title` or `description` to replace the default text. |
 | `ListRefresh` | Wraps content that reloads behind what's on screen (`refreshing`): a thin bar on its top edge, the content dimmed. Shows nothing for a reload under 150 ms. |
@@ -43,6 +44,7 @@ Only what Nuxt UI doesn't provide and two or more screens use:
 | `invalidateQueries(...prefixes)` | Refresh the queries on screen whose key starts with a prefix |
 | `useListQuery(choices, { search, pageSizes })` | A list's filters, search, 1-based page, and page size in the URL, plus `isFiltered` and `clearFilters` ([lists](data-access.md#lists-uselistquery)) |
 | `useUrlTab(tabs, param?)` | A page's tab in `?tab=`: a writable computed. The first tab is the default and is left out of the URL; switching replaces the URL, so Back leaves the page. |
+| `useCenteredTab(root, active)` | Keeps a scrolling tab row's active tab centered: smooth on change, at once on mount and resize, and only the row scrolls. A row that fits does not move. `ListToolbarTabs` and `ListStatusTabs` call it; a page with its own `UTabs` passes a template ref. |
 | `useRefreshIndicator(refreshing)` | Whether to show a reload: after 150 ms, then for at least 300 ms. `ListRefresh` uses it. |
 | `useAppToast()` | `success(description, title?)`, `failed(description, title?)`, `error(e, title?)` (skips silent errors), `base` |
 
