@@ -1,6 +1,6 @@
 # Admin forms
 
-Admin forms use the same rules as the shared [form conventions](../../../docs/conventions.md#forms). The working reference is `pages/auth/sign-in.vue`.
+Admin forms use the same rules as the shared [form conventions](../../../docs/conventions.md#forms). The working reference is `pages/auth/sign-in.vue` with `features/auth/composables/useSignIn.ts`.
 
 ## Pattern
 
@@ -10,35 +10,41 @@ import type { FormSubmitEvent } from '@nuxt/ui'
 import type { SchemaToString } from '@/types/common'
 import { signInSchema } from '@/schema/auth.schema'
 import type { ISignInSchema } from '@/schema/auth.schema'
-import * as signinServices from '@/services/auth.service'
+import { useSignIn } from '@/features/auth'
 
-const auth = useAuth()
-const toast = useAppToast()
-const pending = shallowRef(false)
+const { pending, submit } = useSignIn()
 
 const data = reactive<ISignInSchema>({ email: '', password: '' })
 const FIELD_NAME = { email: 'email', password: 'password' } satisfies SchemaToString<ISignInSchema>
 
-async function onSubmit(evt: FormSubmitEvent<ISignInSchema>) {
+function onSubmit(evt: FormSubmitEvent<ISignInSchema>) {
+  return submit(evt.data)
+}
+</script>
+```
+
+```ts
+// features/auth/composables/useSignIn.ts (excerpt)
+async function submit(form: ISignInSchema) {
   pending.value = true
   try {
-    await signinServices.signin(evt.data)
-    await auth.onSuccess(async () => {
-      await navigateTo(toRoute('/'))
-      toast.success('Welcome to Syncra')
-    })
+    const res = await signIn({ email: form.email, password: form.password })   // maps form → Api.SuperAdminLoginRequest
+    if (!res.success) {                                                     // failure path 1
+      toast.failed(res.reason || 'Could not sign in')
+      return false
+    }
+    await auth.onSuccess(async () => { await navigateTo(toRoute('/')); toast.success('Welcome to Syncra') })
+    return true
   }
-  catch (e) {
+  catch (e) {                                                               // failure path 2, incl. ApiContractError
     toast.exception(e)
+    return false
   }
   finally {
     pending.value = false
   }
 }
-</script>
 ```
-
-This is the real sign-in code. It catches thrown errors only. For a new form that posts to an endpoint that can return `success: false`, also check `success` ([data access → writes](data-access.md#writes)).
 
 ## Where the pieces go
 

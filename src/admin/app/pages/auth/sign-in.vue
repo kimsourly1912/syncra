@@ -3,11 +3,9 @@ import type { FormSubmitEvent } from '@nuxt/ui'
 import { signInSchema } from '@/schema/auth.schema'
 import type { SchemaToString } from '@/types/common'
 import type { ISignInSchema } from '@/schema/auth.schema'
-import * as signinServices from '@/services/auth.service'
+import { useSignIn } from '@/features/auth'
 
-const auth = useAuth()
-const toast = useAppToast()
-const pending = shallowRef(false)
+const { pending, submit } = useSignIn()
 
 const data = reactive<ISignInSchema>({
   email: '',
@@ -19,21 +17,8 @@ const FIELD_NAME = {
   password: 'password',
 } satisfies SchemaToString<ISignInSchema>
 
-async function onSubmit(evt: FormSubmitEvent<ISignInSchema>) {
-  pending.value = true
-  try {
-    await signinServices.signin(evt.data)
-    await auth.onSuccess(async () => {
-      await navigateTo(toRoute('/'))
-      toast.success('Welcome to Syncra')
-    })
-  }
-  catch (e) {
-    toast.exception(e)
-  }
-  finally {
-    pending.value = false
-  }
+function onSubmit(evt: FormSubmitEvent<ISignInSchema>) {
+  return submit(evt.data)
 }
 </script>
 
@@ -41,10 +26,10 @@ async function onSubmit(evt: FormSubmitEvent<ISignInSchema>) {
   <div class="p-4 max-w-lg w-full">
     <section class="bg-white rounded-lg p-6 space-y-8">
       <header class="flex flex-col gap-4 items-center text-center">
-        <NuxtImg
+        <img
           src="/img/syncra-logo.png"
           class="w-14"
-        />
+        >
         <h1 class="font-medium text-highlighted text-2xl">
           Sign in to Syncra Admin
         </h1>

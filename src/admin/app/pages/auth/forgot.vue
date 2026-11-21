@@ -1,14 +1,11 @@
 <script setup lang="ts">
 import type { FormSubmitEvent } from '@nuxt/ui'
 import type { SchemaToString } from '@/types/common'
-import { forgotPassword } from '@/services/auth.service'
 import { forgotEmailSchema } from '@/schema/auth.schema'
 import type { IForgotEmailSchema } from '@/schema/auth.schema'
+import { useForgotPassword } from '@/features/auth'
 
-const toast = useAppToast()
-
-const success = shallowRef(false)
-const pending = shallowRef(false)
+const { pending, sent: success, submit } = useForgotPassword()
 const data = reactive<IForgotEmailSchema>({
   email: '',
 })
@@ -17,18 +14,8 @@ const FIELD_NAME = {
   email: 'email',
 } satisfies SchemaToString<IForgotEmailSchema>
 
-async function onSubmit(evt: FormSubmitEvent<IForgotEmailSchema>) {
-  pending.value = true
-  try {
-    const { data } = await forgotPassword(evt.data)
-    success.value = data.sent
-  }
-  catch (e) {
-    toast.exception(e)
-  }
-  finally {
-    pending.value = false
-  }
+function onSubmit(evt: FormSubmitEvent<IForgotEmailSchema>) {
+  return submit(evt.data)
 }
 </script>
 

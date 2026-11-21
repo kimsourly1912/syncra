@@ -10,6 +10,7 @@ A decision record explains an architecture or documentation choice that had real
 | [0004](0004-import-alias.md) | `@/` is the only app import alias | Accepted. Existing `~/` imports not yet migrated. |
 | [0005](0005-shared-conventions-location.md) | Shared code conventions live at the root; app docs keep only their differences | Accepted |
 | [0006](0006-product-evidence-and-standards.md) | Product evidence stays in product docs; standards stay prescriptive | Accepted |
+| [0007](0007-generated-api-contract.md) | Admin generates its API contract from OpenAPI and parses responses into feature models | Accepted. Admin only; all Admin services migrated. |
 
 ## Template
 

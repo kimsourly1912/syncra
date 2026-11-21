@@ -39,6 +39,8 @@ Known code defects aren't questions. They're listed under **Known gaps** in each
 | Which account actions are wired to the service? The account list and module card use static data. | Wiring Account Management | The Admin API contracts and a staff test environment |
 | Are Sale Request (`/sale-request`), Community Management (`/community`), and Setting (`/setting`) planned? The sidebar links to them, but no pages exist. | Adding or removing those entries | A product decision |
 | What are the endpoints, validation, and permissions for products, plans and pricing, hero content, and lead inquiries? Those pages are UI shells with no submit wiring. | Building Admin CRUD for them | The Admin API contracts |
+| Which response fields are always present and non-null? The OpenAPI spec declares `required` on 24 of 330 schemas, marks no field nullable, documents no error responses, and leaves the date-time format unverified. Admin guards this with feature models ([0007](../decisions/0007-generated-api-contract.md)). | Tightening generated types; enforcing formats | A spec with `required`/`nullable` set, or confirmed sample responses from the API owner |
+| What is the real shape of TechPack inspection findings? The spec has a single `Finding` schema (with `aiValue`) for both PDF and AI findings, probably because springdoc collapsed two classes with that name. Admin reads `pdfValue` on PDF findings, based on the working review screen (`features/techpack-review/models/workbook-inspection.ts`). Inner classes named `Result` and `Sheet` suggest the same naming issue. | Trusting the generated inspection types | Distinct schema names in the spec (for example `PdfFinding`/`AiFinding`), or a confirmed sample response |
 
 ## Platform
 

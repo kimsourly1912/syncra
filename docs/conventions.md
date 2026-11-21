@@ -60,7 +60,8 @@ These rules are the same in Web, Portal, and Admin. Each app's docs cover only h
 | Composable | `useCamelCase.ts` | `export function useThing()` |
 | Store (Portal) | `app/stores/use<Name>Store.ts` | `defineStore(STORE_ID.<name>, () => { … })` |
 | Service | `app/services/<resource>.service.ts`, kebab-case | One exported function per endpoint |
-| DTO | `app/types/dto/<resource>.dto.ts`, kebab-case | Re-exported as a namespace: `export * as GlossaryDTO from './glossary.dto'` |
+| DTO (Portal, Web) | `app/types/dto/<resource>.dto.ts`, kebab-case | Re-exported as a namespace: `export * as GlossaryDTO from './glossary.dto'` |
+| Model (Admin) | `app/features/<feature>/models/<name>.ts`, kebab-case | `<name>Model = defineModel(v<Schema>, …)` and `type <Name> = v.InferOutput<typeof <name>Model>` ([0007](decisions/0007-generated-api-contract.md)) |
 | Form schema | `app/features/<feature>/schemas/<name>-form.ts` (new), or `app/schema/<resource>.schema.ts` (existing) | `<name>Schema` and `type I<Name>Schema = v.InferOutput<typeof <name>Schema>` |
 | Feature folder | `app/features/<kebab-name>/` | Public API in `index.ts` |
 | Test | `test/unit/<subject>.test.ts` or `test/nuxt/<subject>.test.ts` | `describe('<behavior>')` |
@@ -69,7 +70,7 @@ These rules are the same in Web, Portal, and Admin. Each app's docs cover only h
 
 ## API response envelope
 
-All three apps call one API. Each app's `types/dto/base.dto.ts` defines its shapes.
+All three apps call one API. Portal and Web define its shapes in `types/dto/base.dto.ts`. Admin generates them from the OpenAPI spec into `app/api/` and doesn't use DTO files ([decision 0007](decisions/0007-generated-api-contract.md), [Admin data access](../src/admin/docs/data-access.md#the-api-contract)).
 
 ```ts
 interface BaseRes<T> { data: T, msg: string, reason: string, success: boolean }
@@ -81,6 +82,8 @@ interface BaseError { title: string, detail: string, status: number, type: strin
 - Some lists come back as plain arrays, for example `TeamMemberRes = BaseRes<TeamMemberData[]>`. Check the DTO before assuming a page shape.
 
 ## DTO files
+
+Portal and Web only. Admin uses generated types and feature models instead ([0007](decisions/0007-generated-api-contract.md)).
 
 Group types in this order, each under a comment heading. `src/portal/app/types/dto/team-management.dto.ts` is the reference. The example below uses a made-up `supplier` resource to show the shape:
 

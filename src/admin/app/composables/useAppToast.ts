@@ -1,5 +1,6 @@
 import type { FetchError } from 'ofetch'
-import type { BaseRes, BaseError } from '@/types/dto/base.dto'
+import { ApiContractError } from '@/api'
+import type { ApiErrorBody } from '@/api'
 
 export function useAppToast() {
   const toast = useToast()
@@ -13,7 +14,12 @@ export function useAppToast() {
   }
 
   function exception(e: unknown) {
-    const err = e as FetchError<BaseRes<null> & BaseError>
+    if (e instanceof ApiContractError) {
+      console.error(e)
+      return failed(e.message)
+    }
+    const err = e as FetchError<ApiErrorBody>
+    if (err instanceof Error && err.name !== 'FetchError') return failed(err.message)
     return failed(err.data?.reason ?? err.data?.detail ?? 'Internal Server error')
   }
 

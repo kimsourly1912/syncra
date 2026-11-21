@@ -3,15 +3,11 @@ import type { FormSubmitEvent } from '@nuxt/ui'
 import type { SchemaToString } from '@/types/common'
 import { changePasswordSchema } from '@/schema/auth.schema'
 import type { IChangePasswordSchema } from '@/schema/auth.schema'
-import { confirmReset } from '@/services/auth.service'
+import { useResetPassword } from '@/features/auth'
 
-const auth = useAuth()
 const route = useRoute()
-const toast = useAppToast()
-
-const pending = shallowRef(false)
-const success = shallowRef(false)
-const token = route.query.token as string
+const { pending, success, submit } = useResetPassword()
+const token = typeof route.query.token === 'string' ? route.query.token : undefined
 
 const data = reactive<IChangePasswordSchema>({
   newPassword: '',
@@ -23,26 +19,8 @@ const FIELD_NAME = {
   confirmPassword: 'confirmPassword',
 } satisfies SchemaToString<IChangePasswordSchema>
 
-async function onSubmit(evt: FormSubmitEvent<IChangePasswordSchema>) {
-  if (!token) {
-    toast.failed('No token provided')
-    return
-  }
-
-  pending.value = true
-  const { newPassword } = evt.data
-  try {
-    await confirmReset({ token, newPassword })
-    auth.onSuccess(() => {
-      success.value = true
-    })
-  }
-  catch (e) {
-    toast.exception(e)
-  }
-  finally {
-    pending.value = false
-  }
+function onSubmit(evt: FormSubmitEvent<IChangePasswordSchema>) {
+  return submit(token, evt.data)
 }
 </script>
 
@@ -68,10 +46,10 @@ async function onSubmit(evt: FormSubmitEvent<IChangePasswordSchema>) {
     <template v-else>
       <section class="bg-white rounded-lg p-6 space-y-8">
         <header class="flex flex-col gap-4 items-center text-center">
-          <NuxtImg
+          <img
             src="/img/syncra-logo.png"
             class="w-14"
-          />
+          >
           <h1 class="font-medium text-highlighted text-2xl">
             Change Your Password
           </h1>

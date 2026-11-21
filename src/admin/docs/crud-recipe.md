@@ -6,7 +6,7 @@ Use this recipe to wire a static Admin screen to the API, or to add a new staff 
 
 Before you touch a static screen, add this to the PR or the feature spec:
 
-- the endpoints, methods, and DTOs (request, response, page shape)
+- the endpoints and methods, and which fields the screen requires from each response. Check them against the generated `Api.*` types after `api:pull` and `api:gen`.
 - the staff permission the API enforces
 - the validation rules, and what happens after a save (where the user lands, which data reloads)
 - what the static placeholder data becomes. Delete the placeholder data once the screen is wired.
@@ -25,8 +25,8 @@ Before you touch a static screen, add this to the PR or the feature spec:
 ## Files
 
 ```text
-app/types/dto/product.dto.ts              + export * as ProductDTO from './product.dto' in types/dto/index.ts
-app/services/product.service.ts           PREFIX 'admin', buildEndPoint<Parts>, useAPI
+app/features/product/models/product.ts    defineModel(vProductResponse, { required, optional }) + list model
+app/features/product/services/product.service.ts   PREFIX 'admin', buildEndPoint<Parts>, useAPI<Api.*>, parseEnvelope
 app/features/product/schemas/product-form.ts
 app/features/product/composables/useProducts.ts   list (URL state + abort), save, remove
 app/features/product/components/ProductListScreen.vue
@@ -41,8 +41,8 @@ app/pages/product/create.vue, [id].vue    thin: <ProductForm :product-id="…" /
 
 ```ts
 // app/features/product/composables/useProducts.ts (illustrative)
-import type { ProductDTO } from '@/types/dto'
-import * as productService from '@/services/product.service'
+import type { Product } from '../models/product'
+import * as productService from '../services/product.service'
 
 export function useProductList() {
   const nuxtApp = useNuxtApp()
@@ -52,7 +52,7 @@ export function useProductList() {
     const value = Number(route.query.page)
     return Number.isInteger(value) && value > 0 ? value : 0
   })
-  const items = ref<ProductDTO.ProductData[]>([])
+  const items = ref<Product[]>([])
   const totalPages = ref(0)
   const loading = ref(false)
   const error = ref('')
@@ -76,6 +76,10 @@ export function useProductList() {
     }
     catch (e) {
       if (current.signal.aborted) return
+      if (e instanceof ApiContractError) {   // from '@/api'
+        error.value = e.message
+        return
+      }
       const body = (e as { data?: { reason?: string, detail?: string, msg?: string } }).data
       error.value = body?.reason || body?.detail || body?.msg || 'Could not load products.'
     }
@@ -96,7 +100,7 @@ export function useProductList() {
 }
 ```
 
-The service takes the `signal` and passes it through: `useAPI(endpoint, { method: 'GET', query, signal })`.
+The service takes the `signal` and passes it through: `useAPI<Api.ResponseMsgPageProduct>(endpoint, { method: 'GET', query, signal })`, then `parseEnvelope(res, productPageModel, ...)`. `features/techpack-review/services/techpack-review.service.ts` is the working reference.
 
 ## Writes
 
@@ -104,6 +108,6 @@ Follow [data access → writes](data-access.md#writes): the action returns `true
 
 ## Verify
 
-- `pnpm --filter admin exec eslint .` and `pnpm --filter admin build`
+- `pnpm --filter admin exec eslint .`, `pnpm --filter admin test`, and `pnpm --filter admin build`
+- Add a `test/nuxt/<feature>-service.test.ts` that mocks `useAPI` and covers the model, a resolved failure, and a contract error ([testing](testing.md))
 - In the browser: the list with data, empty, and with a failed request; creating, editing, and deleting a record; and page and filter changes, including Back
-- State in the PR that there are no automated tests for the screen ([testing](testing.md))
