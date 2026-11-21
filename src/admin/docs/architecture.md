@@ -22,8 +22,8 @@ src/admin/app/
 │   ├── auth/                    # sign-in, sign-out, forgot, reset forms: composables/, schemas/, components/, models/, index.ts
 │   ├── session/                 # who is signed in: useSession (+ renewSession), useSessionSync, staff-profile model, index.ts
 │   └── techpack-review/         # the reference feature
-│       ├── components/          # ReviewQueueScreen; ReviewDetailScreen + Source, Workbook, Findings, WorkbookGrid, ActionsBar panels
-│       ├── composables/         # useReviewQueue; useReview, useSourcePreview, useDraftInspection, useReviewActions → useReviewDetail
+│       ├── components/          # ReviewQueueScreen; ReviewDetailScreen + Source, Workbook, issue menu and editor, inspection details, WorkbookGrid, WorkbookReplacement, ActionsBar
+│       ├── composables/         # useReviewQueue; useReview, useSourcePreview, useDraftInspection, useWorkbookReview, useReviewActions → useReviewDetail
 │       ├── models/ utils/       # response models; pure helpers (findings)
 │       └── index.ts
 ├── components/                  # shared, auto-registered WITH folder prefix (see below)
@@ -52,7 +52,7 @@ These are the same layers as the rest of Syncra ([workspace architecture](../../
 pages/<route>.vue → features/<f>/components/<F>Screen.vue → features/<f>/composables/use<F>.ts (useApiQuery / useApiMutation) → api (@/api)
 ```
 
-There are no services: a composable calls `api` with a path from the spec and a model from `features/<f>/models/`, and the client parses the response into it ([data access](data-access.md#the-flow), [0009](../../../docs/decisions/0009-admin-typed-endpoints-and-query-toolkit.md)). The session is a feature too. App wiring (the plugin, the route guard, the layout) uses its public `index.ts`; shared components, composables, and utils still never import features ([0008](../../../docs/decisions/0008-admin-api-client-and-session.md)). TechPack review is the reference. Its route files hold only `definePageMeta` and the screen. A list screen with a toolbar (search, filters) renders the whole `UDashboardPanel` itself, so its route file is only the screen.
+There are no services: a composable calls `api` with a path from the spec and a model from `features/<f>/models/`, and the client parses the response into it ([data access](data-access.md#the-flow), [0009](../../../docs/decisions/0009-admin-typed-endpoints-and-query-toolkit.md)). The session is a feature too. App wiring (the plugin, the route guard, the layout) uses its public `index.ts`; shared components, composables, and utils still never import features ([0008](../../../docs/decisions/0008-admin-api-client-and-session.md)). TechPack review is the reference. Its routes render the feature screens, which own the panel when the toolbar or title depends on their state.
 
 ## Routes, guards, and the sidebar
 
@@ -71,8 +71,8 @@ There are no services: a composable calls `api` with a path from the spec and a 
 | --- | --- | --- |
 | API-backed list | `features/techpack-review/composables/useReviewQueue.ts` + `ReviewQueueScreen.vue` | `useListQuery` (status and 1-based page in the URL) + `useApiQuery` keyed by them. `ListStatusTabs`, `AlertApiError`, skeleton rows, `ListRefresh`, `ListEmptyState`, `ListPagination`; the filename opens the record. A page past the end moves back. |
 | Searchable table list with totals | `features/lead-inquiry/composables/useLeadList.ts` + `LeadListScreen.vue` | `useListQuery` with `search` and `pageSizes`; `envelope: false` for this endpoint; a separate summary query feeds the `ListStatusTabs` counts (its own error above the tabs). The screen owns the `UDashboardPanel`, so the toolbar can bind to the list state. Extra filters: `useSaleRequestList` (type select); navbar actions through a slot: `AccountListScreen`. |
-| A screen split into panels | `useReviewDetail.ts` + `ReviewDetailScreen.vue` and its panels | Focused composables (record, PDF preview, inspection, actions) composed once and shared with panels through `createInjectionState`. |
-| Writes | `features/techpack-review/composables/useReviewActions.ts` | `useApiMutation` per action: toasts, pending, double-submit guard, `invalidate`. Each save sends the current `draftUuid`; a draft change clears the attestation. |
+| A screen split into panels | `useReviewDetail.ts` + `ReviewDetailScreen.vue` and its panels | Compose the record, source paging, draft inspection, workbook selection and edits, and release actions once. Panels receive the feature state through `createInjectionState`. The workbook grid owns scrolling and takes sheet data as props. |
+| Writes | `features/techpack-review/composables/useReviewActions.ts` | `useApiMutation` handles toasts, pending states, and double submissions. Each save sends the current `draftUuid`, clears attestation, and reloads the draft. Approval invalidates the review queries. |
 | Form with Valibot + pending | `pages/auth/sign-in.vue` + `features/auth/composables/useSignIn.ts` | `UForm` + a feature schema (`features/auth/schemas/`) + `FIELD_NAME satisfies { [K in keyof IForm]: K }`. The composable wraps the request in `useApiMutation` and acts on `result.ok`. |
 | Request + model | `features/auth/composables/useForgotPassword.ts`, `features/auth/models/forgot-password.ts` | `api.post('/admin/auth/forgot-password', { body, auth: false, model })` |
 | Session-aware action | `features/session/composables/useSession.ts` | Shared state in `useState`, one in-flight load, idempotent `end()` |

@@ -1,91 +1,73 @@
 <script setup lang="ts">
 import { useReviewDetail } from '../composables/useReviewDetail'
 
-const { inspection: draft, actions } = useReviewDetail()
-const { staged, blocksApproval, discardEdits } = draft
-const { confirmed, replacement, workbookInput, busy, canConfirm, chooseReplacement, saveReplacement, saveCorrections, approve } = actions
+const { workbook, inspection, actions } = useReviewDetail()
+const { staged, discardEdits } = workbook
+const { confirmed, canEdit, canConfirm, approvalBlocker, savingCorrections, approving } = actions
+const canApprove = computed(() => canConfirm.value && confirmed.value)
+const reasonId = useId()
 </script>
 
 <template>
-  <details class="rounded-lg border border-default bg-default px-4 py-3">
-    <summary class="cursor-pointer text-sm font-semibold text-highlighted">
-      Replace workbook
-    </summary>
-    <div class="mt-3 flex flex-wrap items-end gap-x-4 gap-y-2">
-      <div class="min-w-0 space-y-1">
-        <label
-          for="corrected-workbook"
-          class="block text-sm font-semibold text-highlighted"
-        >Corrected workbook (.xlsx)</label>
-        <input
-          id="corrected-workbook"
-          ref="workbookInput"
-          type="file"
-          accept=".xlsx"
-          class="block w-full max-w-80 rounded-md border border-default bg-default text-sm text-muted file:mr-3 file:border-0 file:bg-elevated file:px-3 file:py-2"
-          :disabled="busy || !!staged.length"
-          @change="chooseReplacement"
-        >
-      </div>
-      <UButton
-        v-if="replacement"
-        label="Save corrected workbook"
-        icon="lucide:upload"
-        variant="subtle"
-        :loading="busy"
-        @click="saveReplacement"
-      />
-    </div>
-  </details>
-
-  <footer class="space-y-3 rounded-lg border border-default bg-default px-4 py-3 shadow-sm lg:sticky lg:bottom-0 lg:z-10">
-    <div
-      v-if="staged.length"
-      class="flex w-full flex-wrap items-center justify-between gap-2 border-b border-default pb-3"
-    >
-      <span
+  <footer class="flex min-h-14 shrink-0 flex-wrap items-center justify-between gap-2 rounded-lg border border-default bg-default px-3 py-2">
+    <template v-if="staged.length || savingCorrections">
+      <p
         aria-live="polite"
-        class="text-sm font-semibold text-highlighted"
+        class="flex items-center gap-2 text-sm font-semibold text-highlighted"
       >
-        {{ staged.length }} unsaved {{ staged.length === 1 ? 'correction' : 'corrections' }}
-      </span>
-      <div class="flex gap-2">
+        <UIcon
+          name="lucide:circle"
+          class="size-3 shrink-0 fill-primary text-primary"
+        />
+        {{ savingCorrections ? 'Saving corrections…' : `${staged.length} unsaved ${staged.length === 1 ? 'correction' : 'corrections'}` }}
+      </p>
+      <div class="flex flex-wrap gap-2">
         <UButton
           label="Discard changes"
           color="neutral"
           variant="ghost"
-          :disabled="busy"
+          :disabled="!canEdit"
           @click="discardEdits"
         />
         <UButton
-          label="Save corrections"
-          icon="lucide:save"
-          :loading="busy"
-          @click="saveCorrections"
+          :label="staged.length > 1 ? 'Save corrections' : 'Save correction'"
+          :disabled="!canEdit"
+          :loading="savingCorrections"
+          @click="actions.saveCorrections"
         />
       </div>
-    </div>
-    <p
-      v-if="blocksApproval"
-      class="w-full text-sm font-medium text-warning"
-    >
-      Resolve the PDF differences or workbook layout issues shown above before approving.
-    </p>
-    <div class="flex w-full flex-wrap items-center justify-between gap-4">
+    </template>
+
+    <template v-else>
       <UCheckbox
+        v-if="canConfirm || approving"
         v-model="confirmed"
         label="I verified the critical values and required rows and sizes against the source PDF."
         :disabled="!canConfirm"
       />
-      <div class="flex shrink-0 gap-2">
-        <UButton
-          label="Approve and release"
-          icon="lucide:check"
-          :disabled="!canConfirm || !confirmed"
-          :loading="busy"
-          @click="approve"
+      <p
+        v-else
+        :id="reasonId"
+        role="status"
+        class="flex items-center gap-2 text-sm text-highlighted"
+      >
+        <UIcon
+          v-if="inspection.blocksApproval.value"
+          name="lucide:lock"
+          class="size-4 shrink-0 text-error"
         />
-      </div>
-    </div>
+        {{ approvalBlocker }}
+      </p>
+      <UButton
+        label="Approve and release"
+        icon="lucide:check"
+        :color="canApprove ? 'primary' : 'neutral'"
+        :variant="canApprove ? 'solid' : 'soft'"
+        :disabled="!canApprove"
+        :loading="approving"
+        :aria-describedby="canConfirm || approving ? undefined : reasonId"
+        @click="actions.approve"
+      />
+    </template>
   </footer>
 </template>

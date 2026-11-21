@@ -2,7 +2,7 @@ import { describe, expect, it } from 'vitest'
 import {
   aiReviewFindings,
   draftFileName,
-  editKey,
+  workbookCellKey,
   findingColumn,
   pdfReviewFindings,
   stagedCorrections,
@@ -47,7 +47,7 @@ describe('review findings', () => {
 describe('staged corrections', () => {
   it('turns inline edits into corrections in findings order, keyed per sheet', () => {
     const findings = [...pdfReviewFindings(inspection), ...aiReviewFindings(inspection)]
-    const edits = new Map([[editKey(findings[1]!), '31'], [editKey(findings[0]!), '52']])
+    const edits = new Map([[workbookCellKey(findings[1]!), '31'], [workbookCellKey(findings[0]!), '52']])
 
     expect(stagedCorrections(findings, edits)).toEqual([
       { sheetIndex: 0, rowNumber: 1, columnIndex: 1, value: '52' },

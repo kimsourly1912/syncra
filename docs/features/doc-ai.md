@@ -48,7 +48,7 @@ The preflight token estimate comes from the draft or job summary. Invoice result
 - A verification-pending file is shown as waiting. The UI polls for updates. Individual workbook actions use the URLs supplied by the API. History bulk download checks for downloadable workbooks, with a compatibility fallback for older responses. Preserve the distinction between a completed job and a released file.
 - Result details use API expiry and deletion fields for retention and action availability. The job can remain in history after its files are removed.
 - For a company with ERP export enabled and a confirmed TechPack file type, the combined action starts the workbook download before calling ERP export. Preview makes no ERP call. If export fails after the download starts, the retry action calls only ERP. Confirm the destination's state before retrying an uncertain export.
-- Internal Admin source shows a PDF/workbook comparison workflow, corrections or replacement XLSX, an attestation, and an approval action that requests release. The decision to send a workbook to verification and the service's release guarantees remain open.
+- In Admin, a finding opens the relevant workbook cell and the cited PDF page when available. Staff can save cell corrections or upload a replacement XLSX, then verify the current draft and request release. PDF differences and flagged workbook layout issues block release. An AI flag alone is advisory. The decision to send a workbook to verification and the service's release guarantees remain open.
 
 ## POM Glossary
 

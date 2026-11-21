@@ -47,7 +47,7 @@ The `default` layout is `UDashboardGroup` with a collapsible `UDashboardSidebar`
 </template>
 ```
 
-The route file owns the panel, and feature screens (TechPack review) render inside `#body`. The exception is a list screen with a toolbar (Lead Inquiry, Account Management, Sale Requests): it renders the panel itself so the toolbar can bind to its list state. Page-level actions go in through a slot (`AccountListScreen` `#actions`). `UDashboardNavbar` shows its mobile sidebar toggle by itself.
+Simple routes own the panel and render their contents inside `#body`. A feature screen owns the panel when its title or toolbar depends on feature state, as in both TechPack review screens and the Admin lists. Page-level actions go in through a slot (`AccountListScreen` `#actions`). `UDashboardNavbar` shows its mobile sidebar toggle by itself.
 
 **Every page title has an icon** (`UDashboardNavbar` `icon`), the same Lucide icon as its sidebar entry, so the page and its link read as one. A page with its own purpose gets the matching variant: Create New Product is `lucide:package-plus`, a TechPack review is `lucide:file-search`.
 
@@ -74,10 +74,10 @@ Pages set no `max-w-*` on their content and no breakpoints for width. Below the 
 
 | Pattern | Reference | Shape |
 | --- | --- | --- |
-| Queue or list | `features/techpack-review/components/ReviewQueueScreen.vue` | `ListStatusTabs` (status in the URL) + Refresh → `AlertApiError` on error → skeleton rows on the first load → `ListRefresh` around a `UCard` with `ListEmptyState` or the rows → `ListPagination` |
+| Queue or list | `features/techpack-review/components/ReviewQueueScreen.vue` | `ListStatusTabs` (status in the URL) + Refresh → `AlertApiError` on error → skeleton rows on the first load → `ListRefresh` around a `UTable` with a skeleton or `ListEmptyState` → `ListPagination` |
 | Overview + table | `features/lead-inquiry/components/LeadListScreen.vue` | `InputSearch` and filters in `UDashboardToolbar` → the summary endpoint's totals as the counts on `ListStatusTabs` (or its `AlertApiError` above them) → `AlertApiError` or `ListRefresh` around `UTable :loading` with `ListEmptyState` in `#empty` → `ListPagination` with rows per page |
 | Detail with tabs | `pages/account/[id].vue` | Back button in the navbar `#leading` → `ListToolbarTabs` in `UDashboardToolbar`, the tab from `useUrlTab` → the body renders the selected feature panel |
-| Review workspace | `features/techpack-review/components/ReviewDetailScreen.vue` | Source and workbook side by side, findings, a correction form, a replacement upload, an attestation checkbox, then Approve |
+| Review workspace | `features/techpack-review/components/ReviewDetailScreen.vue` | Separate PDF and workbook viewports. The workbook toolbar opens the issue list and the selected issue has an inline editor above the grid. The desktop footer shows the release blocker, staged correction actions, or verification and approval. The preview panes stack in narrow content areas. |
 | Create or edit form | `pages/product/create.vue` (UI only) | Cancel and Save in the navbar `#right` → `UPageCard` → `UForm` |
 
 ## Rows

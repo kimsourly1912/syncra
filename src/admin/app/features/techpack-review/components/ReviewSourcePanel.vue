@@ -2,17 +2,29 @@
 import { useReviewDetail } from '../composables/useReviewDetail'
 
 const { source, actions } = useReviewDetail()
-const { preview, page, zoom, viewport, loading, error, showPage, zoomIn, zoomOut, markImageFailed } = source
+const { image, page, pageCount, zoom, loading, error, canZoomIn, canZoomOut } = source
 const { busy } = actions
+
+const viewport = useTemplateRef<HTMLDivElement>('viewport')
+
+function reportImage(event: Event, status: 'shown' | 'failed') {
+  const element = event.currentTarget as HTMLImageElement
+  source.reportImage(element.getAttribute('src') ?? '', Number(element.dataset.page), status)
+}
+
+watch(page, () => viewport.value?.scrollTo(0, 0), { flush: 'post' })
 </script>
 
 <template>
-  <div class="flex min-w-0 flex-col">
-    <div class="flex flex-wrap items-center justify-between gap-2 border-b border-default bg-default px-4 py-2.5">
+  <section
+    aria-label="Source PDF"
+    class="flex min-h-0 min-w-0 flex-col overflow-hidden rounded-lg border border-default"
+  >
+    <header class="flex flex-wrap items-center justify-between gap-2 border-b border-default px-3 py-2">
       <h2 class="flex items-center gap-2 font-semibold text-highlighted">
         <UIcon
           name="lucide:file-text"
-          class="size-5 text-primary"
+          class="size-4 text-primary"
         />
         Source PDF
       </h2>
@@ -25,10 +37,11 @@ const { busy } = actions
         :disabled="busy"
         @click="actions.download('source')"
       />
-    </div>
+    </header>
+
     <div
-      v-if="preview"
-      class="flex flex-wrap items-center justify-between gap-1 border-b border-default bg-default px-3 py-1"
+      v-if="pageCount"
+      class="flex flex-wrap items-center justify-between gap-1 border-b border-default px-2 py-1"
     >
       <div class="flex items-center gap-1">
         <UButton
@@ -38,20 +51,20 @@ const { busy } = actions
           variant="ghost"
           size="sm"
           :disabled="loading || page <= 1"
-          @click="showPage(page - 1)"
+          @click="source.showPage(page - 1)"
         />
         <span
           aria-live="polite"
           class="min-w-20 text-center text-sm text-muted"
-        >Page {{ page }} of {{ preview.pageCount }}</span>
+        >Page {{ page }} of {{ pageCount }}</span>
         <UButton
           aria-label="Next PDF page"
           icon="lucide:chevron-right"
           color="neutral"
           variant="ghost"
           size="sm"
-          :disabled="loading || page >= preview.pageCount"
-          @click="showPage(page + 1)"
+          :disabled="loading || page >= pageCount"
+          @click="source.showPage(page + 1)"
         />
       </div>
       <div class="flex items-center gap-1">
@@ -61,45 +74,66 @@ const { busy } = actions
           color="neutral"
           variant="ghost"
           size="sm"
-          :disabled="zoom <= 100"
-          @click="zoomOut"
+          :disabled="!canZoomOut"
+          @click="source.zoomOut"
         />
-        <span class="min-w-10 text-center text-sm text-muted">{{ zoom === 100 ? 'Fit' : zoom + '%' }}</span>
+        <span class="min-w-10 text-center text-sm text-muted">{{ canZoomOut ? zoom + '%' : 'Fit' }}</span>
         <UButton
           aria-label="Zoom in PDF"
           icon="lucide:plus"
           color="neutral"
           variant="ghost"
           size="sm"
-          :disabled="zoom >= 250"
-          @click="zoomIn"
+          :disabled="!canZoomIn"
+          @click="source.zoomIn"
         />
       </div>
     </div>
-    <div
-      v-if="loading || error"
-      class="border-b border-default px-4 py-2 text-sm text-muted"
-      role="status"
-    >
-      {{ loading ? 'Loading PDF…' : error }}
-    </div>
-    <div class="relative min-h-[22rem] flex-1 bg-elevated lg:min-h-[29rem]">
+
+    <div class="relative min-h-96 flex-1 bg-elevated lg:@min-[46rem]:min-h-0">
       <div
-        v-if="preview"
+        v-if="error"
+        class="space-y-2 p-4 text-sm text-muted"
+      >
+        <p role="status">
+          PDF preview unavailable. Download the source PDF to compare it.
+        </p>
+        <UButton
+          label="Retry PDF preview"
+          color="neutral"
+          variant="outline"
+          size="sm"
+          @click="source.retry"
+        />
+      </div>
+      <div
+        v-show="!error"
         ref="viewport"
         class="absolute inset-0 overflow-auto p-3"
-        tabindex="0"
+        :tabindex="image ? 0 : undefined"
+        :aria-busy="loading"
         aria-label="Original TechPack PDF preview"
       >
+        <p
+          v-if="loading"
+          class="p-1 text-sm text-muted"
+          role="status"
+        >
+          Loading PDF…
+        </p>
         <img
-          :src="`data:image/png;base64,${preview.pngBase64}`"
-          :alt="`Original TechPack PDF, page ${page}`"
+          v-if="image && !error"
+          :key="image.page"
+          :src="image.src"
+          :data-page="image.page"
+          :alt="`Original TechPack PDF, page ${image.page}`"
           :style="{ width: zoom + '%' }"
           class="max-w-none bg-white shadow-sm"
           draggable="false"
-          @error="markImageFailed"
+          @load="reportImage($event, 'shown')"
+          @error="reportImage($event, 'failed')"
         >
       </div>
     </div>
-  </div>
+  </section>
 </template>

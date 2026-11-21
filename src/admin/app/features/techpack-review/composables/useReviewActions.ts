@@ -1,119 +1,150 @@
 import { api } from '@/api'
-import type { ReviewItem } from '../models/review-item'
+import type { ReviewDraft } from '../models/review-item'
 import { draftFileName } from '../utils/findings'
 import type { StagedCorrection } from '../utils/findings'
 import type { useDraftInspection } from './useDraftInspection'
+import type { useReview } from './useReview'
 import type { useSourcePreview } from './useSourcePreview'
+import type { useWorkbookReview } from './useWorkbookReview'
 
 const REVIEW_PATH = '/admin/docai/techpack-reviews/{fileId}'
 const VERIFY_AGAIN = 'Verify this version against the PDF before approving.'
 
-/**
- * The reviewer's actions: downloads, saving inline corrections or a replacement workbook, and
- * approval. Saves and approval send the current `draftUuid`. Approval needs the reviewer's
- * attestation, which any change to the draft clears.
- */
 export function useReviewActions(
-  review: Readonly<Ref<ReviewItem | undefined>>,
+  record: ReturnType<typeof useReview>,
   source: ReturnType<typeof useSourcePreview>,
   inspection: ReturnType<typeof useDraftInspection>,
+  workbook: ReturnType<typeof useWorkbookReview>,
 ) {
   const router = useRouter()
   const confirmed = ref(false)
   const sourceDownloaded = ref(false)
   const draftDownloaded = ref(false)
   const replacement = shallowRef<File | null>(null)
-  const workbookInput = ref<HTMLInputElement | null>(null)
+  const draftUuid = computed(() => record.draft.value?.draftUuid)
 
-  function clearReplacement() {
-    replacement.value = null
-    if (workbookInput.value) workbookInput.value.value = ''
-  }
-
-  // The attestation covers exactly what's on screen: any change clears it.
-  watch(() => review.value?.draftUuid, () => {
+  watch(draftUuid, () => {
     draftDownloaded.value = false
-    clearReplacement()
+    replacement.value = null
   })
-  watch([() => review.value?.draftUuid, inspection.staged, replacement], () => {
+  watch([draftUuid, workbook.staged, replacement], () => {
     confirmed.value = false
-  })
+  }, { flush: 'sync' })
 
   const download = useApiMutation(
-    ({ item, kind }: { item: ReviewItem, kind: 'source' | 'draft' }) => kind === 'source'
-      ? api.download(`${REVIEW_PATH}/source`, { path: { fileId: item.fileId } })
-      : api.download(`${REVIEW_PATH}/draft`, { path: { fileId: item.fileId }, query: { draftUuid: item.draftUuid! } }),
+    ({ draft, kind }: { draft: ReviewDraft, kind: 'source' | 'draft' }) => kind === 'source'
+      ? api.download(`${REVIEW_PATH}/source`, { path: { fileId: draft.fileId } })
+      : api.download(`${REVIEW_PATH}/draft`, { path: { fileId: draft.fileId }, query: { draftUuid: draft.draftUuid } }),
     { error: 'Could not download the file' },
   )
 
+  async function reloadAfterSave(previousDraft: ReviewDraft) {
+    confirmed.value = false
+    draftDownloaded.value = false
+    await record.refresh()
+    // A changed UUID triggers its own inspection. Refresh explicitly if the UUID was retained.
+    if (draftUuid.value === previousDraft.draftUuid && !record.error.value) await inspection.refresh()
+  }
+
   const saveCorrections = useApiMutation(
-    ({ item, corrections }: { item: ReviewItem, corrections: StagedCorrection[] }) =>
-      api.post(`${REVIEW_PATH}/draft-corrections`, { path: { fileId: item.fileId }, body: { draftUuid: item.draftUuid!, corrections } }),
-    { success: `Corrections saved. ${VERIFY_AGAIN}`, error: 'Could not save the corrections', invalidate: ['techpack-reviews:item'] },
+    async ({ draft, corrections }: { draft: ReviewDraft, corrections: StagedCorrection[] }) => {
+      await api.post(`${REVIEW_PATH}/draft-corrections`, {
+        path: { fileId: draft.fileId },
+        body: { draftUuid: draft.draftUuid, corrections },
+      })
+      workbook.discardEdits()
+      await reloadAfterSave(draft)
+    },
+    { success: `Corrections saved. ${VERIFY_AGAIN}`, error: 'Could not save the corrections' },
   )
 
   const replaceWorkbook = useApiMutation(
-    ({ item, workbook }: { item: ReviewItem, workbook: File }) =>
-      api.post(`${REVIEW_PATH}/draft`, { path: { fileId: item.fileId }, query: { draftUuid: item.draftUuid! }, body: { workbook } }),
-    { success: `Corrected workbook saved. ${VERIFY_AGAIN}`, error: 'Could not save the corrected workbook', invalidate: ['techpack-reviews:item'] },
+    async ({ draft, file }: { draft: ReviewDraft, file: File }) => {
+      await api.post(`${REVIEW_PATH}/draft`, {
+        path: { fileId: draft.fileId },
+        query: { draftUuid: draft.draftUuid },
+        body: { workbook: file },
+      })
+      replacement.value = null
+      await reloadAfterSave(draft)
+    },
+    { success: `Corrected workbook saved. ${VERIFY_AGAIN}`, error: 'Could not save the corrected workbook' },
   )
 
   const approval = useApiMutation(
-    (item: ReviewItem) => api.post(`${REVIEW_PATH}/approve`, { path: { fileId: item.fileId }, body: { draftUuid: item.draftUuid!, sourceVerified: true } }),
+    (draft: ReviewDraft) => api.post(`${REVIEW_PATH}/approve`, {
+      path: { fileId: draft.fileId },
+      body: { draftUuid: draft.draftUuid, sourceVerified: true },
+    }),
     { success: 'Workbook reviewed and released.', error: 'Could not approve the workbook', invalidate: ['techpack-reviews'] },
   )
 
-  const busy = computed(() => download.pending.value || saveCorrections.pending.value || replaceWorkbook.pending.value || approval.pending.value)
-  const canConfirm = computed(() => !busy.value
-    && (sourceDownloaded.value || source.shown.value)
-    && (draftDownloaded.value || inspection.complete.value)
-    && !inspection.loading.value
-    && !inspection.blocksApproval.value
-    && !replacement.value
-    && !inspection.staged.value.length)
+  const busy = computed(() => record.pending.value || download.pending.value
+    || saveCorrections.pending.value || replaceWorkbook.pending.value || approval.pending.value)
 
-  /** The open draft, if it can still be changed. */
-  const openItem = () => (review.value?.draftUuid ? review.value : undefined)
+  const approvalBlocker = computed(() => {
+    if (busy.value) return 'Wait for the current action to finish.'
+    if (workbook.staged.value.length) return 'Save or discard your corrections before approving.'
+    if (replacement.value) return 'Save or cancel the workbook replacement before approving.'
+    if (inspection.pending.value) return 'Wait for the workbook inspection to finish.'
+    if (inspection.blocksApproval.value) {
+      return inspection.pdfFindings.value.length
+        ? 'Resolve the PDF differences before approving.'
+        : 'Resolve the workbook layout issues before approving.'
+    }
+    if (!sourceDownloaded.value && !source.shown.value) {
+      return source.loading.value ? 'Wait for the source PDF to load.' : 'Download the source PDF to verify it.'
+    }
+    if (!draftDownloaded.value && !inspection.complete.value) return 'Download the full workbook to verify it.'
+    return ''
+  })
+
+  const canConfirm = computed(() => !!record.draft.value && !record.error.value && !approvalBlocker.value)
+  const canEdit = computed(() => !busy.value && !inspection.pending.value && !replacement.value)
 
   return {
     confirmed,
-    replacement,
-    workbookInput,
+    replacement: readonly(replacement),
     busy,
+    canEdit,
     canConfirm,
+    approvalBlocker,
+    savingCorrections: saveCorrections.pending,
+    savingReplacement: replaceWorkbook.pending,
+    approving: approval.pending,
 
-    chooseReplacement(event: Event) {
-      replacement.value = (event.target as HTMLInputElement).files?.[0] ?? null
+    setReplacement(file: File | null) {
+      replacement.value = file
     },
 
     async download(kind: 'source' | 'draft') {
-      const item = openItem()
-      if (!item) return
-      const result = await download.execute({ item, kind })
+      const draft = record.draft.value
+      if (!draft || busy.value) return
+      const result = await download.execute({ draft, kind })
       if (!result.ok) return
-      saveFile(result.data, kind === 'source' ? item.filename : draftFileName(item.filename))
+      saveFile(result.data, kind === 'source' ? draft.filename : draftFileName(draft.filename))
       if (kind === 'source') sourceDownloaded.value = true
-      else draftDownloaded.value = true
+      else if (draftUuid.value === draft.draftUuid) draftDownloaded.value = true
     },
 
     async saveCorrections() {
-      const item = openItem()
-      const corrections = inspection.staged.value
-      if (!item || !corrections.length || replacement.value) return
-      if ((await saveCorrections.execute({ item, corrections })).ok) inspection.discardEdits()
+      const draft = record.draft.value
+      const corrections = workbook.staged.value
+      if (!draft || !canEdit.value || !corrections.length) return
+      await saveCorrections.execute({ draft, corrections })
     },
 
     async saveReplacement() {
-      const item = openItem()
-      const workbook = replacement.value
-      if (!item || !workbook || inspection.staged.value.length) return
-      if ((await replaceWorkbook.execute({ item, workbook })).ok) clearReplacement()
+      const draft = record.draft.value
+      const file = replacement.value
+      if (!draft || !file || busy.value || workbook.staged.value.length) return false
+      return (await replaceWorkbook.execute({ draft, file })).ok
     },
 
     async approve() {
-      const item = openItem()
-      if (!item || !confirmed.value || !canConfirm.value) return
-      if ((await approval.execute(item)).ok) await router.replace({ path: '/techpack-reviews', query: { status: 'reviewed' } })
+      const draft = record.draft.value
+      if (!draft || !confirmed.value || !canConfirm.value) return
+      if ((await approval.execute(draft)).ok) await router.replace({ path: '/techpack-reviews', query: { status: 'reviewed' } })
     },
   }
 }

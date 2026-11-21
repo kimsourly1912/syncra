@@ -1,5 +1,5 @@
 import * as v from 'valibot'
-import { defineModel, vFinding, vPreviewRow, vResult, vSheet, vSourceCheck, vTechPackSourcePreview, vTechPackWorkbookInspection } from '@/api'
+import { defineModel, vFinding, vPreviewRow, vResult, vSheet, vSourceCheck, vTechPackWorkbookInspection } from '@/api'
 
 // The spec has a single `Finding` schema with `aiValue` only: springdoc collapsed the PDF and AI
 // finding classes, which share a name. PDF findings carry `pdfValue` instead, which this screen has
@@ -37,11 +37,8 @@ export const workbookInspectionModel = v.object({
   })),
 })
 
-export const sourcePreviewModel = defineModel(vTechPackSourcePreview, { required: ['pageCount', 'pngBase64'] })
-
 export type PdfFinding = v.InferOutput<typeof pdfFindingModel>
 export type AiFinding = v.InferOutput<typeof aiFindingModel>
 export type WorkbookRow = v.InferOutput<typeof workbookRowModel>
 export type WorkbookSheet = v.InferOutput<typeof workbookSheetModel>
 export type WorkbookInspection = v.InferOutput<typeof workbookInspectionModel>
-export type SourcePreview = v.InferOutput<typeof sourcePreviewModel>
