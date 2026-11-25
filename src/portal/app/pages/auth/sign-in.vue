@@ -60,6 +60,7 @@ useHead({
           :state="signEmail.data"
           :schema="signInEmailSchema"
           class="flex flex-col gap-4 mt-4"
+          :validate-on="[]"
           @submit="submitEmail"
         >
           <UFormField
@@ -98,6 +99,7 @@ useHead({
           :state="signPhone.data"
           :schema="signInPhoneSchema"
           class="flex flex-col gap-4 mt-4"
+          :validate-on="[]"
           @submit="submitPhone"
         >
           <InputPhoneNumber

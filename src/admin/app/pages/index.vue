@@ -37,7 +37,10 @@ const open = reactive<OpenItem>({
       description="Create a workspace and its primary admin"
     >
       <template #body>
-        <UForm class="space-y-5">
+        <UForm
+          :validate-on="[]"
+          class="space-y-5"
+        >
           <UFormField
             label="Company Name"
           >
@@ -133,7 +136,10 @@ const open = reactive<OpenItem>({
             </section>
           </header>
 
-          <UForm class="space-y-6">
+          <UForm
+            :validate-on="[]"
+            class="space-y-6"
+          >
             <UFormField
               label="Login Email"
             >

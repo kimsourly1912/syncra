@@ -39,6 +39,7 @@ function onSubmit(evt: FormSubmitEvent<ISignInSchema>) {
         class="space-y-4"
         :state="data"
         :schema="signInSchema"
+        :validate-on="[]"
         @submit="onSubmit"
       >
         <UFormField

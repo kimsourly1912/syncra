@@ -72,7 +72,7 @@ function onSubmit(event: FormSubmitEvent<IInviteMemberSchema>) {
 </script>
 
 <template>
-  <UForm :state :schema="inviteMemberSchema" class="space-y-6" @submit="onSubmit">
+  <UForm :state :schema="inviteMemberSchema" class="space-y-6" :validate-on="[]" @submit="onSubmit">
     <UFormField label="Email address" :name="FIELD_NAME.email" required>
       <UInput v-model="state.email" type="email" class="w-full" :disabled="pending" />
     </UFormField>
@@ -89,6 +89,7 @@ Rules:
 - **Field names.** `FIELD_NAME ... satisfies SchemaToString<ISchema>` checks that each value equals its key, so a typo fails the type check. Some older forms use `ObjectValueToString`, which only checks that values are strings. Prefer `SchemaToString`.
 - **State.** Hold form state in `reactive<ISchema>()`, with every field initialized. Reset it after a successful submit, or when the modal closes.
 - **Validation.** `UForm` validates against the schema before `@submit`. Don't repeat those checks in the handler.
+- **Validate on submit only.** Set `:validate-on="[]"` on every `UForm`, so errors don't appear while the user is still filling the form in ([conventions → forms](../../../docs/conventions.md#forms)).
 - **Pending.** The parent passes `pending` in. Inputs and Submit are disabled or loading while it's true.
 - **Server errors.** Show the API's `reason` in a toast, and keep the input as entered. The API doesn't currently return errors per field, so don't invent a mapping.
 - **One form per independent save.** Profile details and password are separate forms on Account Profile. Representative and company details are separate on Company Information.

@@ -60,6 +60,7 @@ async function onConfirmDisable() {
         :state="inviteState"
         :disabled="inviting"
         class="space-y-5"
+        :validate-on="[]"
         @submit="onInvite"
       >
         <UFormField

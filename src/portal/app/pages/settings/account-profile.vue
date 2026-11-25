@@ -234,6 +234,7 @@ watch(() => profileStore.data, (data) => {
               :state="profileDetail.data"
               :schema="profileDetailSchema"
               class="space-y-6"
+              :validate-on="[]"
               @submit="profileDetail.submit"
             >
               <UFormField
@@ -364,6 +365,7 @@ watch(() => profileStore.data, (data) => {
               :state="changePassword.data"
               :schema="changePasswordSchema"
               class="space-y-6"
+              :validate-on="[]"
               @submit="changePassword.submit"
             >
               <UFormField

@@ -38,6 +38,7 @@ defineEmits<{
     :state="data"
     :schema="contactSaleForTokenSchema"
     class="flex flex-col gap-5"
+    :validate-on="[]"
     @submit="(evt) => $emit('submit', evt)"
   >
     <UFormField

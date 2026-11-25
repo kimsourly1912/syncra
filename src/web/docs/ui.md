@@ -59,3 +59,4 @@ Only `en` is enabled in `nuxt.config.ts`. `i18n/locales/zh-CN.json` exists, but 
 - [ ] Images have `alt` text, and icon-only buttons have an `aria-label`.
 - [ ] Every new `lucide:*` icon exists in `app/assets/icons/lucide/`.
 - [ ] Portal links use `useURL().toPortal`.
+- [ ] Every `UForm` sets `:validate-on="[]"`. Leaving a field empty and tabbing away shows no error; pressing Submit does ([forms](forms.md)).

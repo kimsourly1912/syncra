@@ -73,6 +73,7 @@ useHead({
             :state="signEmail.data"
             :schema="signEmail.schema"
             class="flex flex-col gap-4 mt-4"
+            :validate-on="[]"
             @submit="asyncDataCodeEmail.execute"
           >
             <UFormField
@@ -102,6 +103,7 @@ useHead({
             :state="signPhone.data"
             :schema="signPhone.schema"
             class="flex flex-col gap-4 mt-4"
+            :validate-on="[]"
             @submit="asyncDataCodePhone.execute"
           >
             <InputPhoneNumber
@@ -156,6 +158,7 @@ useHead({
         <UForm
           :state="signOTP.data"
           :schema="signOTP.schema"
+          :validate-on="[]"
           @submit="show.confirm = true"
         >
           <VerifyCode
@@ -182,6 +185,7 @@ useHead({
         :state="signPassword.data"
         :schema="signPassword.schema"
         class="flex flex-col gap-4"
+        :validate-on="[]"
         @submit="asyncDataPassword.execute"
       >
         <UFormField

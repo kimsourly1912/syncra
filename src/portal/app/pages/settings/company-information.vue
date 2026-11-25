@@ -208,6 +208,7 @@ watch(() => profileStore.data, (data) => {
               :state="representative.data"
               :schema="representativeSchema"
               class="space-y-8"
+              :validate-on="[]"
               @submit="representative.submit"
             >
               <fieldset :disabled="!canEdit">
@@ -286,6 +287,7 @@ watch(() => profileStore.data, (data) => {
               :state="company.data"
               :schema="companySchema"
               class="space-y-8"
+              :validate-on="[]"
               @submit="company.submit"
             >
               <fieldset :disabled="!canEdit">

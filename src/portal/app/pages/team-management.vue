@@ -821,6 +821,7 @@ useHead({
             :state="inviteMember.data"
             :schema="inviteMemberSchema"
             class="flex flex-col gap-6"
+            :validate-on="[]"
             @submit="inviteMember.submit"
           >
             <UFormField
@@ -894,6 +895,7 @@ useHead({
             :state="editEmail.data"
             :schema="editEmailSchema"
             class="flex flex-col gap-6 mt-6"
+            :validate-on="[]"
             @submit="editEmail.submit"
           >
             <UFormField
@@ -942,6 +944,7 @@ useHead({
             :state="changeRole.data"
             :schema="changeRoleSchema"
             class="flex flex-col gap-6"
+            :validate-on="[]"
             @submit="changeRole.submit"
           >
             <UFormField
@@ -1121,6 +1124,7 @@ useHead({
             :state="seatRequest.data"
             :schema="seatRequestSchema"
             class="flex flex-col gap-6"
+            :validate-on="[]"
             @submit="seatRequest.submit"
           >
             <UFormField

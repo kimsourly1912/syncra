@@ -13,6 +13,7 @@ Web's only form is the Contact Sales inquiry. Follow the shared [form convention
 
 ## Rules
 
+- Validate on submit only: the `UForm` sets `:validate-on="[]"`, so no errors appear on blur, input, or change ([conventions → forms](../../../docs/conventions.md#forms)).
 - The form component validates and emits. It doesn't call the API. The composable maps and submits.
 - `FIELD_NAME` uses `satisfies ObjectValueToString<IContactSaleSchema>`. Web doesn't define `SchemaToString`. If you add it, copy Portal's definition into `app/types/common.ts`.
 - Preselect the product when the form opens from a product page (`data.modules = [slug]`), as `products/[slug].vue` does.

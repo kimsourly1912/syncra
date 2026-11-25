@@ -90,6 +90,7 @@ function onSubmit(event: FormSubmitEvent<IProfileSchema>) {
         :state
         :disabled="renaming"
         class="space-y-5"
+        :validate-on="[]"
         @submit="onSubmit"
       >
         <UFormField

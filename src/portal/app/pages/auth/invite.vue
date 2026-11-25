@@ -207,6 +207,7 @@ useHead({
           :state="inviteEmail.data"
           :schema="signUpByInvitationSchema"
           class="flex flex-col gap-4 mt-10 mb-4"
+          :validate-on="[]"
           @submit="inviteEmail.submit"
         >
           <UFormField
@@ -259,6 +260,7 @@ useHead({
           :state="confirmPassword.data"
           :schema="signUpByInvitationConfirmPasswordSchema"
           class="flex flex-col gap-4 mt-10"
+          :validate-on="[]"
           @submit="confirmPassword.submit"
         >
           <UFormField
@@ -300,6 +302,7 @@ useHead({
           :state="updateProfile.data"
           :schema="signUpByInvitationUpdateProfileSchema"
           class="flex flex-col gap-4 mt-10"
+          :validate-on="[]"
           @submit="updateProfile.submit"
         >
           <UFormField

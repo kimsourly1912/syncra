@@ -39,6 +39,7 @@ const wordCount = computed(() => v._getWordCount('en', data.value.helpWith))
     :state="data"
     :schema="contactSaleSchema"
     class="flex flex-col gap-5"
+    :validate-on="[]"
     @submit="evt => $emit('submit', evt)"
   >
     <section class="grid grid-cols-1 sm:grid-cols-2 gap-5">

@@ -31,6 +31,7 @@ onUnmounted(() => reset())
       <UForm
         :state="data"
         :schema="signUpOtpSchema"
+        :validate-on="[]"
         @submit="handleSubmit"
       >
         <VerifyCode

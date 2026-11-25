@@ -220,7 +220,7 @@ function onSubmit(event: FormSubmitEvent<ISupplierFormSchema>) {
 <template>
   <UModal v-model:open="open" :title="supplier ? 'Edit supplier' : 'Add supplier'" :dismissible="!pending">
     <template #body>
-      <UForm :state :schema="supplierFormSchema" class="space-y-6" @submit="onSubmit">
+      <UForm :state :schema="supplierFormSchema" class="space-y-6" :validate-on="[]" @submit="onSubmit">
         <UFormField label="Name" :name="FIELD_NAME.name" required>
           <UInput v-model="state.name" class="w-full" :disabled="pending" />
         </UFormField>

@@ -21,6 +21,7 @@ const state = defineModel<ICompanySchema>('state', { required: true })
     :state
     :schema="companySchema"
     class="space-y-8"
+    :validate-on="[]"
     @submit="data => $emit('submit', data)"
   >
     <main class="space-y-4">
