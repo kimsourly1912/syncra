@@ -25,12 +25,14 @@ The `default` layout is `UDashboardGroup` with a collapsible `UDashboardSidebar`
 <template>
   <UDashboardPanel class="page-narrow">                    <!-- forms and settings only -->
     <template #header>
-      <UDashboardNavbar icon="lucide:package-plus" title="Create New Product">
-        <template #leading>                                <!-- detail and form pages only -->
+      <UDashboardNavbar title="New product" :toggle="false"> <!-- nested page: no menu button, no title icon -->
+        <template #leading>                                <!-- nested pages only -->
           <UButton icon="lucide:arrow-left" color="neutral" variant="ghost" to="/product" aria-label="Back to products" />
         </template>
         <template #right>
-          <UButton label="Save" />
+          <UButton icon="lucide:check" aria-label="Create product">
+            <span class="hidden sm:inline">Create product</span>   <!-- icon only on a phone -->
+          </UButton>
         </template>
       </UDashboardNavbar>
       <UDashboardToolbar>                                  <!-- list filters or page tabs, optional -->
@@ -47,11 +49,22 @@ The `default` layout is `UDashboardGroup` with a collapsible `UDashboardSidebar`
 </template>
 ```
 
-Simple routes own the panel and render their contents inside `#body`. Feature screens own the panel when it contains feature navigation or state, as in Account Detail, TechPack reviews, and the Admin lists. Page-level actions go in through a slot (`AccountListScreen` `#actions`). `UDashboardNavbar` shows its mobile sidebar toggle by itself.
+Simple routes own the panel and render their contents inside `#body`. Feature screens own the panel when it contains feature navigation or state, as in Account Detail, TechPack reviews, and the Admin lists. Page-level actions go in through a slot (`AccountListScreen` `#actions`).
 
-**Every page title has an icon** (`UDashboardNavbar` `icon`), the same Lucide icon as its sidebar entry, so the page and its link read as one. A page with its own purpose gets the matching variant: Create New Product is `lucide:package-plus`, a TechPack review is `lucide:file-search`.
+**Top-level pages** (the ones in the sidebar) show the title with an icon (`UDashboardNavbar` `icon`), the same Lucide icon as their sidebar entry, so the page and its link read as one. Below `lg` the navbar adds the menu button that opens the sidebar by itself.
 
-The sidebar (`layouts/default.vue`) has the logo and collapse button in its header, then a `UDashboardSearchButton` and the navigation. Its footer holds the staff menu (the signed-in email and Log Out) and a `UColorModeButton`. Ctrl/⌘+K opens `UDashboardSearch`, which lists every sidebar page plus Nuxt UI's light/dark commands. A section stays highlighted on the pages under it (`/techpack-reviews/101`, `/product/create`) through `isSectionActive`. When a section's pages live elsewhere, list them in the layout's `SECTION_PATHS` (Account Management is `/`, its details are `/account/<id>`).
+**Nested pages** (a detail, create, edit, or review page under a sidebar section) lead with a back button to their list in `#leading` instead. They set `:toggle="false"` so a phone shows no menu button, and they have no title icon: the back button is the way out, and the title keeps its room. The section stays highlighted in the sidebar on a wide screen.
+
+The sidebar (`layouts/default.vue`) has the logo and collapse button in its header, then a `UDashboardSearchButton` and the navigation. Its footer holds the staff menu (the signed-in email and Log Out) and a `UColorModeButton`. Ctrl/⌘+K opens `UDashboardSearch`, which lists every sidebar page, a Keyboard shortcuts command, and Nuxt UI's light/dark commands. Ctrl/⌘+B collapses the sidebar on a wide screen and opens or closes its drawer below `lg`. `?`, the staff menu, and the search palette open `ModalShortcuts`, the list of every shortcut: when you add or remove a shortcut, update its list. Page-wide shortcuts use `defineShortcuts`, which pauses them while typing in a field. A section stays highlighted on the pages under it (`/techpack-reviews/101`, `/product/create`) through `isSectionActive`. When a section's pages live elsewhere, list them in the layout's `SECTION_PATHS` (Account Management is `/`, its details are `/account/<id>`).
+
+### Navbar on a phone
+
+A phone (390px, and down to 320px) has room for the title and **at most two icon buttons** beside the menu or back button. Check the page in each of its modes (reading and editing, for example), since each can add buttons.
+
+1. **Labels go below `sm`.** An action with a label becomes icon only: put the label in `<span class="hidden sm:inline">` and give the button an `aria-label`.
+2. **Repeats go.** A Cancel that the back button repeats is hidden, and badges such as Sample data are hidden or move into the body.
+3. **A third action moves into the body.** Keep the page's main actions (Save, Cancel while editing, Create) in the navbar, and show the rest as a full-width button at the top of the body below `sm` (`hero.vue`: Preview).
+4. **The title shortens with "…", never mid-letter.** `app.config.ts` makes the title a block, since `truncate` can't draw the ellipsis on Nuxt UI's flex title. A `#title` slot keeps its text in one inline element. Keep titles short, because they are what's left when the buttons take their room.
 
 ## Page width
 
@@ -75,10 +88,10 @@ Pages set no `max-w-*` on their content and no breakpoints for width. Below the 
 | Pattern | Reference | Shape |
 | --- | --- | --- |
 | Queue or list | `features/techpack-review/components/ReviewQueueScreen.vue` | `ListToolbarTabs` in the toolbar (status in the URL; one line, not two) + the tab's total + Refresh → `AlertApiError` on error → card-shaped skeletons on the first load → `ListEmptyState`, or `ListRefresh` around a grid of cards (1 to 4 columns; the name, clamped to three lines, opens the record) → `ListPagination` |
-| Overview + table | `features/lead-inquiry/components/LeadListScreen.vue` | `InputSearch` and filters in `UDashboardToolbar` → the summary endpoint's totals as the counts on `ListStatusTabs` (or its `AlertApiError` above them) → `AlertApiError` or `ListRefresh` around `UTable :loading` with `ListEmptyState` in `#empty` → `ListPagination` with rows per page |
-| Detail with tabs | `features/account/components/AccountDetailScreen.vue` | Back button in the navbar, followed by the account summary and `ListToolbarTabs` in `UDashboardToolbar`. The tab comes from `useUrlTab`. The summary and tabs scroll with the tab content on narrow screens. |
+| Overview + table | `features/lead-inquiry/components/LeadListScreen.vue` | `ListToolbarTabs` with the summary endpoint's totals as count badges, then `InputSearch` and filters in a second `UDashboardToolbar` → the totals' `AlertApiError` → `AlertApiError` or `ListRefresh` around `UTable :loading` (from `md`: a few combined columns, the whole row opens the record) and cards on a phone, each with `ListEmptyState` → `ListPagination` with rows per page → a read-only `USlideover` for the open record, kept in the URL (`?lead=`) |
+| Detail with tabs | `features/account/components/AccountDetailScreen.vue` | Back button in the navbar, followed by the account summary and `ListToolbarTabs` in `UDashboardToolbar`. The tab comes from `useUrlTab`. The summary and tabs scroll with the tab content on narrow screens. The layout follows the panel's width (`@container`): the summary's facts go 1 → 2 → 4 columns, label/value rows stack the label above the value below 22rem, and a table becomes a list of two-line rows when its card is narrow. Tabs without an API carry a Sample badge and a notice. |
 | Review workspace | `features/techpack-review/components/ReviewDetailScreen.vue` | Separate PDF and workbook viewports that fill the height between the header and the footer (at least 28rem), each scrolling inside itself, so one pane's content never sets the other's height. From `xl` they sit side by side in a `USplitter` the reviewer can drag (saved per browser, each pane with a minimum width); below `xl` tabs show one at a time, both kept mounted, and an issue offers View in PDF. The workbook toolbar opens the issue list and the selected issue has an inline editor above the grid. The footer shows staged correction actions, or an approval checklist (every remaining step at once, display only; folded below `xl`) above the attestation and Approve. Size-grid sheets keep their header row in view and, in a pane at least 40rem wide, pin the Dim column. Every load has a placeholder in its own shape (the workspace, the PDF page, the grid), a reload after a save dims the grid under `ListRefresh`, and a download shows its spinner on its own button. A failed PDF preview offers Download PDF as its main action. After approval the screen shows the result with Back to queue and Open next review. |
-| Create or edit form | `pages/product/create.vue` (UI only) | Cancel and Save in the navbar `#right` → `UPageCard` → `UForm` |
+| Create or edit form | `features/product/components/ProductFormScreen.vue` (UI only) | One screen for New and Edit (`product` prop): Edit prefills the form, shows the record's name and last update with an Unsaved changes badge and Discard changes once something differs, and ends with a Danger zone card (deactivate, delete; disabled until the API exists). An unknown id shows Not found. Back button, no menu button or title icon; Cancel and Create in the navbar `#right` (icon only on a phone; disabled with a reason until the API exists) → `UPageCard` sections → a live preview beside the form from `lg`, and in a `UModal` from a navbar Preview button below it. One `createReusableTemplate` draws both: framed (border, background, padding) beside the form, and `bare` in the modal, so the modal's own padding isn't doubled on a phone |
 
 ## Rows
 
@@ -98,7 +111,8 @@ A record's **name opens it**: a `ULink` (or a `UButton variant="link"` for an ov
 
 ## Review checklist
 
-- [ ] The page is a `UDashboardPanel` with a `UDashboardNavbar` that has a title `icon`.
+- [ ] The page is a `UDashboardPanel` with a `UDashboardNavbar`: a top-level page has a title `icon`; a nested page has a back button, `:toggle="false"`, and no icon.
+- [ ] At 390px, in every mode of the page, the navbar fits on one line: at most two icon-only actions (each with an `aria-label`), and a long title ends in "…", not mid-letter.
 - [ ] A search box is `InputSearch`; a filter or page change shows `ListSkeleton`, not the previous rows.
 - [ ] Loading, refreshing, empty, error, and pending states all render.
 - [ ] It reads well in light and dark: semantic tokens only, no `bg-white` or hex.

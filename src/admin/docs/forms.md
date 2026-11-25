@@ -66,4 +66,4 @@ async function submit(form: ISignInSchema) {
 
 - Disable the fields and the submit button while `pending` is true. Keep the form open until the request finishes.
 - Show the API reason with `toast.failed` or `toast.exception`, and keep the input as entered.
-- Pages with Save and Cancel in the `UDashboardNavbar #right` slot (products, plans) put the form outside `UForm`'s submit button. Bind Save to the form with a template ref, or move the button inside the form. Don't leave Save unconnected, as the current shells do.
+- Pages with Save and Cancel in the `UDashboardNavbar #right` slot (products, plans) put the form outside `UForm`'s submit button. Bind Save to the form with a template ref, or move the button inside the form. Never leave Save enabled but unconnected. Until a form's API exists, disable it and say why, as `ProductFormScreen` and `PlanFormScreen` do.

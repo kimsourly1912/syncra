@@ -36,3 +36,4 @@ The patterns were taken from another of the owner's Nuxt UI admin apps and adapt
 ## Follow-up
 
 - 2026-11-21: Lead Inquiry, Account Management, and Sale Requests now read their list and summary endpoints with search and rows per page. These list screens render their own `UDashboardPanel`, so the toolbar binds to the list state. Count badges stay unused until the totals' mapping to statuses is confirmed ([open questions](../product/open-questions.md#admin)).
+- 2026-11-25: The Lead Inquiry and Sale Request lists put their status tabs, with count badges, in the toolbar through `ListToolbarTabs`, so `ListStatusTabs` is removed. A row opens a read-only side panel kept in the URL. The static lead detail page now redirects to that panel, and `ListDetails`, which only that page used, is removed.
