@@ -121,4 +121,5 @@ A record's **name opens it**: a `ULink` (or a `UButton variant="link"` for an ov
 - [ ] It works at 1280px and up, and the sidebar collapses on desktop and opens as a slideover below `lg` without breaking the layout.
 - [ ] Keyboard focus is visible, icon-only buttons have an `aria-label`, and record actions show their disabled state.
 - [ ] Destructive actions use `<ModalConfirm>` and name the record.
+- [ ] Every `UForm` sets `:validate-on="[]"`. Leaving a field empty and tabbing away shows no error; pressing Submit does ([forms](forms.md)).
 - [ ] No new sidebar link points to a page that doesn't exist.

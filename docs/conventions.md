@@ -149,6 +149,7 @@ export function getUpload(param: GlossaryDTO.GlossaryUploadParam) {
 
 - Write a Valibot schema for the fields the user edits. In Portal and Web, reuse `baseSchema` from `app/schema/base.schema.ts` for required strings, emails, phones, files, and passwords. Admin has no `baseSchema`: each field starts from the generated request schema ([Admin forms](../src/admin/docs/forms.md)).
 - Derive the form type with `v.InferOutput`. Name the field constants with `satisfies SchemaToString<IForm>` (Admin: the inline mapped type), so a renamed field breaks the build.
+- **Validate on submit.** Every `UForm` sets `:validate-on="[]"`, so errors appear only when the user submits, not on blur, input, or change. An error stays until the next submit. Don't add `@blur` handlers that call `validate()` ([decision 0013](decisions/0013-validate-forms-on-submit.md)).
 - Map form values to a `Req` in a pure function next to the schema. Unit-test it when it does more than copy fields.
 - Each app's `docs/forms.md` has the component pattern.
 

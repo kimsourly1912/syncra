@@ -90,6 +90,7 @@ Run through this before handing off UI work:
 - [ ] Light and dark mode both look right.
 - [ ] Every action is reachable with the keyboard, focus is visible, and icon-only buttons have an `aria-label`.
 - [ ] Destructive actions ask first and name the record.
+- [ ] Every `UForm` sets `:validate-on="[]"`. Leaving a field empty and tabbing away shows no error; pressing Submit does ([forms](forms.md)).
 - [ ] Admin-only controls are hidden from Operators, and the API refusal is still handled.
 - [ ] The text follows the localization rule, and both locale files are updated if keys were added.
 - [ ] Nothing shows another company's data after a company switch or logout.

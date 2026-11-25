@@ -21,6 +21,7 @@ const state = defineModel<IRepresentativeSchema>('state', { required: true })
     :state
     :schema="representativeSchema"
     class="space-y-8"
+    :validate-on="[]"
     @submit="data => $emit('submit', data)"
   >
     <section class="grid md:grid-cols-2 gap-4">

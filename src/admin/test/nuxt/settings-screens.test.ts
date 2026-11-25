@@ -90,6 +90,23 @@ describe('token package settings', () => {
 })
 
 describe('staff access settings', () => {
+  it('validates only on submit, not on blur or input', async () => {
+    fakeApi({})
+    const wrapper = await mount(StaffAccessSettings)
+
+    const password = wrapper.findAll('input[autocomplete="new-password"]')[0]!
+    await password.setValue('weak')
+    await password.trigger('blur')
+    await password.setValue('weaker')
+    await new Promise(resolve => setTimeout(resolve, 400)) // past UForm's input debounce
+    await flushPromises()
+    expect(wrapper.text()).not.toContain('Password too weak')
+
+    await wrapper.find('form').trigger('submit')
+    await flushPromises()
+    expect(wrapper.text()).toContain('Password too weak')
+  })
+
   it('won\'t send an invite with a weak password', async () => {
     const { transport } = fakeApi({})
     const wrapper = await mount(StaffAccessSettings)

@@ -31,6 +31,7 @@ const productTypes = computed(() => props.moduleItems.map<SelectMenuItem>(o => (
     :state="data"
     :schema="contactSaleSchema"
     class="flex flex-col gap-5"
+    :validate-on="[]"
     @submit="(data) => $emit('submit', data)"
   >
     <UFormField

@@ -61,6 +61,7 @@ function onSubmit(evt: FormSubmitEvent<IResetPasswordSchema>) {
           class="space-y-4"
           :state="data"
           :schema="resetPasswordSchema"
+          :validate-on="[]"
           @submit="onSubmit"
         >
           <UFormField

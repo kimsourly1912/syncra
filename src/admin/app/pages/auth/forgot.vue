@@ -55,6 +55,7 @@ function onSubmit(evt: FormSubmitEvent<IForgotPasswordSchema>) {
           class="space-y-4"
           :state="data"
           :schema="forgotPasswordSchema"
+          :validate-on="[]"
           @submit="onSubmit"
         >
           <UFormField
