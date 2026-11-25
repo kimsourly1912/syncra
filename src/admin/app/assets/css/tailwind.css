@@ -69,6 +69,15 @@
   }
 }
 
+/*
+ * The link that opens a row's record (ui.md → Rows): it holds only the name and stretches over the
+ * row, so the whole row opens it. The row needs `relative`; a card row adds `after:rounded-lg`. On a
+ * `ULink`, add `raw`: Nuxt UI's merge can't see that this class replaces its link colors.
+ */
+@utility row-link {
+  @apply text-start font-medium wrap-anywhere text-highlighted after:absolute after:inset-0 hover:text-primary focus-visible:outline-none focus-visible:after:ring-2 focus-visible:after:ring-inset focus-visible:after:ring-primary;
+}
+
 /* Thin scrollbars everywhere: panels, modals, menus. `scrollbar-width` isn't inherited. */
 @layer base {
   * {

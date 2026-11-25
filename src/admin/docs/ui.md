@@ -5,7 +5,7 @@ Admin is a dense desktop-first staff console. Use Nuxt UI components and Admin's
 ## Foundation
 
 - **Colors.** `app/app.config.ts` maps `primary` to the `brand` palette (`--color-brand-*` in `app/assets/css/tailwind.css`). Every other color is the Nuxt UI default. Use semantic utilities (`text-highlighted`, `text-muted`, `border-default`, `ring-default`). Don't add new hex values. **Light mode's primary is the 800 shade** (`--ui-primary` in `tailwind.css`): brand-500, Nuxt UI's default, is 2.4:1 on white, under WCAG AA's 4.5:1. brand-800 passes on white, on its own tint, and on `bg-elevated`. Dark mode keeps the 400 shade. Change the shade there, never per page.
-- **Light and dark.** `colorMode` in `nuxt.config.ts` starts every browser in light (`preference` and `fallback` are `light`, so the system setting is ignored) until staff pick a mode with `UColorModeButton` (sidebar footer, sign-in pages) or the search palette. Use semantic tokens (`bg-default`, `bg-elevated`, `text-highlighted`, `border-default`) so both modes work; don't add `bg-white` or `dark:` variants. The one exception is the TechPack source page, which stays white because it shows a paper PDF page.
+- **Light and dark.** `colorMode` in `nuxt.config.ts` starts every browser in light (`preference` and `fallback` are `light`, so the system setting is ignored) until staff pick a mode with `UColorModeButton` (sidebar footer, sign-in pages) or the search palette. Use semantic tokens (`bg-default`, `bg-elevated`, `text-highlighted`, `border-default`) so both modes work; don't add `bg-white` or `dark:` variants (lint rejects them, and hex classes). Two places stay white on purpose, and are the only exceptions in `eslint.config.mjs`: the TechPack source page (a paper PDF page) and the email template preview (customer email HTML).
 - **Font.** League Spartan (`--font-sans`).
 - **Nuxt UI defaults, plus a few app-wide layout rules.** Use components with their default theme. `app/app.config.ts` is the only place for app-wide overrides, and it holds only layout and overlay rules ([0012](../../../docs/decisions/0012-admin-page-width-and-layout-overrides.md)):
   - the page gutter on `UDashboardNavbar`, `UDashboardToolbar`, and the panel body
@@ -63,7 +63,7 @@ A phone (390px, and down to 320px) has room for the title and **at most two icon
 
 1. **Labels go below `sm`.** An action with a label becomes icon only: put the label in `<span class="hidden sm:inline">` and give the button an `aria-label`.
 2. **Repeats go.** A Cancel that the back button repeats is hidden, and badges such as Sample data are hidden or move into the body.
-3. **A third action moves into the body.** Keep the page's main actions (Save, Cancel while editing, Create) in the navbar, and show the rest as a full-width button at the top of the body below `sm` (`hero.vue`: Preview).
+3. **A third action moves into the body.** Keep the page's main actions (Save, Cancel while editing, Create) in the navbar, and show the rest as a full-width button at the top of the body below `sm` (`HeroScreen`: Preview).
 4. **The title shortens with "…", never mid-letter.** `app.config.ts` makes the title a block, since `truncate` can't draw the ellipsis on Nuxt UI's flex title. A `#title` slot keeps its text in one inline element. Keep titles short, because they are what's left when the buttons take their room.
 
 ## Page width
@@ -73,7 +73,7 @@ On a wide screen a page's content is centered and capped, so lines stay short. T
 | Page | Width | How |
 | --- | --- | --- |
 | Lists, tables, queues, detail pages (the default) | 80rem (1280px) | nothing |
-| Forms and settings (`product/create`, `plan-pricing/create`, `hero`, `setting`) | 56rem (896px) | `class="page-narrow"` on the page's `UDashboardPanel` |
+| Forms and settings (`ProductFormScreen`, `PlanFormScreen`, `HeroScreen`, `SettingsScreen`) | 56rem (896px) | `class="page-narrow"` on the page's `UDashboardPanel` |
 
 Pages set no `max-w-*` on their content and no breakpoints for width. Below the cap the side padding is Nuxt UI's own (1rem, 1.5rem from `sm`). The width is the panel's, so it holds with the sidebar open or collapsed.
 
@@ -95,7 +95,7 @@ Pages set no `max-w-*` on their content and no breakpoints for width. Below the 
 
 ## Rows
 
-A record's **name opens it**: a `ULink` (or a `UButton variant="link"` for an overlay) that holds only the name. There's no separate Manage, Review, or Open column. In a list of rows, stretch the link over the row (`relative` on the row, `after:absolute after:inset-0` on the link, the focus ring on `after:`). Other row actions sit beside it in a `⋮` `UDropdownMenu`, never inside the link.
+A record's **name opens it**: a `ULink` (or a `UButton variant="link"` for an overlay) that holds only the name. There's no separate Manage, Review, or Open column. In a list of rows, stretch the link over the row: `relative` on the row and `class="row-link"` on the link (`tailwind.css`: it stretches, colors, and draws the focus ring); a card row adds `after:rounded-lg`, and a `ULink` adds `raw` so its own link colors don't override the class. Other row actions sit beside it in a `⋮` `UDropdownMenu`, never inside the link.
 
 ## Required states
 

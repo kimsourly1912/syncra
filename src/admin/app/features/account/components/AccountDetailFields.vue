@@ -24,7 +24,7 @@ defineProps<{
           class="h-4 w-3/4"
         />
         <template v-else>
-          {{ field.value || '—' }}
+          {{ field.value || NO_VALUE }}
         </template>
       </dd>
     </div>

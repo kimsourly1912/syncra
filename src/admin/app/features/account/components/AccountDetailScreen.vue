@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import type { TabsItem } from '@nuxt/ui'
 import { useAccountDetail } from '../composables/useAccountDetail'
-import { formatDate, ONBOARDING_BADGE, roleLabel } from '../utils/labels'
+import { ONBOARDING_BADGE, roleLabel } from '../utils/labels'
 import CompanyInformation from './CompanyInformation.vue'
 import ModuleManagement from './ModuleManagement.vue'
 import SeatManagement from './SeatManagement.vue'
@@ -159,7 +159,7 @@ const notFound = computed(() => props.userId === undefined || error.value?.kind 
                     class="mt-1 h-4 w-28"
                   />
                   <template v-else>
-                    {{ fact.value || '—' }}
+                    {{ fact.value || NO_VALUE }}
                   </template>
                 </dd>
               </div>

@@ -27,9 +27,6 @@ watch(open, (template) => {
   view.value = template?.html ? 'html' : 'text'
 })
 
-// The name's button stretches over the row, so the whole row opens the template.
-const OPEN = 'text-start font-medium wrap-anywhere text-highlighted after:absolute after:inset-0 hover:text-primary focus-visible:outline-none focus-visible:after:ring-2 focus-visible:after:ring-inset focus-visible:after:ring-primary'
-
 const columns: TableColumn<EmailTemplate>[] = [
   { id: 'name', header: 'Template' },
   { id: 'subject', header: 'Subject', meta: { class: { th: 'pr-12', td: 'pr-12' } } },
@@ -63,7 +60,7 @@ const columns: TableColumn<EmailTemplate>[] = [
         <template #name-cell="{ row }">
           <button
             type="button"
-            :class="OPEN"
+            class="row-link"
             @click="setOpen(row.original.name)"
           >
             <code class="text-sm">{{ row.original.name }}</code>
@@ -75,7 +72,7 @@ const columns: TableColumn<EmailTemplate>[] = [
           </button>
         </template>
         <template #subject-cell="{ row }">
-          <span class="line-clamp-2 text-muted wrap-anywhere">{{ row.original.subject || '—' }}</span>
+          <span class="line-clamp-2 text-muted wrap-anywhere">{{ row.original.subject || NO_VALUE }}</span>
         </template>
         <template #loading>
           <ListSkeleton label="Loading email templates…" />

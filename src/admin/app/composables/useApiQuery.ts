@@ -3,12 +3,22 @@ import { ApiError } from '@/api'
 /** The queries on screen, so `invalidateQueries` can refresh them after a write. */
 const mounted = new Set<{ key: () => string, refresh: () => Promise<unknown> }>()
 
+/** Dev only: every key's feature (`'lead-inquiry'`) seen in this tab, to catch a mistyped `invalidate`. */
+const seenFeatures = new Set<string>()
+
 /**
- * Refreshes every query on screen whose key starts with one of `features` (`'techpack-reviews'`
- * matches `techpack-reviews:list:…`). Queries that aren't on screen load fresh when next shown.
+ * Refreshes every query on screen whose key starts with one of `features` (`'techpack-review'`
+ * matches `techpack-review:list:…`). Queries that aren't on screen load fresh when next shown.
  */
 export async function invalidateQueries(...features: string[]) {
   const matches = [...mounted].filter(query => features.some(feature => query.key().startsWith(`${feature}:`)))
+  if (import.meta.dev) {
+    for (const feature of features) {
+      if (!seenFeatures.has(feature.split(':')[0]!)) {
+        console.warn(`[invalidateQueries] no query keyed "${feature}:…" has loaded in this tab. Keys start with the feature's folder name ('lead-inquiry', not 'lead-inquiries').`)
+      }
+    }
+  }
   await Promise.all(matches.map(query => query.refresh()))
 }
 
@@ -16,7 +26,8 @@ export async function invalidateQueries(...features: string[]) {
  * Reads API data into a component. Wraps `useAsyncData`, so components using the same key share
  * one request and its data.
  *
- * - `key` is `'<feature>:<name>:<inputs…>'`. A getter key refetches when it changes, so put every
+ * - `key` is `'<feature>:<name>:<inputs…>'`, where `<feature>` is the folder under `features/`
+ *   (`lead-inquiry`, not the API's `lead-inquiries`). A getter key refetches when it changes, so put every
  *   input the request uses into it. `invalidateQueries('<feature>')` refreshes it after a write.
  * - The fetcher gets a `signal`: a newer load cancels the older one, so a slow response can't
  *   overwrite a newer one.
@@ -27,7 +38,7 @@ export async function invalidateQueries(...features: string[]) {
  *
  * @example
  * const review = useApiQuery(
- *   () => `techpack-reviews:item:${fileId}`,
+ *   () => `techpack-review:item:${fileId}`,
  *   ({ signal }) => api.get('/admin/docai/techpack-reviews/{fileId}', { path: { fileId }, signal, model: reviewItemModel }),
  * )
  */
@@ -39,8 +50,10 @@ export function useApiQuery<T>(
     enabled?: MaybeRefOrGetter<boolean>
   } = {},
 ) {
-  if (import.meta.dev && !/^[\w-]+:/.test(toValue(key))) {
-    console.warn(`[useApiQuery] key "${toValue(key)}" should be "<feature>:<name>" so invalidateQueries() can find it.`)
+  if (import.meta.dev) {
+    const feature = /^([\w-]+):/.exec(toValue(key))?.[1]
+    if (feature) seenFeatures.add(feature)
+    else console.warn(`[useApiQuery] key "${toValue(key)}" should be "<feature>:<name>" so invalidateQueries() can find it.`)
   }
 
   const enabled = () => toValue(options.enabled ?? true)

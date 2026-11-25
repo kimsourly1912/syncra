@@ -110,7 +110,7 @@ function onSubmit(event: FormSubmitEvent<IProfileSchema>) {
               Sign-in email
             </dt>
             <dd class="mt-0.5 wrap-anywhere text-highlighted">
-              {{ profile?.email || '—' }}
+              {{ profile?.email || NO_VALUE }}
             </dd>
           </div>
           <div>
@@ -118,7 +118,7 @@ function onSubmit(event: FormSubmitEvent<IProfileSchema>) {
               Role
             </dt>
             <dd class="mt-0.5 text-highlighted">
-              {{ profile?.role?.name || '—' }}
+              {{ profile?.role?.name || NO_VALUE }}
             </dd>
           </div>
           <div>

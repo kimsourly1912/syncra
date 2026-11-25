@@ -48,14 +48,14 @@ export function useProductList() {
   const list = useListQuery({ status: ['active', 'archived'] as const })
 
   const products = useApiQuery(
-    () => `products:list:${list.filters.value.status}:${list.page.value}`,
+    () => `product:list:${list.filters.value.status}:${list.page.value}`,
     ({ signal }) => api.get('/admin/products', {
       query: { status: list.filters.value.status, page: list.page.value - 1 },   // the API's page is zero-based
       signal,
       model: productPageModel,
     }),
   )
-  watch(() => products.data.value?.totalPages, total => total !== undefined && list.clampPage(total))
+  list.keepPageInRange(() => products.data.value?.totalPages)
 
   return {
     ...list,
@@ -76,7 +76,7 @@ export function useProductActions() {
   const router = useRouter()
   const create = useApiMutation(
     (form: IProductFormSchema) => api.post('/admin/products', { body: toProductRequest(form) }),
-    { success: 'Product saved', error: 'Could not save the product', invalidate: ['products'] },
+    { success: 'Product saved', error: 'Could not save the product', invalidate: ['product'] },
   )
 
   async function save(form: IProductFormSchema) {

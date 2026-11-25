@@ -80,3 +80,24 @@ export const MULTIPART_ENDPOINTS: ReadonlySet<string> = new Set([
   'POST /admin/docai/techpack-reviews/{fileId}/draft',
   'POST /admin/users/me/logo',
 ])
+
+/** Operations whose success body isn't a `ResponseMsg*` envelope; the client reads it as it is. */
+export const UNENVELOPED_ENDPOINTS: ReadonlySet<string> = new Set([
+  'GET /admin/lead-inquiries',
+  'GET /admin/lead-inquiries/summary',
+  'GET /admin/lead-inquiries/{id}',
+  'GET /admin/sale-requests',
+  'GET /admin/sale-requests/dashboard',
+  'GET /admin/sale-requests/{id}',
+  'GET /admin/sns/subscription-arn',
+  'POST /admin/auth/otp/verify',
+  'POST /admin/lead-inquiries/change-status',
+  'POST /admin/sale-requests/module',
+  'POST /admin/sale-requests/seat',
+  'POST /admin/sale-requests/token',
+  'POST /admin/sale-requests/{id}',
+  'POST /admin/sns/publish',
+  'POST /admin/sns/subscribe-email',
+  'POST /admin/sns/unsubscribe-email',
+  'POST /admin/token-ledger/expire-grants',
+])

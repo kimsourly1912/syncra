@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import ReviewDetailScreen from '@/features/techpack-review/components/ReviewDetailScreen.vue'
+import { ReviewDetailScreen } from '@/features/techpack-review'
 
 // Key by path so another review starts with a fresh workspace.
 definePageMeta({ key: route => route.path })

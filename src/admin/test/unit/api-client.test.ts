@@ -123,6 +123,18 @@ describe('requests', () => {
     expect(await client.get('/admin/users/me/profile', { model: itemModel, envelope: false })).toEqual({ id: 3 })
   })
 
+  it('reads an endpoint the spec marks as unenveloped without being told', async () => {
+    const { client } = clientReturning(() => ({ id: 3 }))
+
+    expect(await client.get('/admin/sale-requests/{id}', { path: { id: 3 }, model: itemModel })).toEqual({ id: 3 })
+  })
+
+  it('still expects an envelope from an enveloped endpoint', async () => {
+    const { client } = clientReturning(() => ({ id: 3 }))
+
+    await expect(client.get('/admin/users/me/profile', { model: itemModel })).rejects.toMatchObject({ kind: 'contract' })
+  })
+
   it('downloads a blob without parsing it', async () => {
     const blob = new Blob(['x'])
     const { transport, client } = clientReturning(() => blob)

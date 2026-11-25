@@ -5,16 +5,13 @@ import type { TokenPackage } from '../models/token-package'
 
 const { packages, loading, refreshing, pending, error, refresh } = useTokenPackages()
 
-const count = (value: number | null | undefined) => (value == null ? '—' : value.toLocaleString())
-const price = (item: TokenPackage) => (item.price == null || !item.currency
-  ? '—'
-  : new Intl.NumberFormat(undefined, { style: 'currency', currency: item.currency }).format(item.price))
-const expiry = (days: number | null | undefined) => (days == null ? '—' : `${days.toLocaleString()} ${days === 1 ? 'day' : 'days'}`)
+const price = (item: TokenPackage) => formatMoney(item.price, item.currency)
+const expiry = (days: number | null | undefined) => (days == null ? NO_VALUE : `${formatCount(days)} ${days === 1 ? 'day' : 'days'}`)
 
 const NUMBER = { th: 'text-right', td: 'text-right tabular-nums' }
 const columns: TableColumn<TokenPackage>[] = [
   { id: 'package', header: 'Package' },
-  { id: 'tokens', header: 'Tokens', meta: { class: NUMBER }, cell: ({ row }) => count(row.original.tokenAmount) },
+  { id: 'tokens', header: 'Tokens', meta: { class: NUMBER }, cell: ({ row }) => formatCount(row.original.tokenAmount) },
   { id: 'price', header: 'Price', meta: { class: NUMBER }, cell: ({ row }) => price(row.original) },
   { id: 'expiry', header: 'Expires after', meta: { class: NUMBER }, cell: ({ row }) => expiry(row.original.expiryDays) },
 ]
@@ -113,7 +110,7 @@ const columns: TableColumn<TokenPackage>[] = [
                   Tokens
                 </dt>
                 <dd class="truncate font-medium text-highlighted tabular-nums">
-                  {{ count(item.tokenAmount) }}
+                  {{ formatCount(item.tokenAmount) }}
                 </dd>
               </div>
               <div class="min-w-0 px-1">

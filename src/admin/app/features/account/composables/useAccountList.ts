@@ -13,7 +13,7 @@ export function useAccountList() {
   const list = useListQuery({}, { search: true, pageSizes: ACCOUNT_PAGE_SIZES })
 
   const users = useApiQuery(
-    () => `accounts:list:${list.page.value}:${list.pageSize.value}:${list.search.value}`,
+    () => `account:list:${list.page.value}:${list.pageSize.value}:${list.search.value}`,
     ({ signal }) => api.get('/admin/portal-users', {
       query: {
         search: list.search.value || undefined,
@@ -26,14 +26,11 @@ export function useAccountList() {
   )
 
   const summary = useApiQuery(
-    'accounts:summary',
+    'account:summary',
     ({ signal }) => api.get('/admin/portal-users/summary', { signal, model: portalUserSummaryModel }),
   )
 
-  // A page past the end (rows changed since the link was made) moves back to the last page.
-  watch(() => users.data.value?.totalPages, (totalPages) => {
-    if (totalPages !== undefined) list.clampPage(totalPages)
-  })
+  list.keepPageInRange(() => users.data.value?.totalPages)
 
   return {
     search: list.search,

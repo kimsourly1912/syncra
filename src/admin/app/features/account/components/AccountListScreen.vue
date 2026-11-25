@@ -27,12 +27,10 @@ const statusItems: SelectItem[] = [
   { label: 'Pending', value: 'pending' },
 ]
 
-const count = (value: number | null | undefined) => (value == null ? '—' : value.toLocaleString())
-
 const stats = computed<CardStat[]>(() => [
-  { label: 'Registered', icon: 'lucide:users', value: count(summary.value?.accountRegistered), color: 'primary' },
-  { label: 'Completed', icon: 'lucide:circle-check', value: count(summary.value?.completedOnboardingVerification), color: 'success' },
-  { label: 'Pending', icon: 'lucide:clock', value: count(summary.value?.pendingOnboardingVerification), color: 'warning' },
+  { label: 'Registered', icon: 'lucide:users', value: formatCount(summary.value?.accountRegistered), color: 'primary' },
+  { label: 'Completed', icon: 'lucide:circle-check', value: formatCount(summary.value?.completedOnboardingVerification), color: 'success' },
+  { label: 'Pending', icon: 'lucide:clock', value: formatCount(summary.value?.pendingOnboardingVerification), color: 'warning' },
 ])
 
 /** The account's name, or its email when it has none, so the email isn't shown twice. */
@@ -40,23 +38,20 @@ const title = (user: PortalUserRow) => [user.firstname, user.lastname].filter(Bo
 const showsEmail = (user: PortalUserRow) => !!user.email && title(user) !== user.email
 const ids = (user: PortalUserRow) => [`User #${user.userId}`, user.companyId == null ? undefined : `Company #${user.companyId}`].filter(Boolean).join(' · ')
 const onboarding = (user: PortalUserRow) => (user.onboardingStatus ? ONBOARDING[user.onboardingStatus] : undefined)
-const seats = (user: PortalUserRow) => (user.seatTotal == null ? '—' : `${user.seatUsed ?? 0}/${user.seatTotal}`)
+const seats = (user: PortalUserRow) => (user.seatTotal == null ? NO_VALUE : `${user.seatUsed ?? 0}/${user.seatTotal}`)
 const cardStats = (user: PortalUserRow) => [
-  { label: 'Modules', value: count(user.moduleActiveCount) },
-  { label: 'Tokens', value: count(user.token) },
+  { label: 'Modules', value: formatCount(user.moduleActiveCount) },
+  { label: 'Tokens', value: formatCount(user.token) },
   { label: 'Seats', value: seats(user) },
 ]
-
-// The name's link stretches over the row (or card), so the whole row opens the account.
-const LINK = 'font-medium wrap-anywhere text-highlighted after:absolute after:inset-0 hover:text-primary focus-visible:outline-none focus-visible:after:ring-2 focus-visible:after:ring-inset focus-visible:after:ring-primary'
 
 const NUMBER = { th: 'text-right', td: 'text-right tabular-nums' }
 
 const columns: TableColumn<PortalUserRow>[] = [
   { id: 'account', header: 'Account' },
   { id: 'onboarding', header: 'Onboarding' },
-  { id: 'modules', header: 'Modules', meta: { class: NUMBER }, cell: ({ row }) => count(row.original.moduleActiveCount) },
-  { id: 'token', header: 'Tokens', meta: { class: NUMBER }, cell: ({ row }) => count(row.original.token) },
+  { id: 'modules', header: 'Modules', meta: { class: NUMBER }, cell: ({ row }) => formatCount(row.original.moduleActiveCount) },
+  { id: 'token', header: 'Tokens', meta: { class: NUMBER }, cell: ({ row }) => formatCount(row.original.token) },
   { id: 'seats', header: 'Seats', meta: { class: { th: 'text-right pr-12', td: 'text-right tabular-nums pr-12' } }, cell: ({ row }) => seats(row.original) },
 ]
 </script>
@@ -156,7 +151,8 @@ const columns: TableColumn<PortalUserRow>[] = [
             <div class="min-w-0 space-y-0.5">
               <ULink
                 :to="`/account/${row.original.userId}`"
-                :class="LINK"
+                raw
+                class="row-link"
               >
                 {{ title(row.original) }}
                 <UIcon
@@ -225,7 +221,8 @@ const columns: TableColumn<PortalUserRow>[] = [
               <div class="min-w-0 space-y-1 pe-6">
                 <ULink
                   :to="`/account/${user.userId}`"
-                  :class="[LINK, 'block after:rounded-lg']"
+                  raw
+                  class="row-link block after:rounded-lg"
                 >
                   {{ title(user) }}
                 </ULink>

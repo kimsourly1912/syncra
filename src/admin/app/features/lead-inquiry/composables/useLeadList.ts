@@ -24,15 +24,13 @@ export const LEAD_PAGE_SIZES = [20, 50, 100] as const
  * leaves the list instead of stepping through panels. Changing a filter closes the panel.
  */
 export function useLeadList() {
-  const route = useRoute()
-  const router = useRouter()
   const list = useListQuery(
     { status: Object.keys(STATUS) as LeadStatusTab[] },
     { search: true, pageSizes: LEAD_PAGE_SIZES },
   )
 
   const leads = useApiQuery(
-    () => `lead-inquiries:list:${list.filters.value.status}:${list.page.value}:${list.pageSize.value}:${list.search.value}`,
+    () => `lead-inquiry:list:${list.filters.value.status}:${list.page.value}:${list.pageSize.value}:${list.search.value}`,
     ({ signal }) => api.get('/admin/lead-inquiries', {
       query: {
         status: STATUS[list.filters.value.status],
@@ -40,31 +38,19 @@ export function useLeadList() {
         page: list.page.value - 1, // the API's page is zero-based
         size: list.pageSize.value,
       },
-      envelope: false,
       signal,
       model: leadPageModel,
     }),
   )
 
   const summary = useApiQuery(
-    'lead-inquiries:summary',
-    ({ signal }) => api.get('/admin/lead-inquiries/summary', { envelope: false, signal, model: leadSummaryModel }),
+    'lead-inquiry:summary',
+    ({ signal }) => api.get('/admin/lead-inquiries/summary', { signal, model: leadSummaryModel }),
   )
 
-  // A page past the end (rows changed since the link was made) moves back to the last page.
-  watch(() => leads.data.value?.totalPages, (totalPages) => {
-    if (totalPages !== undefined) list.clampPage(totalPages)
-  })
+  list.keepPageInRange(() => leads.data.value?.totalPages)
 
-  const openId = computed(() => {
-    const value = Number(route.query.lead)
-    return Number.isInteger(value) && value > 0 ? value : undefined
-  })
-
-  function setOpenId(id: number | undefined) {
-    const { lead: _, ...query } = route.query
-    return router.replace({ query: id === undefined ? query : { ...query, lead: String(id) } })
-  }
+  const panel = useUrlRecord('lead')
 
   return {
     tab: computed(() => list.filters.value.status),
@@ -88,8 +74,8 @@ export function useLeadList() {
     showPage: list.setPage,
     setPageSize: list.setPageSize,
     clearFilters: list.clearFilters,
-    openId,
-    openLead: (id: number) => setOpenId(id),
-    closeLead: () => setOpenId(undefined),
+    openId: panel.id,
+    openLead: panel.open,
+    closeLead: panel.close,
   }
 }

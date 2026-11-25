@@ -8,10 +8,9 @@ import { saleRequestDetailModel } from '../models/sale-request'
  */
 export function useSaleRequestDetail(id: MaybeRefOrGetter<number | undefined>) {
   return useApiQuery(
-    () => `sale-requests:detail:${toValue(id) ?? ''}`,
+    () => `sale-request:detail:${toValue(id) ?? ''}`,
     ({ signal }) => api.get('/admin/sale-requests/{id}', {
       path: { id: toValue(id)! },
-      envelope: false,
       signal,
       model: saleRequestDetailModel,
     }),

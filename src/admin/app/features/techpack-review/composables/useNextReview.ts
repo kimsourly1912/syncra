@@ -7,7 +7,7 @@ import { reviewPageModel } from '../models/review-item'
  */
 export function useNextReview(fileId: number) {
   const query = useApiQuery(
-    `techpack-reviews:next:${fileId}`,
+    `techpack-review:next:${fileId}`,
     ({ signal }) => api.get('/admin/docai/techpack-reviews', {
       query: { status: 'IN_REVIEW', page: 0 },
       signal,

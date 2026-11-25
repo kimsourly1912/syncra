@@ -81,6 +81,11 @@ export function useListQuery<F extends Record<string, string>>(choices: Choices<
     return replace ? router.replace({ query }) : router.push({ query })
   }
 
+  /** A page past the end moves to the last page. */
+  function clampPage(totalPages: number) {
+    if (page.value > 1 && page.value > totalPages) void go({ ...current(), page: Math.max(1, totalPages) }, true)
+  }
+
   return {
     filters,
     search,
@@ -96,9 +101,15 @@ export function useListQuery<F extends Record<string, string>>(choices: Choices<
     setPageSize: (size: number) => go({ ...current(), pageSize: size, page: 1 }),
     /** Every filter back to its default and the search emptied; the page size stays. */
     clearFilters: () => go({ ...current(), filters: Object.fromEntries(keys.map(key => [key, choices[key][0]])) as unknown as F, search: '', page: 1 }),
-    /** After a load: a page past the end (e.g. its last row was removed) moves to the last page. */
-    clampPage: (totalPages: number) => {
-      if (page.value > 1 && page.value > totalPages) void go({ ...current(), page: Math.max(1, totalPages) }, true)
-    },
+    clampPage,
+    /**
+     * Keeps the page in range as loads come in: pass the query's `totalPages`. A page past the end
+     * (its last row was removed, or an old link) moves to the last page.
+     *
+     * @example list.keepPageInRange(() => leads.data.value?.totalPages)
+     */
+    keepPageInRange: (totalPages: () => number | undefined) => watch(totalPages, (total) => {
+      if (total !== undefined) clampPage(total)
+    }),
   }
 }

@@ -106,7 +106,7 @@ function useAllPdfValues() {
     />
     No issues found
     <template v-if="comparedCells">
-      · {{ comparedCells.toLocaleString() }} {{ comparedCells === 1 ? 'cell' : 'cells' }} compared
+      · {{ formatCount(comparedCells) }} {{ comparedCells === 1 ? 'cell' : 'cells' }} compared
     </template>
   </span>
 </template>

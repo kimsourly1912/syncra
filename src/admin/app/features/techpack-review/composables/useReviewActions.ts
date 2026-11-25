@@ -89,7 +89,7 @@ export function useReviewActions(
       path: { fileId: draft.fileId },
       body: { draftUuid: draft.draftUuid, sourceVerified: true },
     }),
-    { success: 'Workbook reviewed and released.', error: 'Could not approve the workbook', invalidate: ['techpack-reviews'] },
+    { success: 'Workbook reviewed and released.', error: 'Could not approve the workbook', invalidate: ['techpack-review'] },
   )
 
   const busy = computed(() => record.pending.value || download.pending.value
