@@ -45,6 +45,7 @@ const metadata = computed(() => current.value ? `Company ${current.value.company
     <template #header>
       <UDashboardNavbar
         :title="title"
+        :toggle="false"
         :ui="{ left: 'min-w-0', title: 'min-w-0 truncate' }"
       >
         <template #leading>
