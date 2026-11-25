@@ -15,10 +15,10 @@ Before you touch a static screen, add this to the PR or the feature spec:
 
 | Topic | Portal | Admin |
 | --- | --- | --- |
-| Company identity | Always from `useProfileStore().companyId` | Staff work across companies, so a company-scoped Admin screen gets `companyId` from the **route** (`/account/[id]`). The server must check that the staff member may act on it. Validate the param: it must be a positive integer, otherwise show "not found". |
+| Company identity | Always from `useProfileStore().companyId` | Staff work across companies, so an Admin screen takes the record's id from the **route** (`/account/[id]` is a portal user's id). The server must check that the staff member may act on it. Validate the param: a positive integer, otherwise show "not found". |
 | Toasts | `toast.add('success', …)`, `toast.addException(e)` | `toast.success(msg)`, `toast.failed(msg)`, `toast.error(e)` |
 | Failures | A resolved `success: false` and a thrown error | One thrown `ApiError` ([errors](data-access.md#errors)) |
-| List state | `reactive` query + `useAsyncData` watch | Query in the URL (`route.query`) + an aborted request on change. See the [list rules](data-access.md#lists). |
+| List state | `reactive` query + `useAsyncData` watch | `useListQuery`: the query lives in the URL, and a change cancels the older request ([list rules](data-access.md#lists-uselistquery)) |
 | Confirm dialog | `<ModalConfirmation>` with `loading` | `<ModalConfirm>` emits `confirm` and `cancel`, and has no loading prop. Disable the trigger while pending, and close the dialog after the request. |
 | Text | i18n | English only |
 
@@ -29,11 +29,12 @@ app/features/product/models/product.ts                 defineModel(vProductRespo
 app/features/product/schemas/product-form.ts            form schema + toProductRequest(form)
 app/features/product/composables/useProductList.ts      useListQuery + useApiQuery
 app/features/product/composables/useProductActions.ts   useApiMutation per write
-app/features/product/components/ProductListScreen.vue
-app/features/product/components/ProductForm.vue
-app/pages/product/index.vue                             thin: <ProductListScreen />
-app/pages/product/create.vue, [id].vue                  thin: <ProductForm :product-id="…" />
+app/features/product/components/ProductListScreen.vue   exists (sample data): switch it to useProductList
+app/features/product/components/ProductFormScreen.vue   exists (UI only): wire its Save to useProductActions
+app/pages/product/index.vue, create.vue, [id].vue       already thin; [id].vue loads the record instead of a fixture
 ```
+
+Delete `fixtures/products.ts` once nothing reads it.
 
 There is no service file: composables call `api` with the spec's paths. Every page is staff-only by default (`middleware/access.global.ts`), so `/product/**` needs no guard setup. The sidebar shows the Product link once a page exists.
 
@@ -41,7 +42,7 @@ There is no service file: composables call `api` with the spec's paths. Every pa
 
 ```ts
 // app/features/product/composables/useProductList.ts (illustrative: confirm the real endpoint first)
-import { api, errorMessage } from '@/api'
+import { api } from '@/api'
 import { productPageModel } from '../models/product'
 
 export function useProductList() {
@@ -62,7 +63,8 @@ export function useProductList() {
     items: computed(() => products.data.value?.content ?? []),
     totalPages: computed(() => products.data.value?.totalPages ?? 0),
     loading: products.loading,
-    error: computed(() => (products.error.value ? errorMessage(products.error.value, 'Could not load products.') : '')),
+    refreshing: products.refreshing,
+    error: products.error, // an ApiError, for <AlertApiError>
     refresh: products.refresh,
   }
 }
@@ -90,6 +92,6 @@ The action acts only on `result.ok`. For review-style workflows, carry the recor
 
 ## Verify
 
-- `pnpm --filter admin exec eslint .`, `pnpm --filter admin test`, and `pnpm --filter admin build`
+- `pnpm --filter admin exec eslint .`, `pnpm --filter admin typecheck`, `pnpm --filter admin test`, and `pnpm --filter admin build`
 - Add a `test/nuxt/<feature>-screens.test.ts` that answers through `fakeApi` and covers the model, a refused request, a contract error, and the requests each action sends ([testing](testing.md))
 - In the browser: the list with data, empty, and with a failed request; creating, editing, and deleting a record; and page and filter changes, including Back

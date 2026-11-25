@@ -1,6 +1,6 @@
 # Admin data access
 
-How Admin reads and writes API data and keeps the staff session. The reasoning is in [decision 0009](../../../docs/decisions/0009-admin-typed-endpoints-and-query-toolkit.md) (typed endpoints, no services, query and mutation helpers), [decision 0008](../../../docs/decisions/0008-admin-api-client-and-session.md) (client, errors, session, route access), and [decision 0007](../../../docs/decisions/0007-generated-api-contract.md) (generated contract and models).
+How Admin reads and writes API data and keeps the staff session. The reasoning: [0007](../../../docs/decisions/0007-generated-api-contract.md) (generated contract and models), [0008](../../../docs/decisions/0008-admin-api-client-and-session.md) (client, errors, session), [0009](../../../docs/decisions/0009-admin-typed-endpoints-and-query-toolkit.md) (typed endpoints, no services, query and mutation helpers), [0014](../../../docs/decisions/0014-admin-session-survives-api-outages.md) (session through outages).
 
 ## The flow
 
@@ -8,134 +8,106 @@ How Admin reads and writes API data and keeps the staff session. The reasoning i
 pages/<route>.vue                  thin: definePageMeta + <Screen />
   → features/<f>/components/       render state, call actions
   → features/<f>/composables/      useApiQuery (reads), useApiMutation (writes), feature state
-  → api.get/post/… (@/api)         paths, params, query, and body checked against the spec
+  → api.get/post/… (@/api)         path, query, and body checked against the spec at compile time
   → client                         envelope, model parsing, ApiError, session renewal
 ```
 
-There is no service layer. A composable calls `api` directly, inside `useApiQuery` or `useApiMutation`, and passes the feature's model.
+There is no service layer: a composable calls `api` inside `useApiQuery` or `useApiMutation` and passes the feature's model.
 
 ## Calling the API
 
 ```ts
 import { api } from '@/api'
 
-api.get('/admin/docai/techpack-reviews', { query: { status, page }, signal, model: reviewPageModel })
 api.get('/admin/docai/techpack-reviews/{fileId}', { path: { fileId }, signal, model: reviewItemModel })
 api.post('/admin/docai/techpack-reviews/{fileId}/approve', { path: { fileId }, body: { draftUuid, sourceVerified: true } })
-api.post('/admin/docai/techpack-reviews/{fileId}/draft', { path: { fileId }, query: { draftUuid }, body: { workbook } })   // multipart
-api.download('/admin/docai/techpack-reviews/{fileId}/source', { path: { fileId } })                                      // Blob
+api.post('/admin/docai/techpack-reviews/{fileId}/draft', { path: { fileId }, query: { draftUuid }, body: { workbook } }) // multipart
+api.download('/admin/docai/techpack-reviews/{fileId}/source', { path: { fileId } })                                    // Blob
 ```
 
-- **Paths are the spec's paths**, including `{param}` placeholders. `app/api/generated/endpoints.gen.ts` maps every `'METHOD /path'` to its generated request type. A wrong method or path, a missing path param, or a query or body field the spec doesn't have is a **compile error**. Never build paths by hand.
-- `path` values are URL-encoded. A missing one throws before anything is sent.
-- **Multipart** endpoints (flagged in `MULTIPART_ENDPOINTS`) take a plain object body (`{ workbook }`) and send it as `FormData`.
+- **Paths are the spec's**, `{param}` placeholders included. A wrong method, path, path param, or query or body field is a compile error. Never build a path by hand.
+- **The generated endpoint map decides the transport:** `MULTIPART_ENDPOINTS` send a plain object body as `FormData`, and `UNENVELOPED_ENDPOINTS` (no `success` flag in the spec: `lead-inquiries/*`, `sale-requests/*`, `sns/*`) are read without unwrapping. Don't pass `envelope` unless the spec is known to be wrong, with a comment saying so.
 - `model` is what the feature needs from the response ([the API contract](#the-api-contract)). Without one, the call resolves to `undefined`.
-- **Envelopes come from the spec.** `api:gen` lists every operation whose success body has no `success` flag in `UNENVELOPED_ENDPOINTS` (today `lead-inquiries/*`, `sale-requests/*`, and `sns/*`), and the client reads those bodies as they are. Don't pass `envelope`; set it only to override a spec that's known to be wrong, with a comment saying so.
-- `auth: false` is only for the calls that set session cookies or renew them (sign-in, password reset, refresh). A 401 is then thrown as it is, with no renewal. Logout renews like any other call, so a staff member whose access token expired can still sign out ([0014](../../../docs/decisions/0014-admin-session-survives-api-outages.md)).
-- `api` needs no Nuxt context, so it works after an `await`. Nothing is retried except one retry after a renewed session.
-- `configureApi` (called once by `plugins/session.client.ts`) sets the transport: `$fetch.create({ baseURL: apiProxyPath || apiURL, credentials: 'include', retry: false })`. In `nuxt dev`, `apiProxyPath` is `/_api` and Nitro's `devProxy` forwards it to `NUXT_PUBLIC_API_URL`, because the API's CORS allowlist rejects localhost and its cookies are scoped to `.syncra.app`.
+- `auth: false` only for calls that set or renew session cookies (sign-in, password reset, refresh): their 401 is thrown as is.
+- `api` needs no Nuxt context, so it works after an `await`. Nothing is retried, except once after a renewed session.
+- In `nuxt dev`, requests go to `/_api`, which Nitro's `devProxy` forwards to `NUXT_PUBLIC_API_URL`, because the API's CORS and cookies don't accept localhost.
 
 ## Reads: `useApiQuery`
 
 ```ts
 const review = useApiQuery(
-  `techpack-review:item:${fileId}`,
-  ({ signal }) => api.get('/admin/docai/techpack-reviews/{fileId}', { path: { fileId }, signal, model: reviewItemModel }),
-  { enabled: fileId > 0 },
+  () => `techpack-review:item:${fileId.value}`,
+  ({ signal }) => api.get('/admin/docai/techpack-reviews/{fileId}', { path: { fileId: fileId.value }, signal, model: reviewItemModel }),
+  { enabled: () => fileId.value > 0 },
 )
-review.data       // the model, or undefined
-review.loading    // nothing to show for this key yet: the first load, or a new key
-review.refreshing // reloading the same key while its data is shown
-review.error      // ApiError | undefined
-review.refresh()
+review.data / review.error / review.refresh()
+review.loading     // nothing to show for this key: the first load, or a new key
+review.refreshing  // reloading the same key with its data shown
 ```
 
-- **The key is `'<feature>:<name>:<inputs…>'`, and `<feature>` is the folder under `features/`** (`lead-inquiry:list:…`, not the API's `lead-inquiries`), so `invalidate: ['lead-inquiry']` finds it. In dev, `invalidateQueries` warns about a prefix no query in the tab has used. Use a getter (`() => \`…:${page.value}\``) when inputs change. A new key loads again, and while it loads `data` is `undefined` and `loading` is true: Nuxt keeps the previous key's data, but those are another filter's or page's rows, so the screen shows `ListSkeleton` rather than stale rows. Only a reload of the same key (Refresh, Retry, `invalidateQueries`) is `refreshing`. Put every input the request uses into the key.
-- Pass `signal` through: a newer load cancels the older one.
-- `enabled` (a boolean or getter) holds the load until its inputs exist, for example a `draftUuid`.
-- When a refresh fails for the connection or the server, the last good data stays on screen. A refusal (404, `success: false`) clears it.
-- Components using the same key share one request and its data.
-- Inline errors use `errorMessage(error, 'Could not load …')`: the API's reason when there is one, otherwise the fallback.
+- **The key is `'<feature>:<name>:<inputs…>'`**, `<feature>` being the folder under `features/` (`lead-inquiry:list:…`, not the API's `lead-inquiries`), so `invalidate: ['lead-inquiry']` finds it. Put every input the request uses into the key, with a getter when they change. In dev, `invalidateQueries` warns about a prefix no query has used.
+- A new key is `loading` with `data` undefined, so a filter or page change shows `ListSkeleton`, never another query's rows. Only a reload of the same key is `refreshing`.
+- Pass `signal` through: a newer load cancels the older one. `enabled` holds the load until its inputs exist.
+- Components using the same key share one request.
+- **When a reload fails for the connection or the server, the last good data stays on screen** (a refusal clears it). That data is for display only: a decision such as an approval gate reads it only while `error` is unset (`useDraftInspection().current`).
+- Inline errors use `errorMessage(error, 'Could not load …')`: the API's reason, or the fallback.
 
 ## Writes: `useApiMutation`
 
 ```ts
 const approve = useApiMutation(
-  (item: ReviewItem) => api.post('/admin/docai/techpack-reviews/{fileId}/approve', { path: { fileId: item.fileId }, body: { draftUuid: item.draftUuid!, sourceVerified: true } }),
+  (draft: ReviewDraft) => api.post('/admin/docai/techpack-reviews/{fileId}/approve', { path: { fileId: draft.fileId }, body: { draftUuid: draft.draftUuid, sourceVerified: true } }),
   { success: 'Workbook reviewed and released.', error: 'Could not approve the workbook', invalidate: ['techpack-review'] },
 )
-
-const result = await approve.execute(item)   // { ok: true, data } | { ok: false, error }; never throws
-if (result.ok) await router.replace({ path: '/techpack-reviews', query: { status: 'reviewed' } })
+const result = await approve.execute(draft) // { ok: true, data } | { ok: false, error }; never throws
+if (result.ok) await router.replace('/techpack-reviews?status=reviewed')
 ```
 
-- **No `try`/`catch` in features.** The helper shows the toasts: `success` text on success, and on failure a toast titled `error` with the `ApiError`'s message. Silent errors (a cancelled request, an ended session) show nothing.
-- `pending` is true while a call runs. A second `execute` during that time is skipped, so a double click sends once.
-- `invalidate` refreshes the queries on screen whose key starts with one of the given prefixes (`'techpack-review'`, or a narrower `'techpack-review:item'`). `invalidateQueries(...)` does the same by hand.
-- Navigate with a router captured during setup (`const router = useRouter()`), not `navigateTo`, because the code runs after an `await`.
-- Use `useAppToast().failed(text)` for a failure the composable decides itself, such as `forgotPassword` resolving with `sent: false`.
+- **No `try`/`catch` in features** (lint enforces it). The helper toasts `success`, or `error` with the API's message; silent errors (cancelled, session ended) show nothing.
+- `pending` is true while a call runs, and a second `execute` meanwhile is skipped, so a double click sends once.
+- `invalidate` refreshes the on-screen queries whose key starts with a prefix; `invalidateQueries(...)` does it by hand.
+- Navigate with a router captured in setup, not `navigateTo` (lint enforces it): the code runs after an `await`.
+- `useAppToast().failed(text)` reports a failure the composable decides itself (`forgotPassword` resolving `sent: false`).
 - Destructive actions ask first with `<ModalConfirm>`.
 
 ## Lists: `useListQuery`
 
-```ts
-const list = useListQuery({ status: ['in-review', 'reviewed'] as const })   // first choice = default
-list.filters.value.status                  // from the URL; unknown values read as the default
-list.page.value                            // 1-based, from the URL
-list.setFilters({ status: 'reviewed' })    // back to page 1
-list.setPage(2)
-list.keepPageInRange(() => query.data.value?.totalPages)   // past the end → last page, on every load
+The URL is the list's state (`/lead-inquiry?status=new&search=acme&page=2&size=50`), so reload, Back, and shared links keep the place ([0011](../../../docs/decisions/0011-admin-list-toolkit-and-color-mode.md)). The composable's JSDoc lists every member; the rules:
 
-// A list whose endpoint takes `search` and `size`:
-const leads = useListQuery({ status: ['all', 'new'] as const }, { search: true, pageSizes: [20, 50, 100] })
-leads.search.value                         // trimmed `?search=`, '' when absent
-leads.pageSize.value                       // `?size=` if it's a choice, else the first choice
-leads.setSearch('acme')                    // replaces the URL entry, back to page 1
-leads.setPageSize(50)                      // back to page 1
-leads.isFiltered.value                     // a filter or the search hides rows
-leads.clearFilters()                       // defaults and no search; the page size stays
+```ts
+const list = useListQuery({ status: ['all', 'new'] as const }, { search: true, pageSizes: [20, 50, 100] })
+list.filters.value.status / list.search.value / list.page.value / list.pageSize.value
+list.setFilters({ status: 'new' }) / list.setSearch('acme') / list.setPage(2) / list.setPageSize(50) / list.clearFilters()
+list.keepPageInRange(() => query.data.value?.totalPages)
 ```
 
-The URL is the state (`/techpack-reviews?status=reviewed&page=2`), so reload, Back, and shared links keep the place, and defaults are left out of it. Filter, page, and page-size changes are history entries. A search replaces the current entry, so Back doesn't step through each search ([0011](../../../docs/decisions/0011-admin-list-toolkit-and-color-mode.md)). Only turn on `search` and `pageSizes` when the endpoint takes `search` and `size`. The TechPack review endpoint takes neither. The Admin API's page is **zero-based**: send `page - 1`, and send `pageSize` as `size`. `features/techpack-review/composables/useReviewQueue.ts` is the reference. Links into a record pass the list's query along, so the record's Back link returns to the same tab and page.
-
-Which endpoints take what (from the generated contract):
-
-| Endpoint | `search` | Filters | `sort` | `page` / `size` |
-| --- | --- | --- | --- | --- |
-| `GET /admin/docai/techpack-reviews` | – | `status` | – | `page` only |
-| `GET /admin/lead-inquiries` | ✓ | `status` | ✓ | ✓ |
-| `GET /admin/portal-users` | ✓ | – | ✓ | ✓ |
-| `GET /admin/sale-requests` | ✓ | `status`, `type` | ✓ | ✓ |
-
-The `sort` format, the largest `size`, and a status filter for portal users aren't confirmed ([open questions](../../../docs/product/open-questions.md#admin)).
+- A filter's first choice is its default and stays out of the URL; an unknown value reads as the default.
+- Filter, page, and size changes add history entries; a search replaces the current one. Each goes back to page 1, and a filter change also closes a `useUrlRecord` panel.
+- `page` is 1-based; the Admin API's is **zero-based**: send `page - 1`, and `pageSize` as `size`.
+- Turn on `search` and `pageSizes` only when the endpoint takes `search` and `size` (lead inquiries, portal users, sale requests; not TechPack reviews). `sort` isn't used: its format isn't confirmed ([open questions](../../../docs/product/open-questions.md#admin)).
+- Links into a record pass the list's query along, so its Back link returns to the same tab and page.
 
 ## Errors
 
-Every failure is one thrown `ApiError` (inside the helpers, a value in `error` or `result.error`):
+Every failure is one `ApiError` (inside the helpers, `error` or `result.error`):
 
 | `kind` | When | `message` |
 | --- | --- | --- |
-| `rejected` | A `success: false` envelope (on any status except 401 and 403), or another 4xx | The API's `reason`, if any |
-| `validation`, `not_found`, `conflict`, `forbidden` | 400/422, 404, 409, 403 | The API's `reason`, if any |
-| `unauthorized` | 401 that couldn't be recovered | "Your session has expired…" |
+| `rejected` | `success: false` (any status but 401 and 403), or another 4xx | The API's `reason` |
+| `validation`, `not_found`, `conflict`, `forbidden` | 400/422, 404, 409, 403 | The API's `reason` |
+| `unauthorized` | A 401 that couldn't be recovered | "Your session has expired…" |
 | `contract` | The response doesn't match the `model` | `Unexpected response from GET /admin/… (field: issue)` |
-| `server`, `network`, `timeout`, `aborted`, `unknown` | 5xx without an envelope, no response, timeout, cancelled, anything else | A fixed, user-safe message |
+| `server`, `network`, `timeout`, `aborted`, `unknown` | 5xx without an envelope, no response, timeout, cancelled, other | A fixed, user-safe message |
 
-`retryable` is true for `network`, `timeout`, and `server`. `silent` is true for cancelled requests and for the 401 that ended the session. `ApiError.from(e)` finds the API error inside wrappers such as `useAsyncData`'s.
+`retryable` is true for `network`, `timeout`, and `server`; `silent` for cancelled requests and the 401 that ended the session. `ApiError.from(e)` unwraps one from inside other errors.
 
 ## The API contract
 
-| Piece | Where | Notes |
-| --- | --- | --- |
-| Spec snapshot | `openapi/syncra.json` | Committed. Refresh it with `pnpm --filter admin api:pull`, which reads `NUXT_PUBLIC_API_URL` from `.env`. |
-| Generated contract | `app/api/generated/` | `pnpm --filter admin api:gen` runs `openapi-ts`, then `scripts/gen-endpoints.mjs`. Never edit these files. `Api.*` types, `v*` Valibot schemas, and the endpoint map (with `MULTIPART_ENDPOINTS` and `UNENVELOPED_ENDPOINTS`), for `/admin/**` only. |
-| Contract helpers | `app/api/contract.ts` | `defineModel`, `parseData`, `ApiErrorBody` |
-| Models | `features/<f>/models/<name>.ts` | What the feature needs from a response |
+The spec snapshot is `openapi/syncra.json`. `pnpm --filter admin api:pull` refreshes it (from `NUXT_PUBLIC_API_URL` in `.env`), and `pnpm --filter admin api:gen` regenerates `app/api/generated/`: `Api.*` types, `v*` Valibot schemas, and the endpoint map, for `/admin/**` only. Never edit the generated files. After a spec change, run both and commit the spec with the output; a removed or changed endpoint then fails typecheck where it's called.
 
-**Every generated field is optional and nullable**, because the spec doesn't say which fields are required. Don't use `!`, `?? 0`, or defaults to hide that. Declare what the feature needs in a model:
+**Every generated field is optional and nullable**, because the spec doesn't say otherwise. Don't hide that with `!`, `?? 0`, or defaults: declare what the feature needs in a model in `features/<f>/models/`:
 
 ```ts
-// features/techpack-review/models/review-item.ts
 export const reviewItemModel = defineModel(vReviewItem, {
   required: ['fileId', 'jobId', 'companyId', 'filename', 'status'], // present and not null
   optional: ['draftUuid', 'reviewedAt'],                            // may be null or missing
@@ -143,41 +115,20 @@ export const reviewItemModel = defineModel(vReviewItem, {
 export type ReviewItem = v.InferOutput<typeof reviewItemModel>
 ```
 
-- **Lists** are parsed whole: `v.object({ content: v.array(reviewItemModel), totalPages: v.number() })`. If one row is bad, the request fails. Never drop rows silently.
-- **Request bodies** are typed by the endpoint map. A form keeps its own schema and maps its values to the body.
-- **After a spec change**, run `api:pull` and then `api:gen`. Commit the spec and the generated output together. A removed or changed endpoint now fails typecheck where it's called; fix those call sites.
+A list is parsed whole (`v.object({ content: v.array(reviewItemModel), totalPages: v.number() })`): one bad row fails the request, and rows are never dropped silently. Request bodies are typed by the endpoint map; a form keeps its own schema and maps its values to the body.
 
 ## The session
 
-The `session` feature (`app/features/session/`) owns who is signed in. It's navigation state only: the API checks the session on every request, and there is no staff role map.
+`features/session` owns who is signed in. It is navigation state only: the API checks the session on every request, and there is no staff role map.
 
-```ts
-import { useSession } from '@/features/session'
-
-const session = useSession()
-session.status     // 'unknown' | 'signed-in' | 'signed-out' (readonly)
-session.staff      // StaffProfile | null (readonly)
-session.signedIn   // computed
-```
-
-| Action | Does |
+| `useSession()` | Does |
 | --- | --- |
-| `load()` | Loads the profile once; concurrent callers share the request. A refusal (401, 403, 404, 400, `success: false`) means signed out. If the API can't answer (offline, timeout, 5xx, unexpected response), it resolves to that `ApiError`, `status` stays `unknown`, and the next call tries again. Called by the route guard on every navigation until the status is known. |
-| `reload()` | Loads the profile again after the cookies changed (password reset, another tab signed in, a profile edit). Resolves like `load()`; a failure the API couldn't answer keeps the current state. |
-| `signIn(body)` | Logs in, then loads the profile. Throws `ApiError` if either fails. Tells the other tabs. |
-| `signOut()` | Logs out (renewing an expired access token first), then clears the session, goes to sign-in, and clears every query's data. If the session couldn't be renewed, it was already over, and the sign-out completes. If the API can't be reached, it throws and the session is kept. Tells the other tabs. |
-| `end(reason)` | Ends the session locally: `'expired'` (from the API client; shows "Session expired") or `'signed-out-elsewhere'`. Idempotent. Goes to sign-in with `?redirect=` only if someone was signed in, then clears every query's data. A profile response still in flight can't sign the tab back in. |
+| `status`, `staff`, `signedIn` | `'unknown' \| 'signed-in' \| 'signed-out'`, the `StaffProfile`, and a computed, all read-only |
+| `load()` | Loads the profile once, shared by concurrent callers; the route guard calls it until the status is known. A refusal means signed out. If the API can't answer, it resolves to the `ApiError` and the status stays `unknown`. |
+| `reload()` | Loads the profile again after the cookies changed (password reset, another tab, a profile edit) |
+| `signIn(body)` / `signOut()` | Log in or out and tell the other tabs. `signOut` renews an expired access token first, and keeps the session if the API can't be reached. |
+| `end(reason)` | Ends the session locally (`'expired'` or `'signed-out-elsewhere'`), goes to sign-in, and clears every query's data. Idempotent. |
 
-`features/auth` wraps the actions for the forms in `useApiMutation`: `useSignIn`, `useSignOut`, `useForgotPassword`, and `useResetPassword`.
+`features/auth` wraps these for the forms (`useSignIn`, `useSignOut`, `useForgotPassword`, `useResetPassword`).
 
-**Session renewal.** On a 401, the client calls `renewSession()` (`POST /admin/auth/refresh`) and retries the request once:
-
-- Concurrent 401s share **one** renewal. A request that started before a renewal finished retries without renewing again, because its 401 was for the old cookies.
-- Tabs renew one at a time (Web Locks), because they share the refresh cookie. A tab that waited retries with the cookies the other tab got.
-- A **refused** renewal ends the session (`end('expired')`), and the request throws a silent `unauthorized`. Refused means `rejected`, `unauthorized`, `forbidden`, or `validation`. The API answers a missing refresh cookie with HTTP 500 and a `success: false` envelope, which counts as `rejected` ([open question](../../../docs/product/open-questions.md#admin)).
-- A **transient** renewal failure (network, timeout, a 5xx without an envelope) is thrown to the caller, and the session stays.
-- The renewal times out after 10 seconds.
-
-**Tabs stay in step.** `useSessionSync` (started by the plugin) broadcasts sign-in and sign-out. Another tab reloads its profile, or ends its session.
-
-**State tied to the staff session.** If you add `useState` that belongs to the signed-in staff member, clear it in `useSession`'s `clear()`.
+**Renewal.** On a 401 the client renews the session once (`POST /admin/auth/refresh`) and retries the request; concurrent 401s and other tabs share one renewal (`api/recovery.ts`). A refused renewal ends the session; a transient failure is thrown and the session stays. **If you add `useState` that belongs to the signed-in staff member, clear it in `useSession`'s `clear()`.**
