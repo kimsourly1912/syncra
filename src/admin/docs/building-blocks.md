@@ -22,7 +22,7 @@ Only what Nuxt UI doesn't provide and two or more screens use:
 
 | Component | Use for |
 | --- | --- |
-| `CardStats` | A stat grid of `items: CardStat[]` (`label`, `value`, `icon`, `color`), built on `UPageGrid` + `UPageCard`. Columns follow the item count. `#value="{ item }"` replaces the value. The `CardStat` type is exported from `CardStats.vue`. |
+| `CardStats` | A grid of compact stat tiles from `items: CardStat[]` (`label`, `value`, `icon`, `color`): a colored icon, the value, and a short label. Up to three tiles stay in one row even on a phone, so keep labels to a word or two ("Pending"); four or five wrap to two columns there. `#value="{ item }"` replaces the value. The `CardStat` type is exported from `CardStats.vue`. |
 | `ListDetails` | A label and value list (`items: ListDetail[]`; `type` is `text` by default or `badge`). The `ListDetail` type is exported from `ListDetails.vue`. |
 | `ModalConfirm` | A `UModal` confirmation. `v-model` opens it. Props: `title` (default "Are you sure?") and `description` (or the `#description` slot). Emits `confirm` and `cancel`. **It has no loading prop.** |
 | `InputPassword` | A password field with a show/hide toggle |

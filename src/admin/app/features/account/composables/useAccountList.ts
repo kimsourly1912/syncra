@@ -7,7 +7,7 @@ export const ACCOUNT_PAGE_SIZES = [20, 50, 100] as const
 /**
  * The portal-user account list: search, page, and page size in the URL
  * (`/?search=acme&page=2&size=50`), plus the totals cards. The API has no onboarding-status
- * filter (open question), so the list has none.
+ * filter (open question), so the screen shows that filter disabled.
  */
 export function useAccountList() {
   const list = useListQuery({}, { search: true, pageSizes: ACCOUNT_PAGE_SIZES })
