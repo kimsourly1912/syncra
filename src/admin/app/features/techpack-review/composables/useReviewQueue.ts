@@ -17,7 +17,7 @@ export function useReviewQueue() {
   const status = computed(() => STATUS[list.filters.value.status])
 
   const reviews = useApiQuery(
-    () => `techpack-reviews:list:${status.value}:${list.page.value}`,
+    () => `techpack-review:list:${status.value}:${list.page.value}`,
     ({ signal }) => api.get('/admin/docai/techpack-reviews', {
       query: { status: status.value, page: list.page.value - 1 }, // the API's page is zero-based
       signal,
@@ -25,10 +25,7 @@ export function useReviewQueue() {
     }),
   )
 
-  // A page past the end (its last review was just approved) moves back to the last page.
-  watch(() => reviews.data.value?.totalPages, (totalPages) => {
-    if (totalPages !== undefined) list.clampPage(totalPages)
-  })
+  list.keepPageInRange(() => reviews.data.value?.totalPages)
 
   return {
     tab: computed(() => list.filters.value.status),

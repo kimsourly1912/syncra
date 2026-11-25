@@ -33,15 +33,13 @@ export const SALE_REQUEST_PAGE_SIZES = [20, 50, 100] as const
  * Back leaves the list instead of stepping through panels. Changing a filter closes the panel.
  */
 export function useSaleRequestList() {
-  const route = useRoute()
-  const router = useRouter()
   const list = useListQuery(
     { status: Object.keys(STATUS) as SaleRequestStatusTab[], type: Object.keys(TYPE) as SaleRequestTypeFilter[] },
     { search: true, pageSizes: SALE_REQUEST_PAGE_SIZES },
   )
 
   const requests = useApiQuery(
-    () => `sale-requests:list:${list.filters.value.status}:${list.filters.value.type}:${list.page.value}:${list.pageSize.value}:${list.search.value}`,
+    () => `sale-request:list:${list.filters.value.status}:${list.filters.value.type}:${list.page.value}:${list.pageSize.value}:${list.search.value}`,
     ({ signal }) => api.get('/admin/sale-requests', {
       query: {
         status: STATUS[list.filters.value.status],
@@ -50,31 +48,19 @@ export function useSaleRequestList() {
         page: list.page.value - 1, // the API's page is zero-based
         size: list.pageSize.value,
       },
-      envelope: false,
       signal,
       model: saleRequestPageModel,
     }),
   )
 
   const summary = useApiQuery(
-    'sale-requests:summary',
-    ({ signal }) => api.get('/admin/sale-requests/dashboard', { envelope: false, signal, model: saleRequestSummaryModel }),
+    'sale-request:summary',
+    ({ signal }) => api.get('/admin/sale-requests/dashboard', { signal, model: saleRequestSummaryModel }),
   )
 
-  // A page past the end (rows changed since the link was made) moves back to the last page.
-  watch(() => requests.data.value?.totalPages, (totalPages) => {
-    if (totalPages !== undefined) list.clampPage(totalPages)
-  })
+  list.keepPageInRange(() => requests.data.value?.totalPages)
 
-  const openId = computed(() => {
-    const value = Number(route.query.request)
-    return Number.isInteger(value) && value > 0 ? value : undefined
-  })
-
-  function setOpenId(id: number | undefined) {
-    const { request: _, ...query } = route.query
-    return router.replace({ query: id === undefined ? query : { ...query, request: String(id) } })
-  }
+  const panel = useUrlRecord('request')
 
   return {
     tab: computed(() => list.filters.value.status),
@@ -100,8 +86,8 @@ export function useSaleRequestList() {
     showPage: list.setPage,
     setPageSize: list.setPageSize,
     clearFilters: list.clearFilters,
-    openId,
-    openRequest: (id: number) => setOpenId(id),
-    closeRequest: () => setOpenId(undefined),
+    openId: panel.id,
+    openRequest: panel.open,
+    closeRequest: panel.close,
   }
 }

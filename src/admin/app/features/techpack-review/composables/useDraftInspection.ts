@@ -6,7 +6,7 @@ import { aiReviewFindings, pdfReviewFindings } from '../utils/findings'
 /** Fetches and interprets the inspection for the current draft version. */
 export function useDraftInspection(draft: Readonly<Ref<ReviewDraft | undefined>>) {
   const query = useApiQuery(
-    () => `techpack-reviews:inspection:${draft.value?.fileId}:${draft.value?.draftUuid}`,
+    () => `techpack-review:inspection:${draft.value?.fileId}:${draft.value?.draftUuid}`,
     ({ signal }) => {
       const current = draft.value
       if (!current) return Promise.resolve(null)

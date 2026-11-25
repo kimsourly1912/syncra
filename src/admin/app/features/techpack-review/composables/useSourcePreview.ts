@@ -14,7 +14,7 @@ export function useSourcePreview(draft: Readonly<Ref<ReviewDraft | undefined>>) 
   const imageStatus = ref<'loading' | 'shown' | 'failed'>('loading')
 
   const query = useApiQuery(
-    () => `techpack-reviews:source:${draft.value?.fileId}:${page.value}`,
+    () => `techpack-review:source:${draft.value?.fileId}:${page.value}`,
     async ({ signal }) => {
       const current = draft.value
       if (!current) return null

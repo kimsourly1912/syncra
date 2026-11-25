@@ -7,7 +7,7 @@ import { accountDetailModel } from '../models/account-detail'
  */
 export function useAccountDetail(userId: MaybeRefOrGetter<number | undefined>) {
   return useApiQuery(
-    () => `accounts:detail:${toValue(userId) ?? ''}`,
+    () => `account:detail:${toValue(userId) ?? ''}`,
     ({ signal }) => api.get('/admin/portal-users/{userId}/account-detail', {
       path: { userId: toValue(userId)! },
       signal,

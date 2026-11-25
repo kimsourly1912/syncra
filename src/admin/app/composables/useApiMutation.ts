@@ -23,7 +23,7 @@ export interface ApiMutationOptions<I, R> {
  * @example
  * const approve = useApiMutation(
  *   (item: ReviewItem) => api.post('/admin/docai/techpack-reviews/{fileId}/approve', { path: { fileId: item.fileId }, body }),
- *   { success: 'Workbook reviewed and released', error: 'Could not approve the workbook', invalidate: ['techpack-reviews'] },
+ *   { success: 'Workbook reviewed and released', error: 'Could not approve the workbook', invalidate: ['techpack-review'] },
  * )
  * if ((await approve.execute(item)).ok) await navigateTo('/techpack-reviews?status=reviewed')
  */

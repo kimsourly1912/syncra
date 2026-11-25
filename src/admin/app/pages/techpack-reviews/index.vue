@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import ReviewQueueScreen from '@/features/techpack-review/components/ReviewQueueScreen.vue'
+import { ReviewQueueScreen } from '@/features/techpack-review'
 </script>
 
 <template>
