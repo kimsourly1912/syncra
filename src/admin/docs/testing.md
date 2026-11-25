@@ -57,7 +57,7 @@ Screen tests mount components with a mocked API. They don't cover real layout, r
 | Account Detail | `/account/<id>` loads the summary and Company tab (loading placeholders, an error with Retry, "Account not found" for a bad id or a 404). Switching tabs updates `?tab=`; Modules, Tokens, and Seats say Sample. At 390px the summary stacks, label/value rows stack, and token, member, and seat-history tables become lists. |
 | TechPack review queue | Switch In Review and Reviewed, change pages, land on an empty page and get sent back, see the error state with Retry when the API fails, and Refresh (the list dims under a thin bar) |
 | TechPack review detail | Load it, save a correction, upload a replacement, check that attestation resets when the draft changes, approve, and return to the queue |
-| Auth and session | Signed out on a deep link → sign-in → back to the link. Sign out, also with a second tab open. An expired session (refresh refused) → "Session expired" and sign-in. An API outage during renewal keeps the session. Forgot and reset password. |
+| Auth and session | Signed out on a deep link → sign-in → back to the link. Sign out, also with a second tab open. An expired session (refresh refused) → "Session expired" and sign-in. An API outage during renewal keeps the session. An API outage when opening the app → the error page, then "Try again". Sign out after the access token expired. Forgot and reset password (the token leaves the address bar after the change). |
 | Wired CRUD | List with data, empty, and with an error; create, edit, and delete; Back after a filter or page change |
 
 - Use a staff test account against a test API.

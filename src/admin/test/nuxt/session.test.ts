@@ -1,7 +1,8 @@
 import type { RouteLocationNormalized } from 'vue-router'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 import { mockNuxtImport } from '@nuxt/test-utils/runtime'
-import { clearNuxtState, useRouter } from '#imports'
+import { flushPromises } from '@vue/test-utils'
+import { clearNuxtState, useNuxtApp, useRouter } from '#imports'
 import accessGuard from '../../app/middleware/access.global'
 import { redirectTarget, useSession } from '../../app/features/session'
 import { fakeApi, httpError, ok } from '../fake-api'
@@ -65,6 +66,79 @@ describe('session', () => {
     expect(router.push).toHaveBeenCalledWith({ path: '/auth/sign-in', query: { redirect: useRouter().currentRoute.value.fullPath } })
   })
 
+  it('keeps the session unknown when the API can\'t answer, and tries again on the next load', async () => {
+    const { transport } = fakeApi({
+      [ME]: () => {
+        throw httpError(502)
+      },
+    })
+    const session = useSession()
+
+    expect(await session.load()).toMatchObject({ kind: 'server' })
+    expect(session.status.value).toBe('unknown')
+
+    fakeApi({ [ME]: profile })
+    expect(await session.load()).toBeUndefined()
+    expect(session.status.value).toBe('signed-in')
+    expect(transport).toHaveBeenCalledOnce()
+  })
+
+  it.each([401, 403])('is signed out when the profile request answers %i', async (status) => {
+    fakeApi({
+      [ME]: () => {
+        throw httpError(status)
+      },
+    })
+
+    await useSession().load()
+    expect(useSession().status.value).toBe('signed-out')
+  })
+
+  it('stays signed in when a reload fails for the connection', async () => {
+    fakeApi({ [ME]: profile })
+    const session = useSession()
+    await session.load()
+
+    fakeApi({
+      [ME]: () => {
+        throw Object.assign(new Error('offline'), { name: 'FetchError', cause: new TypeError('Failed to fetch') })
+      },
+    })
+
+    expect(await session.reload()).toMatchObject({ kind: 'network' })
+    expect(session.status.value).toBe('signed-in')
+    expect(session.staff.value).toMatchObject({ id: 7 })
+  })
+
+  it('ignores a profile that arrives after another tab signed out', async () => {
+    let answer!: (value: unknown) => void
+    fakeApi({ [ME]: () => new Promise((resolve) => {
+      answer = resolve
+    }) })
+    const session = useSession()
+
+    const loading = session.load()
+    await vi.waitFor(() => expect(answer).toBeTypeOf('function'))
+    session.end('signed-out-elsewhere')
+    answer(profile)
+    await loading
+
+    expect(session.status.value).toBe('signed-out')
+    expect(session.staff.value).toBeNull()
+  })
+
+  it('forgets the loaded data once the expired session has left the page', async () => {
+    fakeApi({ [ME]: profile })
+    const session = useSession()
+    await session.load()
+    useNuxtApp().payload.data['sample:item'] = { id: 1 }
+
+    session.end('expired')
+    await flushPromises()
+
+    expect(useNuxtApp().payload.data['sample:item']).toBeUndefined()
+  })
+
   it('doesn\'t navigate when the session ends before the first load finished', () => {
     useSession().end('expired')
 
@@ -98,6 +172,15 @@ describe('access guard', () => {
 
     expect(navigate).toHaveBeenCalledOnce()
     expect(navigate).toHaveBeenCalledWith('/product')
+  })
+
+  it('shows the error page, not sign-in, when the API can\'t answer', async () => {
+    fakeApi({ [ME]: () => Promise.reject(httpError(503)) })
+
+    const result = await accessGuard(to('/techpack-reviews?status=reviewed'), to('/'))
+
+    expect(result).toMatchObject({ status: 503, fatal: true, data: { retry: '/techpack-reviews?status=reviewed' } })
+    expect(navigate).not.toHaveBeenCalled()
   })
 
   it('lets a signed-out visitor open the guest pages', async () => {

@@ -4,7 +4,19 @@ import { SESSION_PATHS, redirectTarget, useSession } from '@/features/session'
 // This is navigation, not security: the API checks the session on every request.
 export default defineNuxtRouteMiddleware(async (to) => {
   const session = useSession()
-  await session.load()
+  const failure = await session.load()
+
+  // The API couldn't say whether there's a session (offline, 5xx). Don't send a staff member
+  // with valid cookies to sign-in: show the error page, whose "Try again" repeats this navigation.
+  if (failure) {
+    return createError({
+      status: 503,
+      statusText: 'Syncra Admin is unavailable',
+      message: failure.message,
+      data: { retry: to.fullPath },
+      fatal: true,
+    })
+  }
 
   const access = to.meta.access ?? 'staff'
   if (access === 'staff' && !session.signedIn.value) {

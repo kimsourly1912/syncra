@@ -1,5 +1,5 @@
 import { api, ApiError } from '@/api'
-import type { Api } from '@/api'
+import type { Api, ApiErrorKind } from '@/api'
 import { staffProfileModel } from '../models/staff-profile'
 import type { StaffProfile } from '../models/staff-profile'
 import { SESSION_PATHS } from '../utils/paths'
@@ -12,8 +12,18 @@ const STATE = {
   staff: 'session:staff',
 } as const
 
-// One profile load at a time, shared by the route guard and the actions.
-let loading: Promise<void> | undefined
+/**
+ * A profile request that failed with these means there's no usable staff session. Any other
+ * failure (offline, timeout, 5xx, an unexpected response) says nothing about the session, so
+ * the session isn't changed.
+ */
+const NO_SESSION = new Set<ApiErrorKind>(['unauthorized', 'forbidden', 'rejected', 'validation', 'not_found'])
+
+// One profile request at a time, shared by the route guard and the actions.
+let loading: Promise<ApiError | undefined> | undefined
+// Goes up each time the session is cleared, so a profile response that was already in flight
+// can't sign this tab back in (another tab signed out while it loaded).
+let generation = 0
 // Tells the other tabs; set by useSessionSync.
 let announce: ((event: SessionEvent) => void) | undefined
 
@@ -37,28 +47,43 @@ export function renewSession() {
 export function useSession() {
   const status = useState<SessionStatus>(STATE.status, () => 'unknown')
   const staff = useState<StaffProfile | null>(STATE.staff, () => null)
+  const nuxtApp = useNuxtApp()
   const router = useRouter()
   const toast = useToast()
   const signedIn = computed(() => status.value === 'signed-in')
 
   function clear() {
+    generation++
     status.value = 'signed-out'
     staff.value = null
-    // Clear any other state tied to the staff session here too.
   }
 
-  /** Loads the profile once. A profile that can't be loaded, for any reason, means signed out. */
-  function load() {
-    if (status.value !== 'unknown') return Promise.resolve()
+  /** Drops every query's data, so the next staff member in this tab never sees it. Call once the signed-out page is showing. */
+  function forgetData() {
+    nuxtApp.runWithContext(() => clearNuxtData())
+  }
+
+  /**
+   * Requests the profile; concurrent callers share the request. Resolves to the failure when the
+   * API couldn't answer (the session is then left as it was), otherwise to `undefined`.
+   */
+  function fetchProfile() {
+    const started = generation
     loading ??= api.get('/admin/users/me/profile', { model: staffProfileModel })
       .then((profile) => {
+        if (started !== generation) return undefined
         staff.value = profile
         status.value = 'signed-in'
+        return undefined
       })
       .catch((error: unknown) => {
         const e = ApiError.from(error)
-        if (e.kind !== 'unauthorized') console.error('Could not load the staff profile', e)
-        clear()
+        if (NO_SESSION.has(e.kind)) {
+          clear()
+          return undefined
+        }
+        console.error('Could not load the staff profile', e)
+        return e
       })
       .finally(() => {
         loading = undefined
@@ -66,28 +91,50 @@ export function useSession() {
     return loading
   }
 
-  /** Loads the profile again, for example after the cookies changed. */
+  /**
+   * Loads the profile once. Resolves to the failure if the API couldn't answer: `status` then
+   * stays `unknown`, so the next call tries again. A cookie that's still valid never signs anyone
+   * out just because the API was briefly unreachable.
+   */
+  async function load() {
+    if (status.value !== 'unknown') return undefined
+    return fetchProfile()
+  }
+
+  /** Loads the profile again, for example after the cookies changed. A failure keeps the current state. */
   async function reload() {
     await loading
-    status.value = 'unknown'
-    await load()
+    return fetchProfile()
   }
 
   /** Throws `ApiError` if the API refuses the credentials or the profile can't be loaded. */
   async function signIn(body: Api.SuperAdminLoginRequest) {
     // Sets the session cookies; `auth: false` so a refused login isn't treated as an expiry.
     await api.post('/admin/auth/login', { body, auth: false })
-    await reload()
-    if (!signedIn.value) throw new ApiError({ kind: 'unknown', message: 'Signed in, but your profile could not be loaded. Please try again.' })
+    const failure = await reload()
+    if (failure || !signedIn.value) {
+      throw new ApiError({ kind: failure?.kind ?? 'unknown', message: 'Signed in, but your profile could not be loaded. Please try again.', cause: failure })
+    }
     announce?.('signed-in')
   }
 
-  /** Throws `ApiError` if the API didn't confirm the logout; the session is then kept. */
+  /**
+   * Throws `ApiError` if the API didn't confirm the logout; the session is then kept. The logout
+   * renews an expired access token first, so a staff member who was idle can still sign out (and
+   * the refresh cookie is cleared). If the session couldn't be renewed, it was already over:
+   * `end('expired')` has signed this tab out, and the other tabs are told too.
+   */
   async function signOut() {
-    await api.post('/admin/auth/logout', { auth: false })
+    try {
+      await api.post('/admin/auth/logout')
+    }
+    catch (error) {
+      if (ApiError.from(error).kind !== 'unauthorized') throw error
+    }
     clear()
     announce?.('signed-out')
     await router.push(SESSION_PATHS.signIn)
+    forgetData()
   }
 
   /**
@@ -101,7 +148,7 @@ export function useSession() {
     clear()
     if (!wasSignedIn) return
     if (reason === 'expired') toast.add({ title: 'Session expired', description: 'Please sign in again.', color: 'warning' })
-    void router.push({ path: SESSION_PATHS.signIn, query: { redirect: router.currentRoute.value.fullPath } })
+    void router.push({ path: SESSION_PATHS.signIn, query: { redirect: router.currentRoute.value.fullPath } }).finally(forgetData)
   }
 
   return {
