@@ -5,7 +5,7 @@ import { mockNuxtImport, mountSuspended } from '@nuxt/test-utils/runtime'
 import { clearNuxtData, useRouter } from '#imports'
 import ReviewQueueScreen from '../../app/features/techpack-review/components/ReviewQueueScreen.vue'
 import ReviewDetailScreen from '../../app/features/techpack-review/components/ReviewDetailScreen.vue'
-import { fakeApi, ok } from '../fake-api'
+import { fakeApi, httpError, ok } from '../fake-api'
 
 const { navigate, route } = vi.hoisted(() => ({
   navigate: vi.fn(),
@@ -272,6 +272,52 @@ describe('review detail screen', () => {
     }))
     expect(api.mock.calls.filter(([url]) => url === '/admin/docai/techpack-reviews/102')).toHaveLength(2)
     expect(wrapper.text()).not.toContain('unsaved correction')
+    wrapper.unmount()
+  })
+
+  it('stops trusting the previous inspection when the re-inspection after a save fails', async () => {
+    // An AI flag doesn't block approval, so before the save the checklist passes on the inspection.
+    const flagged = {
+      ...clean,
+      aiReview: { comparedCells: 1, notes: [], findings: [{ sheetIndex: 0, rowNumber: 1, columnIndex: 1, column: 'M', measurement: 'Chest', workbookValue: '50', aiValue: '52' }] },
+    }
+    let saved = false
+    const routes: Record<string, () => unknown> = {
+      'techpack-reviews/104': () => ok({ ...item, fileId: 104 }),
+      'source-preview': () => preview,
+      'draft-inspection': () => {
+        if (saved) throw httpError(503)
+        return ok(flagged)
+      },
+      'draft-corrections': () => {
+        saved = true
+        return ok(null)
+      },
+    }
+    api.mockImplementation(async (endpoint: string) => {
+      const match = Object.keys(routes).sort((a, b) => b.length - a.length).find(key => endpoint.endsWith(key))
+      if (!match) throw new Error(`unexpected ${endpoint}`)
+      return routes[match]!()
+    })
+    const wrapper = await mountSuspended(ReviewDetailScreen, { props: { fileId: '104' }, attachTo: document.body })
+    await flushPromises()
+    const checklist = () => wrapper.get('ul[aria-label="Approval checklist"]').text()
+    expect(checklist()).toContain('No blocking issues')
+    expect(checklist()).toContain('Full workbook checked')
+
+    const [flag] = await openReviewIssues(wrapper)
+    flag!.click()
+    await flushPromises()
+    await wrapper.get('section[aria-label="Selected review issue"] input').setValue('52')
+    await wrapper.findAll('button').find(button => button.text() === 'Save correction')!.trigger('click')
+    await flushPromises()
+
+    // Same draftUuid, so the inspection reloads and fails: the one still shown describes the old version.
+    expect(saved).toBe(true)
+    expect(wrapper.text()).toContain('Workbook preview unavailable')
+    expect(checklist()).toContain('Inspection unavailable: compare by hand')
+    expect(checklist()).toContain('Download the full workbook')
+    expect(checklist()).not.toContain('Full workbook checked')
     wrapper.unmount()
   })
 
