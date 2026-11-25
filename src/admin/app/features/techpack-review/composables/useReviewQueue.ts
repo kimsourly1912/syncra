@@ -37,6 +37,8 @@ export function useReviewQueue() {
     listQuery: computed(() => route.query),
     items: computed(() => reviews.data.value?.content ?? []),
     totalPages: computed(() => reviews.data.value?.totalPages ?? 0),
+    /** Reviews in the current tab across every page; undefined until loaded or when the API leaves it out. */
+    total: computed(() => (reviews.loading.value ? undefined : reviews.data.value?.totalElements ?? undefined)),
     loading: reviews.loading,
     refreshing: reviews.refreshing,
     pending: reviews.pending,

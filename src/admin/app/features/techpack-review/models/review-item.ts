@@ -13,6 +13,9 @@ export const reviewItemModel = defineModel(vReviewItem, {
 export const reviewPageModel = v.object({
   content: v.array(reviewItemModel),
   totalPages: v.pipe(v.number(), v.integer()),
+  // Reviews in this status across every page, shown as a count only. A missing or malformed
+  // total hides the count instead of failing the whole queue.
+  totalElements: v.fallback(v.nullish(v.pipe(v.number(), v.integer())), undefined),
 })
 
 export type ReviewItem = v.InferOutput<typeof reviewItemModel>

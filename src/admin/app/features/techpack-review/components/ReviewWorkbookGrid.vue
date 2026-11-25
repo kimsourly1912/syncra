@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import { useElementSize } from '@vueuse/core'
 import type { WorkbookSheet } from '../models/workbook-inspection'
 import { workbookCellKey } from '../utils/findings'
 import type { WorkbookCell } from '../utils/findings'
@@ -12,6 +13,26 @@ const props = defineProps<{
 }>()
 
 const viewport = useTemplateRef<HTMLDivElement>('viewport')
+
+// A size-grid sheet keeps its header row (Dim, Description, sizes) in view while the reviewer
+// scrolls down, and its Dim column (A) while they scroll across, so each size value stays tied to
+// its measurement. Only Dim is pinned, and only in a pane wide enough to spare it: pinning the
+// description too left room for one size column. A Dim cell's tooltip gives the description.
+const PINNED_COLUMN = 0
+/** Narrower than this (40rem), the pinned column would crowd out the size columns. */
+const MIN_PIN_WIDTH = 640
+const { width: viewportWidth } = useElementSize(viewport)
+const hasGridHeader = computed(() => props.sheet.gridHeaderRow != null
+  && props.sheet.rows.some(row => row.number === props.sheet.gridHeaderRow))
+const pinned = computed(() => hasGridHeader.value && viewportWidth.value >= MIN_PIN_WIDTH)
+// The sticky offsets are fixed sizes in the stylesheet (--letters-height, --row-number-width),
+// never measured: a measured offset that ran before fonts or layout settled left a strip where
+// cells scrolling underneath showed through.
+const isPinned = (columnIndex: number) => pinned.value && columnIndex === PINNED_COLUMN
+/** The description (column B) as the pinned Dim cell's tooltip, since B scrolls away. */
+const pinTitle = (columnIndex: number, cells: { value: string }[]) => (isPinned(columnIndex) && hasGridHeader.value
+  ? cells[PINNED_COLUMN + 1]?.value || undefined
+  : undefined)
 const selectedCell = computed(() => props.selection ? workbookCellKey(props.selection) : undefined)
 
 const rows = computed(() => props.sheet.rows.map(row => ({
@@ -52,20 +73,24 @@ onMounted(scrollToSelection)
 <template>
   <div
     ref="viewport"
-    class="h-96 min-h-0 flex-1 overflow-auto bg-default lg:@min-[46rem]:h-auto"
+    class="min-h-0 flex-1 overflow-auto bg-default"
     tabindex="0"
     :aria-label="`${sheet.name} workbook preview`"
   >
-    <table class="review-grid">
+    <table
+      class="review-grid"
+      :class="{ 'pin-header': hasGridHeader }"
+    >
       <thead>
         <tr>
           <th scope="col">
             Row
           </th>
           <th
-            v-for="column in sheet.columns"
+            v-for="(column, columnIndex) in sheet.columns"
             :key="column"
             scope="col"
+            :class="{ 'pinned-cell': isPinned(columnIndex) }"
           >
             {{ column }}
           </th>
@@ -81,14 +106,16 @@ onMounted(scrollToSelection)
             {{ row.number }}
           </th>
           <td
-            v-for="cell in row.cells"
+            v-for="(cell, columnIndex) in row.cells"
             :key="cell.key"
             :data-cell="cell.key"
             :class="{
+              'pinned-cell': isPinned(columnIndex),
               'flagged-cell': cell.flagged,
               'active-cell': cell.key === selectedCell,
               'edited-cell': cell.edited,
             }"
+            :title="pinTitle(columnIndex, row.cells)"
           >
             {{ cell.value }}
           </td>
@@ -99,7 +126,11 @@ onMounted(scrollToSelection)
 </template>
 
 <style scoped>
+/* Fixed sizes the sticky offsets use. Nothing is measured, so they can't drift. */
 .review-grid {
+  --letters-height: 2.25rem;
+  --row-number-width: 3.75rem;
+
   width: max-content;
   min-width: 100%;
   border-spacing: 0;
@@ -108,6 +139,7 @@ onMounted(scrollToSelection)
 }
 
 .review-grid :is(th, td) {
+  box-sizing: border-box;
   padding: 0.375rem 0.625rem;
   border-right: 1px solid var(--ui-border);
   border-bottom: 1px solid var(--ui-border);
@@ -121,18 +153,62 @@ onMounted(scrollToSelection)
   font-weight: 500;
 }
 
+/* The column letters: one line at a fixed height, above everything that scrolls under them. */
 .review-grid thead th {
   top: 0;
-  z-index: 2;
+  z-index: 4;
+  height: var(--letters-height);
+  white-space: nowrap;
 }
 
+/* The row numbers: a fixed width, so the pinned Dim column starts exactly at its edge. */
 .review-grid th:first-child {
   left: 0;
   z-index: 1;
+  width: var(--row-number-width);
+  min-width: var(--row-number-width);
+  max-width: var(--row-number-width);
   text-align: end;
 }
 
 .review-grid thead th:first-child {
+  z-index: 6;
+}
+
+/* The pinned Dim column: capped so the size columns keep the room. Its edge is its own border,
+   drawn inside the cell, so nothing shows between it and the cells scrolling underneath. */
+.review-grid td.pinned-cell {
+  position: sticky;
+  z-index: 1;
+  max-width: 8rem;
+}
+
+.review-grid .pinned-cell {
+  left: var(--row-number-width);
+}
+
+.review-grid .pinned-cell {
+  border-right-color: var(--ui-border-accented);
+}
+
+/* Pinned cells need an opaque background. Same weight as the flagged and edited rules below,
+   which come later and win. */
+.review-grid .pinned-cell:where(td) {
+  background: var(--ui-bg);
+}
+
+.review-grid thead th.pinned-cell {
+  z-index: 5;
+}
+
+/* The size-grid header row sticks under the column letters. */
+.review-grid.pin-header .grid-header :is(th, td) {
+  position: sticky;
+  top: var(--letters-height);
+  z-index: 2;
+}
+
+.review-grid.pin-header .grid-header :is(th:first-child, .pinned-cell) {
   z-index: 3;
 }
 

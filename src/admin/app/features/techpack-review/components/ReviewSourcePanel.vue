@@ -3,7 +3,7 @@ import { useReviewDetail } from '../composables/useReviewDetail'
 
 const { source, actions } = useReviewDetail()
 const { image, page, pageCount, zoom, loading, error, canZoomIn, canZoomOut } = source
-const { busy } = actions
+const { busy, downloading } = actions
 
 const viewport = useTemplateRef<HTMLDivElement>('viewport')
 
@@ -35,6 +35,7 @@ watch(page, () => viewport.value?.scrollTo(0, 0), { flush: 'post' })
         variant="ghost"
         size="sm"
         :disabled="busy"
+        :loading="downloading === 'source'"
         @click="actions.download('source')"
       />
     </header>
@@ -90,37 +91,69 @@ watch(page, () => viewport.value?.scrollTo(0, 0), { flush: 'post' })
       </div>
     </div>
 
-    <div class="relative min-h-96 flex-1 bg-elevated lg:@min-[46rem]:min-h-0">
+    <!-- The pane always shows one state: the page, loading, the error, or no preview yet. -->
+    <div class="relative min-h-0 flex-1 bg-elevated">
+      <!-- Downloading the PDF is what unblocks approval here, so it is the main action. -->
       <div
-        v-if="error"
-        class="space-y-2 p-4 text-sm text-muted"
+        v-if="error || (!image && !loading)"
+        class="absolute inset-0 flex items-center justify-center overflow-auto p-4"
+        role="status"
       >
-        <p role="status">
-          PDF preview unavailable. Download the source PDF to compare it.
-        </p>
-        <UButton
-          label="Retry PDF preview"
-          color="neutral"
-          variant="outline"
-          size="sm"
-          @click="source.retry"
+        <UEmpty
+          icon="lucide:file-warning"
+          :title="error ? 'PDF preview unavailable' : 'No PDF preview yet'"
+          description="Download the source PDF and compare it with the workbook."
+          variant="naked"
+          :actions="[
+            {
+              label: 'Download PDF',
+              icon: 'lucide:download',
+              disabled: busy,
+              loading: downloading === 'source',
+              onClick: () => actions.download('source'),
+            },
+            {
+              label: 'Retry preview',
+              icon: 'lucide:refresh-cw',
+              color: 'neutral',
+              variant: 'outline',
+              loading,
+              onClick: source.retry,
+            },
+          ]"
         />
       </div>
       <div
-        v-show="!error"
+        v-else-if="loading && !image"
+        class="absolute inset-0 flex flex-col items-center justify-center gap-2 text-sm text-muted"
+        role="status"
+      >
+        <UIcon
+          name="lucide:loader-circle"
+          class="size-6 animate-spin"
+        />
+        {{ pageCount ? `Loading page ${page} of ${pageCount}…` : 'Loading PDF…' }}
+      </div>
+      <div
+        v-show="!error && image"
         ref="viewport"
         class="absolute inset-0 overflow-auto p-3"
         :tabindex="image ? 0 : undefined"
         :aria-busy="loading"
         aria-label="Original TechPack PDF preview"
       >
-        <p
-          v-if="loading"
-          class="p-1 text-sm text-muted"
+        <!-- The image decodes in place; a spinner sits over it until it shows. -->
+        <div
+          v-if="loading && image"
+          class="absolute inset-0 z-10 flex items-center justify-center bg-elevated/70 text-sm text-muted"
           role="status"
         >
-          Loading PDF…
-        </p>
+          <UIcon
+            name="lucide:loader-circle"
+            class="size-6 animate-spin"
+          />
+          <span class="sr-only">Loading PDF…</span>
+        </div>
         <img
           v-if="image && !error"
           :key="image.page"

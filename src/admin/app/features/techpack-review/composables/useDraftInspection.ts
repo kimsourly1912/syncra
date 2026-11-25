@@ -26,6 +26,10 @@ export function useDraftInspection(draft: Readonly<Ref<ReviewDraft | undefined>>
   return {
     inspection,
     pending: query.pending,
+    /** Nothing to show yet for this draft version. */
+    loading: query.loading,
+    /** Reloading with the previous inspection still shown (after a save that kept the draftUuid). */
+    refreshing: query.refreshing,
     error: query.error,
     refresh: query.refresh,
     pdfFindings,

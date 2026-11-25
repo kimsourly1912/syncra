@@ -1,33 +1,34 @@
 <script setup lang="ts">
-import type { TableColumn } from '@nuxt/ui'
-import type { ListStatusTab } from '@/components/list/ListStatusTabs.vue'
+import type { TabsItem } from '@nuxt/ui'
 import { useReviewQueue } from '../composables/useReviewQueue'
 import type { ReviewQueueTab } from '../composables/useReviewQueue'
 import type { ReviewItem } from '../models/review-item'
 
 const {
-  tab, page, listQuery, items, totalPages, loading, refreshing, pending, error, refresh, showStatus, showPage,
+  tab, page, listQuery, items, totalPages, total, loading, refreshing, pending, error, refresh, showStatus, showPage,
 } = useReviewQueue()
 
-const tabs: ListStatusTab<ReviewQueueTab>[] = [
-  { label: 'In Review', value: 'in-review' },
-  { label: 'Reviewed', value: 'reviewed' },
-]
+// In the toolbar, so the tabs sit on its line (one border, not two).
+const tabs = computed<(TabsItem & { value: ReviewQueueTab })[]>(() => [
+  { label: 'In Review', value: 'in-review', disabled: pending.value },
+  { label: 'Reviewed', value: 'reviewed', disabled: pending.value },
+])
 
-const fileColumns: TableColumn<ReviewItem>[] = [
-  { accessorKey: 'filename', header: 'TechPack file' },
-  { accessorKey: 'companyId', header: 'Company ID' },
-  { accessorKey: 'jobId', header: 'Job ID', meta: { class: { td: 'pr-9' } } },
-]
+const totalLabel = computed(() => {
+  if (total.value == null) return ''
+  return tab.value === 'in-review' ? `${total.value.toLocaleString()} waiting for review` : `${total.value.toLocaleString()} reviewed`
+})
 
-const reviewedAtColumn: TableColumn<ReviewItem> = {
-  accessorKey: 'reviewedAt',
-  header: 'Reviewed at',
-  meta: { class: { td: 'pr-9 whitespace-nowrap' } },
-  cell: ({ row }) => row.original.reviewedAt ? new Date(row.original.reviewedAt).toLocaleString() : '—',
-}
+const reviewedAt = (item: ReviewItem) => (item.reviewedAt
+  ? new Date(item.reviewedAt).toLocaleString(undefined, { dateStyle: 'medium', timeStyle: 'short' })
+  : '—')
 
-const columns = computed(() => tab.value === 'reviewed' ? [...fileColumns, reviewedAtColumn] : fileColumns)
+const reviewLink = (item: ReviewItem) => ({ path: `/techpack-reviews/${item.fileId}`, query: listQuery.value })
+
+// The filename's link stretches over the card, so the whole card opens the review.
+const LINK = 'block font-medium wrap-anywhere text-highlighted after:absolute after:inset-0 after:rounded-lg hover:text-primary focus-visible:outline-none focus-visible:after:ring-2 focus-visible:after:ring-primary'
+
+const GRID = 'grid gap-3 sm:grid-cols-2 lg:grid-cols-3 2xl:grid-cols-4'
 </script>
 
 <template>
@@ -39,15 +40,22 @@ const columns = computed(() => tab.value === 'reviewed' ? [...fileColumns, revie
       />
       <UDashboardToolbar>
         <template #left>
-          <ListStatusTabs
+          <ListToolbarTabs
             :model-value="tab"
             :items="tabs"
-            :disabled="pending"
+            role="group"
             aria-label="Review status"
             @update:model-value="showStatus"
           />
         </template>
         <template #right>
+          <p
+            v-if="totalLabel"
+            class="hidden text-sm whitespace-nowrap text-muted sm:block"
+            role="status"
+          >
+            {{ totalLabel }}
+          </p>
           <UButton
             label="Refresh"
             icon="lucide:refresh-cw"
@@ -61,6 +69,13 @@ const columns = computed(() => tab.value === 'reviewed' ? [...fileColumns, revie
     </template>
 
     <template #body>
+      <p
+        v-if="totalLabel"
+        class="text-sm text-muted sm:hidden"
+      >
+        {{ totalLabel }}
+      </p>
+
       <AlertApiError
         v-if="error"
         :error="error"
@@ -70,54 +85,83 @@ const columns = computed(() => tab.value === 'reviewed' ? [...fileColumns, revie
         @retry="refresh"
       />
 
+      <!-- Card-shaped placeholders, so nothing jumps when the reviews arrive. -->
+      <div
+        v-else-if="loading"
+        role="status"
+        aria-label="Loading reviews…"
+        :class="GRID"
+      >
+        <span class="sr-only">Loading reviews…</span>
+        <div
+          v-for="card in 6"
+          :key="card"
+          class="space-y-2 rounded-lg border border-default p-4"
+        >
+          <USkeleton class="h-4 w-4/5" />
+          <USkeleton class="h-4 w-1/2" />
+          <USkeleton class="h-3 w-2/3" />
+        </div>
+      </div>
+
+      <ListEmptyState
+        v-else-if="!items.length"
+        noun="TechPack reviews"
+        :title="tab === 'in-review' ? 'No TechPacks are waiting for review.' : 'No reviewed TechPacks.'"
+      />
+
       <ListRefresh
         v-else
         :active="refreshing"
       >
-        <UTable
-          :data="items"
-          :columns="columns"
-          :loading="loading"
-          :ui="{ root: 'rounded-lg border border-default', tr: 'relative' }"
+        <ul
+          :class="GRID"
           aria-label="TechPack reviews"
         >
-          <template #filename-cell="{ row }">
-            <div class="flex items-center gap-2">
-              <UIcon
-                name="lucide:file-text"
-                class="size-4 shrink-0 text-muted"
-              />
+          <li
+            v-for="item in items"
+            :key="item.fileId"
+            class="relative flex gap-3 rounded-lg border border-default bg-elevated/40 p-4"
+            :class="item.draftUuid && 'pe-9 hover:border-accented'"
+          >
+            <UIcon
+              name="lucide:file-text"
+              class="mt-0.5 size-5 shrink-0 text-muted"
+            />
+            <div class="min-w-0 flex-1 space-y-1.5">
               <ULink
-                v-if="row.original.draftUuid"
-                :to="{ path: '/techpack-reviews/' + row.original.fileId, query: listQuery }"
-                class="font-medium wrap-anywhere text-highlighted after:absolute after:inset-0 hover:text-primary focus-visible:outline-none focus-visible:after:ring-2 focus-visible:after:ring-inset focus-visible:after:ring-primary"
+                v-if="item.draftUuid"
+                :to="reviewLink(item)"
+                :title="item.filename"
+                :class="[LINK, 'line-clamp-3']"
               >
-                {{ row.original.filename }}
-                <UIcon
-                  name="lucide:chevron-right"
-                  class="absolute end-3 top-1/2 size-4 -translate-y-1/2 text-muted"
-                  aria-hidden="true"
-                />
+                {{ item.filename }}
               </ULink>
-              <span
+              <p
                 v-else
-                class="font-medium wrap-anywhere text-highlighted"
-              >{{ row.original.filename }}</span>
+                :title="item.filename"
+                class="line-clamp-3 font-medium wrap-anywhere text-highlighted"
+              >
+                {{ item.filename }}
+              </p>
+              <p class="text-xs text-dimmed tabular-nums">
+                Company #{{ item.companyId }} · Job #{{ item.jobId }} · File #{{ item.fileId }}
+              </p>
+              <p
+                v-if="tab === 'reviewed'"
+                class="text-xs text-muted"
+              >
+                Reviewed {{ reviewedAt(item) }}
+              </p>
             </div>
-          </template>
-          <template #loading>
-            <ListSkeleton
-              label="Loading reviews…"
-              :rows="4"
+            <UIcon
+              v-if="item.draftUuid"
+              name="lucide:chevron-right"
+              class="absolute inset-e-3 top-4 size-4 text-muted"
+              aria-hidden="true"
             />
-          </template>
-          <template #empty>
-            <ListEmptyState
-              noun="TechPack reviews"
-              :title="tab === 'in-review' ? 'No TechPacks are waiting for review.' : 'No reviewed TechPacks.'"
-            />
-          </template>
-        </UTable>
+          </li>
+        </ul>
       </ListRefresh>
 
       <ListPagination
