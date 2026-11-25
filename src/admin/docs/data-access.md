@@ -31,7 +31,7 @@ api.download('/admin/docai/techpack-reviews/{fileId}/source', { path: { fileId }
 - **Multipart** endpoints (flagged in `MULTIPART_ENDPOINTS`) take a plain object body (`{ workbook }`) and send it as `FormData`.
 - `model` is what the feature needs from the response ([the API contract](#the-api-contract)). Without one, the call resolves to `undefined`.
 - `envelope: false` is for the few bodies without a `ResponseMsg*` envelope (`sale-requests`, `lead-inquiries`).
-- `auth: false` is only for the calls that set or clear session cookies (sign-in, password reset, refresh, logout). A 401 is then thrown as it is, with no renewal.
+- `auth: false` is only for the calls that set session cookies or renew them (sign-in, password reset, refresh). A 401 is then thrown as it is, with no renewal. Logout renews like any other call, so a staff member whose access token expired can still sign out ([0014](../../../docs/decisions/0014-admin-session-survives-api-outages.md)).
 - `api` needs no Nuxt context, so it works after an `await`. Nothing is retried except one retry after a renewed session.
 - `configureApi` (called once by `plugins/session.client.ts`) sets the transport: `$fetch.create({ baseURL: apiProxyPath || apiURL, credentials: 'include', retry: false })`. In `nuxt dev`, `apiProxyPath` is `/_api` and Nitro's `devProxy` forwards it to `NUXT_PUBLIC_API_URL`, because the API's CORS allowlist rejects localhost and its cookies are scoped to `.syncra.app`.
 
@@ -162,11 +162,11 @@ session.signedIn   // computed
 
 | Action | Does |
 | --- | --- |
-| `load()` | Loads the profile once; concurrent callers share the request. Any failure means signed out. Called by the route guard on the first navigation. |
-| `reload()` | Loads the profile again after the cookies changed (password reset, another tab signed in). |
+| `load()` | Loads the profile once; concurrent callers share the request. A refusal (401, 403, 404, 400, `success: false`) means signed out. If the API can't answer (offline, timeout, 5xx, unexpected response), it resolves to that `ApiError`, `status` stays `unknown`, and the next call tries again. Called by the route guard on every navigation until the status is known. |
+| `reload()` | Loads the profile again after the cookies changed (password reset, another tab signed in, a profile edit). Resolves like `load()`; a failure the API couldn't answer keeps the current state. |
 | `signIn(body)` | Logs in, then loads the profile. Throws `ApiError` if either fails. Tells the other tabs. |
-| `signOut()` | Logs out, then clears the session and goes to sign-in. If the API doesn't confirm, it throws and the session is kept. Tells the other tabs. |
-| `end(reason)` | Ends the session locally: `'expired'` (from the API client; shows "Session expired") or `'signed-out-elsewhere'`. Idempotent. Goes to sign-in with `?redirect=` only if someone was signed in. |
+| `signOut()` | Logs out (renewing an expired access token first), then clears the session, goes to sign-in, and clears every query's data. If the session couldn't be renewed, it was already over, and the sign-out completes. If the API can't be reached, it throws and the session is kept. Tells the other tabs. |
+| `end(reason)` | Ends the session locally: `'expired'` (from the API client; shows "Session expired") or `'signed-out-elsewhere'`. Idempotent. Goes to sign-in with `?redirect=` only if someone was signed in, then clears every query's data. A profile response still in flight can't sign the tab back in. |
 
 `features/auth` wraps the actions for the forms in `useApiMutation`: `useSignIn`, `useSignOut`, `useForgotPassword`, and `useResetPassword`.
 

@@ -1,11 +1,13 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 import { mockNuxtImport } from '@nuxt/test-utils/runtime'
-import { clearNuxtState, useRouter } from '#imports'
+import { clearNuxtState, useNuxtApp, useRouter } from '#imports'
 import * as v from 'valibot'
+import type { $Fetch } from 'ofetch'
+import { configureApi } from '../../app/api'
 import { resetPasswordSchema, signInSchema, useForgotPassword, useResetPassword, useSignIn, useSignOut } from '../../app/features/auth'
 import { checkPasswordRules } from '../../app/features/auth/schemas/reset-password-form'
 import { useSession } from '../../app/features/session'
-import { fakeApi, ok, refused } from '../fake-api'
+import { fakeApi, httpError, ok, refused } from '../fake-api'
 
 const { route, toast } = vi.hoisted(() => ({
   route: { query: {} as Record<string, string> },
@@ -122,6 +124,62 @@ describe('sign-out', () => {
     expect(useSession().signedIn.value).toBe(true)
     expect(toast.add).toHaveBeenCalledWith(expect.objectContaining({ color: 'error' }))
     expect(router.push).not.toHaveBeenCalled()
+  })
+})
+
+describe('sign-out after the access token expired', () => {
+  const LOGOUT = 'POST /admin/auth/logout'
+
+  it('renews the session, then logs out', async () => {
+    let expired = true
+    const { transport } = fakeApi({
+      [ME]: profile,
+      [LOGOUT]: () => {
+        if (expired) {
+          expired = false
+          throw httpError(401)
+        }
+        return ok()
+      },
+    })
+    await useSession().load()
+
+    await useSignOut().submit()
+
+    expect(transport.mock.calls.filter(([url]) => url === '/admin/auth/logout')).toHaveLength(2)
+    expect(useSession().status.value).toBe('signed-out')
+    expect(router.push).toHaveBeenCalledWith('/auth/sign-in')
+    expect(toast.add).not.toHaveBeenCalledWith(expect.objectContaining({ color: 'error' }))
+  })
+
+  it('signs out without an error when the session can\'t be renewed', async () => {
+    fakeApi({ [ME]: profile })
+    await useSession().load()
+    configureApi({
+      fetch: vi.fn(async () => {
+        throw httpError(401)
+      }) as unknown as $Fetch,
+      renew: async () => {
+        throw httpError(500, refused('refreshToken blank'))
+      },
+      onExpired: () => useSession().end('expired'),
+    })
+
+    await useSignOut().submit()
+
+    expect(useSession().status.value).toBe('signed-out')
+    expect(router.push).toHaveBeenLastCalledWith('/auth/sign-in')
+    expect(toast.add).not.toHaveBeenCalledWith(expect.objectContaining({ color: 'error' }))
+  })
+
+  it('forgets the loaded data after signing out', async () => {
+    fakeApi({ [ME]: profile, [LOGOUT]: ok() })
+    await useSession().load()
+    useNuxtApp().payload.data['sample:item'] = { id: 1 }
+
+    await useSignOut().submit()
+
+    expect(useNuxtApp().payload.data['sample:item']).toBeUndefined()
   })
 })
 

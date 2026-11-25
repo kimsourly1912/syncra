@@ -61,6 +61,7 @@ There are no services: a composable calls `api` with a path from the spec and a 
 ## Routes, guards, and the sidebar
 
 - **Every page is staff-only by default.** `middleware/access.global.ts` runs on every navigation: it awaits `useSession().load()` (one request, on the first navigation), then checks the page's `access` meta.
+  - The API couldn't answer the profile request (offline, 5xx): a fatal 503 shows `app/error.vue`, whose "Try again" reloads the app at that page (a router navigation to the same page wouldn't run the guard). Valid cookies never land on sign-in because of an outage.
   - `access` unset (`staff`): signed out → `/auth/sign-in?redirect=<page>` (no `redirect` for the home page).
   - `definePageMeta({ access: 'guest', layout: 'auth' })`: the sign-in, forgot, and reset pages. Signed in → the `redirect` target, or home.
   - A new page needs nothing to be protected. Never add a per-page `middleware: 'auth'`.

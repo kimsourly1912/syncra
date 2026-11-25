@@ -1,6 +1,6 @@
 # 0008: Admin API client with one failure path, a session feature, and page-meta route access
 
-- Status: Accepted
+- Status: Accepted. Points 2 and 3 refined by [0014](0014-admin-session-survives-api-outages.md): only a refusal signs out, and logout renews.
 - Date: 2026-11-21
 - Scope: Admin. Supersedes [0003](0003-request-and-error-flow.md) for Admin, changes point 4 of [0007](0007-generated-api-contract.md), and refines rule 6 of [0002](0002-feature-folders-and-public-api.md) for app wiring.
 

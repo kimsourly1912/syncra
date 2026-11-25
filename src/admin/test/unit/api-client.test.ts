@@ -262,18 +262,58 @@ describe('session renewal', () => {
   })
 })
 
+/**
+ * The part of the Web Locks API that `acrossTabs` uses, so the test doesn't depend on the Node
+ * version (Node 22 has no `navigator.locks`). One holder per name; `ifAvailable` gets `null`.
+ */
+function fakeLocks() {
+  const held = new Set<string>()
+  const waiting = new Map<string, Array<() => void>>()
+  type Callback = (lock: { name: string } | null) => unknown
+
+  async function request(name: string, optionsOrCallback: { ifAvailable?: boolean } | Callback, maybeCallback?: Callback) {
+    const options = typeof optionsOrCallback === 'function' ? {} : optionsOrCallback
+    const callback = (typeof optionsOrCallback === 'function' ? optionsOrCallback : maybeCallback)!
+    if (held.has(name)) {
+      if (options.ifAvailable) return callback(null)
+      await new Promise<void>(resolve => waiting.set(name, [...(waiting.get(name) ?? []), resolve]))
+    }
+    held.add(name)
+    try {
+      return await callback({ name })
+    }
+    finally {
+      held.delete(name)
+      waiting.get(name)?.shift()?.()
+    }
+  }
+  return { request }
+}
+
 describe('acrossTabs', () => {
   it('renews in one tab while the other waits for it', async () => {
-    const gate = deferred()
-    const renew = vi.fn(() => gate.promise)
+    vi.stubGlobal('navigator', { locks: fakeLocks() })
+    try {
+      const gate = deferred()
+      const renew = vi.fn(() => gate.promise)
+      let secondDone = false
 
-    const first = acrossTabs('test:renew', renew)
-    const second = acrossTabs('test:renew', renew)
-    await vi.waitFor(() => expect(renew).toHaveBeenCalledOnce())
-    gate.resolve(undefined)
+      const first = acrossTabs('test:renew', renew)
+      const second = acrossTabs('test:renew', renew).then(() => {
+        secondDone = true
+      })
+      await vi.waitFor(() => expect(renew).toHaveBeenCalledOnce())
+      await Promise.resolve()
+      // The second tab waits for the first tab's renewal instead of starting its own.
+      expect(secondDone).toBe(false)
+      gate.resolve(undefined)
 
-    await Promise.all([first, second])
-    expect(renew).toHaveBeenCalledOnce()
+      await Promise.all([first, second])
+      expect(renew).toHaveBeenCalledOnce()
+    }
+    finally {
+      vi.unstubAllGlobals()
+    }
   })
 
   it('renews directly without the Web Locks API', async () => {

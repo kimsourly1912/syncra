@@ -19,8 +19,12 @@ const FIELD_NAME = {
   confirmPassword: 'confirmPassword',
 } satisfies { [K in keyof IResetPasswordSchema]: K }
 
-function onSubmit(evt: FormSubmitEvent<IResetPasswordSchema>) {
-  return submit(token, evt.data)
+async function onSubmit(evt: FormSubmitEvent<IResetPasswordSchema>) {
+  const changed = await submit(token, evt.data)
+  // The token is used up: drop it from the address bar and history. `history.replaceState`, not
+  // the router, so the guest guard doesn't run and leave the "Password Changed" screen.
+  if (changed) window.history.replaceState(window.history.state, '', route.path)
+  return changed
 }
 </script>
 
