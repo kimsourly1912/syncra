@@ -18,9 +18,14 @@ export const LEAD_PAGE_SIZES = [20, 50, 100] as const
 
 /**
  * The lead list: status, search, page, and page size in the URL
- * (`/lead-inquiry?status=new&search=acme&page=2&size=50`), plus the totals cards.
+ * (`/lead-inquiry?status=new&search=acme&page=2&size=50`), plus the status totals.
+ *
+ * The lead open in the detail panel is `?lead=7`. Opening and closing replace the URL, so Back
+ * leaves the list instead of stepping through panels. Changing a filter closes the panel.
  */
 export function useLeadList() {
+  const route = useRoute()
+  const router = useRouter()
   const list = useListQuery(
     { status: Object.keys(STATUS) as LeadStatusTab[] },
     { search: true, pageSizes: LEAD_PAGE_SIZES },
@@ -51,6 +56,16 @@ export function useLeadList() {
     if (totalPages !== undefined) list.clampPage(totalPages)
   })
 
+  const openId = computed(() => {
+    const value = Number(route.query.lead)
+    return Number.isInteger(value) && value > 0 ? value : undefined
+  })
+
+  function setOpenId(id: number | undefined) {
+    const { lead: _, ...query } = route.query
+    return router.replace({ query: id === undefined ? query : { ...query, lead: String(id) } })
+  }
+
   return {
     tab: computed(() => list.filters.value.status),
     search: list.search,
@@ -73,5 +88,8 @@ export function useLeadList() {
     showPage: list.setPage,
     setPageSize: list.setPageSize,
     clearFilters: list.clearFilters,
+    openId,
+    openLead: (id: number) => setOpenId(id),
+    closeLead: () => setOpenId(undefined),
   }
 }
