@@ -1,128 +1,124 @@
 <script setup lang="ts">
 import type { TableColumn } from '@nuxt/ui'
-import type { CardStat } from '@/components/card/CardStats.vue'
+import { sampleTokenHistory, sampleTokenTotals } from '../fixtures/account-detail'
+import AccountResourceSummary from './AccountResourceSummary.vue'
 
-interface TokenTableData {
-  activity: string
-  actor: string
-  type: string
-  amount: number
-  balance: number
-  date: string
-}
+type Transaction = (typeof sampleTokenHistory)[number]
 
-const tokenItems: CardStat[] = [
-  {
-    label: 'Current Token Balance',
-    value: '10.000',
-    color: 'neutral',
-    icon: 'lucide:wallet',
-  },
-  {
-    label: 'Total In-flow',
-    value: '50.000',
-    color: 'success',
-    icon: 'lucide:arrow-down-left',
-  },
-  {
-    label: 'Total Out-flow',
-    value: '40.000',
-    color: 'error',
-    icon: 'lucide:arrow-up-right',
-  },
+const allActivity = 'All activity'
+const activityTypes = [allActivity, 'Credit', 'Usage']
+const activityType = ref(allActivity)
+const search = ref('')
+const numberFormat = new Intl.NumberFormat('en-US')
+const signedFormat = new Intl.NumberFormat('en-US', { signDisplay: 'exceptZero' })
+
+const metrics = [
+  { label: 'Current balance', value: sampleTokenTotals.balance, emphasized: true },
+  { label: 'Total inflow', value: sampleTokenTotals.inflow },
+  { label: 'Total outflow', value: sampleTokenTotals.outflow },
 ]
 
-const tokenTableData = Array.from({ length: 5 }, _ => ({
-  activity: 'Testing',
-  actor: 'John Doe',
-  type: 'Usage',
-  amount: 6000,
-  balance: 1000,
-  date: new Date().toISOString(),
-}) satisfies TokenTableData)
+const columns: TableColumn<Transaction>[] = [
+  { accessorKey: 'activity', header: 'Activity', meta: { class: { td: 'font-medium text-highlighted' } } },
+  { accessorKey: 'actor', header: 'Actor' },
+  { accessorKey: 'type', header: 'Type' },
+  { accessorKey: 'amount', header: 'Amount', meta: { class: { th: 'text-right', td: 'text-right tabular-nums' } } },
+  {
+    accessorKey: 'balance',
+    header: 'Balance after',
+    meta: { class: { th: 'text-right', td: 'text-right tabular-nums' } },
+    cell: ({ row }) => numberFormat.format(row.original.balance),
+  },
+  { accessorKey: 'date', header: 'Date' },
+]
 
-const tokenTableColumn = computed(() => {
-  return [
-    {
-      accessorKey: 'activity',
-      header: 'Activity',
-    },
-    {
-      accessorKey: 'actor',
-      header: 'Actor',
-    },
-    {
-      accessorKey: 'type',
-      header: 'Type',
-    },
-    {
-      accessorKey: 'amount',
-      header: 'Amount',
-    },
-    {
-      accessorKey: 'balance',
-      header: 'Balance After',
-    },
-    {
-      accessorKey: 'date',
-      header: 'Date',
-    },
-  ] satisfies TableColumn<TokenTableData>[]
+const transactions = computed(() => {
+  const query = search.value.toLowerCase()
+  return sampleTokenHistory.filter(row => (activityType.value === allActivity || row.type === activityType.value)
+    && [row.activity, row.actor, row.type].some(value => value.toLowerCase().includes(query)))
 })
+function clearFilters() {
+  search.value = ''
+  activityType.value = allActivity
+}
 </script>
 
 <template>
-  <UPageCard
-    title="Token Balance"
-    variant="naked"
-    orientation="horizontal"
-  >
-    <div class="flex gap-2 flex-wrap lg:justify-end">
-      <UButton
-        label="Deduct Token"
-        icon="lucide:minus"
-        variant="outline"
-        color="error"
-      />
-      <UButton
-        label="Add Token"
-        icon="lucide:plus"
-      />
-    </div>
-  </UPageCard>
+  <div class="min-w-0 space-y-4">
+    <AccountResourceSummary
+      heading="Token balance"
+      :metrics="metrics"
+    >
+      <template #actions>
+        <UButton
+          label="Deduct tokens"
+          icon="lucide:minus"
+          color="neutral"
+          variant="outline"
+          disabled
+        />
+        <UButton
+          label="Add tokens"
+          icon="lucide:plus"
+          disabled
+        />
+      </template>
+    </AccountResourceSummary>
 
-  <CardStats :items="tokenItems">
-    <template #value="{ item }">
-      <div class="rounded-full bg-default border-4 border-primary/25 inline-flex items-center justify-center">
-        <img
-          src="/img/coin.png"
-          class="size-6"
-        >
-      </div>
-      {{ item.value }}
-    </template>
-  </CardStats>
+    <UCard
+      as="section"
+      aria-label="Transaction history"
+      :ui="{ header: 'px-4 py-3 sm:px-5 sm:py-4', body: 'p-0 sm:p-0' }"
+    >
+      <template #header>
+        <div class="flex flex-wrap items-center justify-between gap-3">
+          <h2 class="text-lg font-semibold text-highlighted">
+            Transaction history
+          </h2>
+          <div class="flex min-w-0 flex-wrap items-center gap-2">
+            <InputSearch
+              v-model="search"
+              placeholder="Search transactions…"
+              class="w-full sm:w-60"
+            />
+            <USelect
+              v-model="activityType"
+              :items="activityTypes"
+              aria-label="Transaction activity"
+              class="w-36"
+            />
+          </div>
+        </div>
+      </template>
 
-  <UPageCard
-    title="Token Transaction History"
-    variant="naked"
-  >
-    <div class="flex flex-wrap items-center justify-between gap-2">
-      <!-- Static panel: the search isn't wired to an API yet. -->
-      <InputSearch
-        placeholder="Search transactions…"
-        class="w-full max-w-sm"
-      />
-      <USelect
-        placeholder="Activity"
-        :items="['Completed', 'Pending']"
-        class="w-48"
-      />
-    </div>
-
-    <UTable
-      :data="tokenTableData"
-      :columns="tokenTableColumn"
-    />
-  </UPageCard>
+      <UTable
+        :data="transactions"
+        :columns="columns"
+        :ui="{ thead: 'bg-elevated/50', th: 'px-4 py-2.5', td: 'px-4 py-2.5' }"
+      >
+        <template #type-cell="{ row }">
+          <UBadge
+            :label="row.original.type"
+            :color="row.original.type === 'Credit' ? 'success' : 'neutral'"
+            variant="subtle"
+          />
+        </template>
+        <template #amount-cell="{ row }">
+          <span
+            class="font-medium"
+            :class="row.original.amount > 0 ? 'text-success' : 'text-highlighted'"
+          >
+            {{ signedFormat.format(row.original.amount) }}
+          </span>
+        </template>
+        <template #empty>
+          <ListEmptyState
+            noun="transactions"
+            :filtered="!!search || activityType !== allActivity"
+            @clear="clearFilters"
+          />
+        </template>
+      </UTable>
+    </UCard>
+  </div>
 </template>

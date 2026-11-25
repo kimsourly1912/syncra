@@ -1,57 +1,52 @@
 <script setup lang="ts">
-import type { ListDetail } from '@/components/list/ListDetails.vue'
+import { sampleAccount } from '../fixtures/account-detail'
+import AccountDetailFields from './AccountDetailFields.vue'
 
-const representativeItems: ListDetail[] = [
+const { company, representative } = sampleAccount
+const sections = [
   {
-    label: 'Full Name',
-    value: 'John Doe',
+    heading: 'Company details',
+    icon: 'lucide:building-2',
+    fields: [
+      { label: 'Company name', value: company.name },
+      { label: 'Company email', value: company.email },
+      { label: 'Industry', value: company.industry },
+      { label: 'Company size', value: company.size },
+    ],
   },
   {
-    label: 'Work Email Address',
-    value: 'John.doe@supplychain.com',
-  },
-  {
-    label: 'Role / Position',
-    value: 'Manager',
-  },
-  {
-    label: 'Contact Number',
-    value: '+855 12 345 678',
-  },
-]
-
-const companyItems: ListDetail[] = [
-  {
-    label: 'Company Name',
-    value: 'Supply Chain Inc.',
-  },
-  {
-    label: 'Company Email Address',
-    value: 'SC@supplychain.com',
-  },
-  {
-    label: 'Industry Type',
-    value: 'Garment Industry',
-  },
-  {
-    label: 'Company Size',
-    value: '50 (Medium)',
+    heading: 'Representative details',
+    icon: 'lucide:contact',
+    fields: [
+      { label: 'Full name', value: representative.name },
+      { label: 'Role / position', value: representative.position },
+      { label: 'Work email', value: representative.email },
+      { label: 'Contact number', value: representative.phone },
+    ],
   },
 ]
 </script>
 
 <template>
-  <UPageCard
-    title="Representative Details"
-    variant="outline"
-  >
-    <ListDetails :items="representativeItems" />
-  </UPageCard>
+  <div class="grid gap-4 @min-[48rem]:grid-cols-[minmax(0,53fr)_minmax(0,47fr)]">
+    <UCard
+      v-for="section in sections"
+      :key="section.heading"
+      as="section"
+      :aria-label="section.heading"
+      :ui="{ header: 'px-4 py-3 sm:px-5 sm:py-4', body: 'px-4 py-0 sm:px-5 sm:py-0' }"
+    >
+      <template #header>
+        <h2 class="flex items-center gap-2 text-lg font-semibold text-highlighted">
+          <UIcon
+            :name="section.icon"
+            class="size-5 text-primary"
+          />
+          {{ section.heading }}
+        </h2>
+      </template>
 
-  <UPageCard
-    title="Company Details"
-    variant="outline"
-  >
-    <ListDetails :items="companyItems" />
-  </UPageCard>
+      <AccountDetailFields :fields="section.fields" />
+    </UCard>
+  </div>
 </template>

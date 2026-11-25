@@ -16,7 +16,7 @@ src/admin/app/
 │   ├── community/ setting.vue   # placeholders (UEmpty), so the sidebar shows them
 │   └── auth/                    # sign-in, forgot, reset (guest)
 ├── features/<feature>/          # one staff workflow (decision 0002)
-│   ├── account/                 # AccountListScreen + useAccountList + portal-user model; static detail panels (CompanyInformation, ModuleManagement, TokenManagement, SeatManagement)
+│   ├── account/                 # AccountListScreen + useAccountList + portal-user model; AccountDetailScreen and its four sample-data panels
 │   ├── lead-inquiry/            # LeadListScreen + useLeadList + lead model + status labels
 │   ├── sale-request/            # SaleRequestListScreen + useSaleRequestList + model + labels
 │   ├── auth/                    # sign-in, sign-out, forgot, reset forms: composables/, schemas/, components/, models/, index.ts
@@ -76,7 +76,7 @@ There are no services: a composable calls `api` with a path from the spec and a 
 | Form with Valibot + pending | `pages/auth/sign-in.vue` + `features/auth/composables/useSignIn.ts` | `UForm` + a feature schema (`features/auth/schemas/`) + `FIELD_NAME satisfies { [K in keyof IForm]: K }`. The composable wraps the request in `useApiMutation` and acts on `result.ok`. |
 | Request + model | `features/auth/composables/useForgotPassword.ts`, `features/auth/models/forgot-password.ts` | `api.post('/admin/auth/forgot-password', { body, auth: false, model })` |
 | Session-aware action | `features/session/composables/useSession.ts` | Shared state in `useState`, one in-flight load, idempotent `end()` |
-| Tabs in the URL | `pages/account/[id].vue` | `ListToolbarTabs` bound to `useUrlTab`: an unknown `?tab=` reads as the first tab, and switching replaces the URL |
+| Tabs in the URL | `features/account/components/AccountDetailScreen.vue` | `ListToolbarTabs` bound to `useUrlTab`: an unknown `?tab=` reads as the first tab, and switching replaces the URL |
 | Page layout | `pages/product/create.vue` | `UDashboardPanel` → `UDashboardNavbar` (back button in `#leading`, actions in `#right`) → `UPageCard` |
 
 ## Legacy: don't copy
@@ -91,5 +91,5 @@ There are no services: a composable calls `api` with a path from the spec and a 
 
 - `/community` and `/setting` are placeholder pages that keep the sidebar entries visible. The API has no endpoints for them ([open question](../../../docs/product/open-questions.md#admin)).
 - The wired lists have no sorting, and their row actions aren't wired: Account Management's dialogs, lead detail, and sale request approval. Sale requests have no detail page yet.
-- Account Detail and the module card show static data.
+- Account Detail labels its sample data and disables mutation controls. Token and seat tables filter the sample rows in the browser.
 - Tests cover the API client, the session and route guard, auth composables, TechPack review, and the three wired list screens, but not route files ([testing](testing.md)).
