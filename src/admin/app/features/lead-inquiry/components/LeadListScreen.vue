@@ -1,5 +1,6 @@
 <script setup lang="ts">
-import type { TableColumn, TabsItem } from '@nuxt/ui'
+import type { TableColumn } from '@nuxt/ui'
+import type { ToolbarTab } from '@/components/list/ListToolbarTabs.vue'
 import { LEAD_PAGE_SIZES, useLeadList } from '../composables/useLeadList'
 import type { LeadStatusTab } from '../composables/useLeadList'
 import type { LeadRow } from '../models/lead'
@@ -12,19 +13,15 @@ const {
   openId, openLead, closeLead,
 } = useLeadList()
 
-const count = (value: number | null | undefined) => (value == null
-  ? undefined
-  : { label: value.toLocaleString(), color: 'neutral' as const, variant: 'subtle' as const, size: 'sm' as const })
-
 // In the toolbar, so the tabs sit on its line. The API's totals become the tab counts. It has none
 // for New, and its "rejected" total isn't confirmed to be the Not interested status (open
 // question), so those two show no badge.
-type StatusTab = TabsItem & { value: LeadStatusTab }
+type StatusTab = ToolbarTab<LeadStatusTab>
 const tabs = computed(() => ([
-  { label: 'All', value: 'all', icon: 'lucide:inbox', badge: count(summary.value?.leadReceived) },
+  { label: 'All', value: 'all', icon: 'lucide:inbox', count: summary.value?.leadReceived },
   { label: 'New', value: 'new', icon: 'lucide:sparkles' },
-  { label: 'Contacted', value: 'contacted', icon: 'lucide:phone', badge: count(summary.value?.contacted) },
-  { label: 'Converted', value: 'converted', icon: 'lucide:circle-check', badge: count(summary.value?.converted) },
+  { label: 'Contacted', value: 'contacted', icon: 'lucide:phone', count: summary.value?.contacted },
+  { label: 'Converted', value: 'converted', icon: 'lucide:circle-check', count: summary.value?.converted },
   { label: 'Not interested', value: 'not-interested', icon: 'lucide:circle-x' },
 ] satisfies StatusTab[]).map((item): StatusTab => ({ ...item, disabled: pending.value })))
 
@@ -38,9 +35,6 @@ const interests = (row: LeadRow) => {
 }
 
 const openRow = computed(() => items.value.find(row => row.id === openId.value))
-
-// The name's button stretches over the row (or card), so the whole row opens the lead.
-const OPEN = 'text-start font-medium wrap-anywhere text-highlighted after:absolute after:inset-0 hover:text-primary focus-visible:outline-none focus-visible:after:ring-2 focus-visible:after:ring-inset focus-visible:after:ring-primary'
 
 const columns: TableColumn<LeadRow>[] = [
   { id: 'lead', header: 'Lead' },
@@ -113,7 +107,7 @@ const columns: TableColumn<LeadRow>[] = [
             <div class="min-w-0 space-y-0.5">
               <button
                 type="button"
-                :class="OPEN"
+                class="row-link"
                 @click="openLead(row.original.id)"
               >
                 {{ name(row.original) }}
@@ -131,7 +125,7 @@ const columns: TableColumn<LeadRow>[] = [
           <template #contact-cell="{ row }">
             <div class="min-w-0 space-y-0.5">
               <p class="wrap-anywhere text-highlighted">
-                {{ row.original.workEmail || '—' }}
+                {{ row.original.workEmail || NO_VALUE }}
               </p>
               <p
                 v-if="row.original.phoneNumber"
@@ -214,7 +208,7 @@ const columns: TableColumn<LeadRow>[] = [
               <div class="flex flex-wrap items-center gap-2">
                 <button
                   type="button"
-                  :class="[OPEN, 'after:rounded-lg']"
+                  class="row-link after:rounded-lg"
                   @click="openLead(row.id)"
                 >
                   {{ name(row) }}

@@ -184,7 +184,7 @@ const fileSize = (file: File) => `${(file.size / 1024 / 1024).toFixed(1)} MB`
                 Tagline
               </dt>
               <dd class="mt-1 text-highlighted">
-                {{ saved.tagline || '—' }}
+                {{ saved.tagline || NO_VALUE }}
               </dd>
             </div>
             <div>
@@ -192,7 +192,7 @@ const fileSize = (file: File) => `${(file.size / 1024 / 1024).toFixed(1)} MB`
                 Description
               </dt>
               <dd class="mt-1 text-highlighted">
-                {{ saved.description || '—' }}
+                {{ saved.description || NO_VALUE }}
               </dd>
             </div>
             <div>

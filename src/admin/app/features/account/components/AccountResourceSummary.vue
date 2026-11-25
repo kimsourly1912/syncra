@@ -8,8 +8,6 @@ defineSlots<{
   'actions': () => unknown
   'metric-detail'?: (props: { label: string }) => unknown
 }>()
-
-const numberFormat = new Intl.NumberFormat('en-US')
 </script>
 
 <template>
@@ -41,7 +39,7 @@ const numberFormat = new Intl.NumberFormat('en-US')
           class="text-xl font-semibold tabular-nums @min-[34rem]:text-2xl"
           :class="metric.emphasized ? 'text-primary' : 'text-highlighted'"
         >
-          {{ numberFormat.format(metric.value) }}
+          {{ formatCount(metric.value) }}
         </dd>
         <slot
           name="metric-detail"

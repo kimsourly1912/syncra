@@ -1,18 +1,13 @@
 <script setup lang="ts">
 import type { DropdownMenuItem, TableColumn } from '@nuxt/ui'
-import { formatTimeAgo, usePreferredReducedMotion } from '@vueuse/core'
+import { usePreferredReducedMotion } from '@vueuse/core'
 import { useSortable } from '@vueuse/integrations/useSortable'
 import type { UseSortableOptions } from '@vueuse/integrations/useSortable'
-import { SAMPLE_PRODUCTS } from '@/features/product'
-import type { Product } from '@/features/product'
+import { SAMPLE_PRODUCTS } from '../fixtures/products'
+import type { Product } from '../fixtures/products'
 
 // Static page: sample rows until the product API exists (open question). The navbar says so.
 const data = shallowRef<Product[]>([...SAMPLE_PRODUCTS])
-
-const updated = (value: string) => {
-  const date = new Date(value)
-  return { age: formatTimeAgo(date), full: date.toLocaleString(undefined, { dateStyle: 'medium', timeStyle: 'short' }) }
-}
 
 // Only Edit leads anywhere (a placeholder page); the rest wait for the product API.
 const actions = (product: Product): DropdownMenuItem[][] => [
@@ -247,8 +242,8 @@ const columns: TableColumn<Product>[] = [
         <template #updated-cell="{ row }">
           <span
             class="text-muted whitespace-nowrap"
-            :title="updated(row.original.updatedAt).full"
-          >{{ updated(row.original.updatedAt).age }}</span>
+            :title="formatAge(row.original.updatedAt).full"
+          >{{ formatAge(row.original.updatedAt).age }}</span>
         </template>
 
         <template #action-cell="{ row }">
@@ -344,8 +339,8 @@ const columns: TableColumn<Product>[] = [
               />
               <span
                 class="text-xs text-dimmed"
-                :title="updated(product.updatedAt).full"
-              >Updated {{ updated(product.updatedAt).age }}</span>
+                :title="formatAge(product.updatedAt).full"
+              >Updated {{ formatAge(product.updatedAt).age }}</span>
             </div>
           </div>
 

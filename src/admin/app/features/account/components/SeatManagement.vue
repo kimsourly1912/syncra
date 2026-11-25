@@ -10,7 +10,6 @@ const allActivity = 'All activity'
 const activity = ref(allActivity)
 const activityTypes = [allActivity, 'Seats added', 'Seats deducted']
 const memberSearch = ref('')
-const signedFormat = new Intl.NumberFormat('en-US', { signDisplay: 'exceptZero' })
 
 const metrics = [
   { label: 'Total seats', value: sampleSeatTotals.total },
@@ -202,7 +201,7 @@ const history = computed(() => sampleSeatHistory.filter(row => activity.value ==
               <span
                 class="shrink-0 text-sm font-medium tabular-nums"
                 :class="row.change > 0 ? 'text-success' : 'text-highlighted'"
-              >{{ signedFormat.format(row.change) }}</span>
+              >{{ formatChange(row.change) }}</span>
             </li>
           </ul>
           <div
@@ -225,7 +224,7 @@ const history = computed(() => sampleSeatHistory.filter(row => activity.value ==
                 class="font-medium"
                 :class="row.original.change > 0 ? 'text-success' : 'text-highlighted'"
               >
-                {{ signedFormat.format(row.original.change) }}
+                {{ formatChange(row.original.change) }}
               </span>
             </template>
             <template #empty>

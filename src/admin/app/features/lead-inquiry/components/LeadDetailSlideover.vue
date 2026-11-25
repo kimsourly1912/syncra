@@ -31,18 +31,18 @@ const lead = computed(() => {
 const status = computed(() => (lead.value.status ? LEAD_STATUS[lead.value.status] : undefined))
 
 const contact = computed(() => [
-  { label: 'Name', value: lead.value.name || '—' },
-  { label: 'Company', value: lead.value.company || '—' },
-  { label: 'Work email', value: lead.value.email || '—' },
-  { label: 'Phone number', value: lead.value.phone || '—' },
+  { label: 'Name', value: lead.value.name },
+  { label: 'Company', value: lead.value.company },
+  { label: 'Work email', value: lead.value.email },
+  { label: 'Phone number', value: lead.value.phone },
 ])
 
-const agreed = (value: boolean | null | undefined) => (value == null ? '—' : value ? 'Yes' : 'No')
+const agreed = (value: boolean | null | undefined) => (value == null ? NO_VALUE : value ? 'Yes' : 'No')
 
 const company = computed(() => [
-  { label: 'Country', value: detail.value?.country || '—' },
-  { label: 'Company size', value: detail.value?.companySize || '—' },
-  { label: 'Industry', value: detail.value?.industryType || '—' },
+  { label: 'Country', value: detail.value?.country },
+  { label: 'Company size', value: detail.value?.companySize },
+  { label: 'Industry', value: detail.value?.industryType },
   { label: 'Agreed to be contacted', value: agreed(detail.value?.agreedToContact) },
 ])
 
@@ -86,20 +86,10 @@ const interests = computed(() => {
           >
             Contact
           </h3>
-          <dl class="mt-2 grid grid-cols-1 gap-4 sm:grid-cols-2">
-            <div
-              v-for="fact in contact"
-              :key="fact.label"
-              class="min-w-0"
-            >
-              <dt class="text-sm text-muted">
-                {{ fact.label }}
-              </dt>
-              <dd class="mt-0.5 wrap-anywhere text-highlighted">
-                {{ fact.value }}
-              </dd>
-            </div>
-          </dl>
+          <DetailGrid
+            :items="contact"
+            class="mt-2"
+          />
         </section>
 
         <AlertApiError
@@ -184,20 +174,10 @@ const interests = computed(() => {
             >
               Company
             </h3>
-            <dl class="mt-2 grid grid-cols-1 gap-4 sm:grid-cols-2">
-              <div
-                v-for="fact in company"
-                :key="fact.label"
-                class="min-w-0"
-              >
-                <dt class="text-sm text-muted">
-                  {{ fact.label }}
-                </dt>
-                <dd class="mt-0.5 wrap-anywhere text-highlighted">
-                  {{ fact.value }}
-                </dd>
-              </div>
-            </dl>
+            <DetailGrid
+              :items="company"
+              class="mt-2"
+            />
           </section>
 
           <section

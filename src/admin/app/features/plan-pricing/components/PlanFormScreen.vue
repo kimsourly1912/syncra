@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { createReusableTemplate, formatTimeAgo } from '@vueuse/core'
+import { createReusableTemplate } from '@vueuse/core'
 import type { Plan } from '../fixtures/plans'
 
 /**
@@ -73,10 +73,8 @@ function discardChanges() {
   features.value = startFeatures()
 }
 
-const updated = computed(() => (props.plan ? formatTimeAgo(new Date(props.plan.updatedAt)) : undefined))
-const previewPrice = computed(() => (form.amount == null
-  ? '—'
-  : new Intl.NumberFormat(undefined, { style: 'currency', currency: form.currency, maximumFractionDigits: 2 }).format(form.amount)))
+const updated = computed(() => (props.plan ? formatAge(props.plan.updatedAt).age : undefined))
+const previewPrice = computed(() => formatMoney(form.amount, form.currency))
 const previewFeatures = computed(() => featureTexts(features.value))
 </script>
 

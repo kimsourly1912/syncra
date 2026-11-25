@@ -1,18 +1,12 @@
 <script setup lang="ts">
 import type { DropdownMenuItem, TableColumn } from '@nuxt/ui'
-import { formatTimeAgo } from '@vueuse/core'
-import { SAMPLE_PLANS } from '@/features/plan-pricing'
-import type { Plan } from '@/features/plan-pricing'
+import { SAMPLE_PLANS } from '../fixtures/plans'
+import type { Plan } from '../fixtures/plans'
 
 // Static page: sample rows until the plan API exists (open question). The navbar says so.
 const plans = SAMPLE_PLANS
 
-const price = (plan: Plan) => new Intl.NumberFormat(undefined, { style: 'currency', currency: plan.currency, maximumFractionDigits: 0 }).format(plan.amount)
-
-const updated = (value: string) => {
-  const date = new Date(value)
-  return { age: formatTimeAgo(date), full: date.toLocaleString(undefined, { dateStyle: 'medium', timeStyle: 'short' }) }
-}
+const price = (plan: Plan) => formatMoney(plan.amount, plan.currency, { maximumFractionDigits: 0 })
 
 // Only Edit leads anywhere (a placeholder page); the rest wait for the plan API.
 const actions = (plan: Plan): DropdownMenuItem[][] => [
@@ -122,8 +116,8 @@ const columns: TableColumn<Plan>[] = [
         <template #updated-cell="{ row }">
           <span
             class="whitespace-nowrap text-muted"
-            :title="updated(row.original.updatedAt).full"
-          >{{ updated(row.original.updatedAt).age }}</span>
+            :title="formatAge(row.original.updatedAt).full"
+          >{{ formatAge(row.original.updatedAt).age }}</span>
         </template>
 
         <template #action-cell="{ row }">
@@ -191,8 +185,8 @@ const columns: TableColumn<Plan>[] = [
               />
               <span
                 class="text-xs text-dimmed"
-                :title="updated(plan.updatedAt).full"
-              >Updated {{ updated(plan.updatedAt).age }}</span>
+                :title="formatAge(plan.updatedAt).full"
+              >Updated {{ formatAge(plan.updatedAt).age }}</span>
             </div>
           </div>
 

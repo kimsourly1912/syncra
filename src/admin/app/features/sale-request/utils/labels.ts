@@ -1,5 +1,4 @@
 import type { BadgeProps } from '@nuxt/ui'
-import { formatTimeAgo } from '@vueuse/core'
 import type { SaleRequestSource, SaleRequestStatus, SaleRequestType } from '../models/sale-request'
 
 /** How each sale request status reads in a badge. */
@@ -21,18 +20,4 @@ export const SALE_REQUEST_SOURCE: Record<SaleRequestSource, string> = {
   CUSTOMER_PORTAL: 'Customer Portal',
   WEBSITE: 'Website',
   INTERNAL_ADMIN: 'Internal Admin',
-}
-
-/**
- * A submit date as an age ("3 days ago") and in full, for its tooltip. The API's date format
- * isn't verified (it may have no time zone), so a value that doesn't parse is shown as sent.
- */
-export function submitDate(value: string | null | undefined, now: Date | number = Date.now()) {
-  if (!value) return { age: '—', full: undefined }
-  const date = new Date(value)
-  if (Number.isNaN(date.getTime())) return { age: value, full: value }
-  return {
-    age: formatTimeAgo(date, {}, now),
-    full: date.toLocaleString(undefined, { dateStyle: 'medium', timeStyle: 'short' }),
-  }
 }

@@ -12,9 +12,7 @@ const props = defineProps<{
 
 const { next, loading, error } = useNextReview(props.review.fileId)
 
-const reviewedAt = computed(() => (props.review.reviewedAt
-  ? new Date(props.review.reviewedAt).toLocaleString(undefined, { dateStyle: 'medium', timeStyle: 'short' })
-  : ''))
+const reviewedAt = computed(() => formatDateTime(props.review.reviewedAt) ?? '')
 </script>
 
 <template>

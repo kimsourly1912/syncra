@@ -16,17 +16,12 @@ const tabs = computed<(TabsItem & { value: ReviewQueueTab })[]>(() => [
 
 const totalLabel = computed(() => {
   if (total.value == null) return ''
-  return tab.value === 'in-review' ? `${total.value.toLocaleString()} waiting for review` : `${total.value.toLocaleString()} reviewed`
+  return tab.value === 'in-review' ? `${formatCount(total.value)} waiting for review` : `${formatCount(total.value)} reviewed`
 })
 
-const reviewedAt = (item: ReviewItem) => (item.reviewedAt
-  ? new Date(item.reviewedAt).toLocaleString(undefined, { dateStyle: 'medium', timeStyle: 'short' })
-  : '—')
+const reviewedAt = (item: ReviewItem) => formatDateTime(item.reviewedAt) ?? NO_VALUE
 
 const reviewLink = (item: ReviewItem) => ({ path: `/techpack-reviews/${item.fileId}`, query: listQuery.value })
-
-// The filename's link stretches over the card, so the whole card opens the review.
-const LINK = 'block font-medium wrap-anywhere text-highlighted after:absolute after:inset-0 after:rounded-lg hover:text-primary focus-visible:outline-none focus-visible:after:ring-2 focus-visible:after:ring-primary'
 
 const GRID = 'grid gap-3 sm:grid-cols-2 lg:grid-cols-3 2xl:grid-cols-4'
 </script>
@@ -133,7 +128,8 @@ const GRID = 'grid gap-3 sm:grid-cols-2 lg:grid-cols-3 2xl:grid-cols-4'
                 v-if="item.draftUuid"
                 :to="reviewLink(item)"
                 :title="item.filename"
-                :class="[LINK, 'line-clamp-3']"
+                raw
+                class="row-link block line-clamp-3 after:rounded-lg"
               >
                 {{ item.filename }}
               </ULink>

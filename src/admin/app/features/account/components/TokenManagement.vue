@@ -9,8 +9,6 @@ const allActivity = 'All activity'
 const activityTypes = [allActivity, 'Credit', 'Usage']
 const activityType = ref(allActivity)
 const search = ref('')
-const numberFormat = new Intl.NumberFormat('en-US')
-const signedFormat = new Intl.NumberFormat('en-US', { signDisplay: 'exceptZero' })
 
 const metrics = [
   { label: 'Current balance', value: sampleTokenTotals.balance, emphasized: true },
@@ -27,7 +25,7 @@ const columns: TableColumn<Transaction>[] = [
     accessorKey: 'balance',
     header: 'Balance after',
     meta: { class: { th: 'text-right', td: 'text-right tabular-nums' } },
-    cell: ({ row }) => numberFormat.format(row.original.balance),
+    cell: ({ row }) => formatCount(row.original.balance),
   },
   { accessorKey: 'date', header: 'Date' },
 ]
@@ -115,10 +113,10 @@ function clearFilters() {
               class="text-sm font-medium tabular-nums"
               :class="row.amount > 0 ? 'text-success' : 'text-highlighted'"
             >
-              {{ signedFormat.format(row.amount) }}
+              {{ formatChange(row.amount) }}
             </p>
             <p class="text-xs text-muted tabular-nums">
-              Balance {{ numberFormat.format(row.balance) }}
+              Balance {{ formatCount(row.balance) }}
             </p>
           </div>
         </li>
@@ -151,7 +149,7 @@ function clearFilters() {
             class="font-medium"
             :class="row.original.amount > 0 ? 'text-success' : 'text-highlighted'"
           >
-            {{ signedFormat.format(row.original.amount) }}
+            {{ formatChange(row.original.amount) }}
           </span>
         </template>
         <template #empty>

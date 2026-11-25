@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { createReusableTemplate, formatTimeAgo, useObjectUrl } from '@vueuse/core'
+import { createReusableTemplate, useObjectUrl } from '@vueuse/core'
 import type { Product } from '../fixtures/products'
 
 /**
@@ -64,7 +64,7 @@ function discardChanges() {
   iconError.value = ''
 }
 
-const updated = computed(() => (props.product ? formatTimeAgo(new Date(props.product.updatedAt)) : undefined))
+const updated = computed(() => (props.product ? formatAge(props.product.updatedAt).age : undefined))
 const previewName = computed(() => form.name.trim() || 'Product name')
 const previewDescription = computed(() => form.description.trim() || 'A short description of the product.')
 

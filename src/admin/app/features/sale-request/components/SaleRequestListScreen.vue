@@ -1,9 +1,10 @@
 <script setup lang="ts">
-import type { TableColumn, TabsItem } from '@nuxt/ui'
+import type { TableColumn } from '@nuxt/ui'
+import type { ToolbarTab } from '@/components/list/ListToolbarTabs.vue'
 import { SALE_REQUEST_PAGE_SIZES, useSaleRequestList } from '../composables/useSaleRequestList'
 import type { SaleRequestStatusTab, SaleRequestTypeFilter } from '../composables/useSaleRequestList'
 import type { SaleRequestRow } from '../models/sale-request'
-import { SALE_REQUEST_SOURCE, SALE_REQUEST_STATUS, SALE_REQUEST_TYPE, submitDate } from '../utils/labels'
+import { SALE_REQUEST_SOURCE, SALE_REQUEST_STATUS, SALE_REQUEST_TYPE } from '../utils/labels'
 import SaleRequestDetailSlideover from './SaleRequestDetailSlideover.vue'
 
 const {
@@ -19,34 +20,27 @@ const typeItems: { label: string, value: SaleRequestTypeFilter }[] = [
   { label: 'Seat', value: 'seat' },
 ]
 
-const count = (value: number | null | undefined) => (value == null
-  ? undefined
-  : { label: value.toLocaleString(), color: 'neutral' as const, variant: 'subtle' as const, size: 'sm' as const })
-
 // In the toolbar, so the tabs sit on its line. The API's totals become the tab counts; it has
 // none for Completed, which shows no badge.
-type StatusTab = TabsItem & { value: SaleRequestStatusTab }
+type StatusTab = ToolbarTab<SaleRequestStatusTab>
 const tabs = computed(() => ([
-  { label: 'All', value: 'all', icon: 'lucide:inbox', badge: count(summary.value?.total) },
-  { label: 'Pending', value: 'pending', icon: 'lucide:clock', badge: count(summary.value?.pending) },
-  { label: 'Approved', value: 'approved', icon: 'lucide:circle-check', badge: count(summary.value?.approved) },
-  { label: 'Rejected', value: 'rejected', icon: 'lucide:circle-x', badge: count(summary.value?.rejected) },
+  { label: 'All', value: 'all', icon: 'lucide:inbox', count: summary.value?.total },
+  { label: 'Pending', value: 'pending', icon: 'lucide:clock', count: summary.value?.pending },
+  { label: 'Approved', value: 'approved', icon: 'lucide:circle-check', count: summary.value?.approved },
+  { label: 'Rejected', value: 'rejected', icon: 'lucide:circle-x', count: summary.value?.rejected },
   { label: 'Completed', value: 'completed', icon: 'lucide:badge-check' },
 ] satisfies StatusTab[]).map((item): StatusTab => ({ ...item, disabled: pending.value })))
 
 const code = (row: SaleRequestRow) => row.requestCode ?? `#${row.id}`
 /** The requester's name, or the email when there's none, so the email isn't shown twice. */
-const requester = (row: SaleRequestRow) => row.userName || row.emailAddress || '—'
+const requester = (row: SaleRequestRow) => row.userName || row.emailAddress || NO_VALUE
 const showsEmail = (row: SaleRequestRow) => !!row.emailAddress && requester(row) !== row.emailAddress
 const status = (row: SaleRequestRow) => (row.status ? SALE_REQUEST_STATUS[row.status] : undefined)
 const requestType = (row: SaleRequestRow) => (row.requestType ? SALE_REQUEST_TYPE[row.requestType] : undefined)
-const meta = (row: SaleRequestRow) => [submitDate(row.submitDate).age, row.source ? SALE_REQUEST_SOURCE[row.source] : undefined]
+const meta = (row: SaleRequestRow) => [formatAge(row.submitDate).age, row.source ? SALE_REQUEST_SOURCE[row.source] : undefined]
   .filter(Boolean).join(' · ')
 
 const openRow = computed(() => items.value.find(row => row.id === openId.value))
-
-// The code's button stretches over the row (or card), so the whole row opens the request.
-const OPEN = 'text-start font-medium wrap-anywhere text-highlighted after:absolute after:inset-0 hover:text-primary focus-visible:outline-none focus-visible:after:ring-2 focus-visible:after:ring-inset focus-visible:after:ring-primary'
 
 const columns: TableColumn<SaleRequestRow>[] = [
   { id: 'request', header: 'Request' },
@@ -128,7 +122,7 @@ const columns: TableColumn<SaleRequestRow>[] = [
             <div class="min-w-0 space-y-0.5">
               <button
                 type="button"
-                :class="OPEN"
+                class="row-link"
                 @click="openRequest(row.original.id)"
               >
                 {{ code(row.original) }}
@@ -140,7 +134,7 @@ const columns: TableColumn<SaleRequestRow>[] = [
               </button>
               <p
                 class="text-xs text-dimmed"
-                :title="submitDate(row.original.submitDate).full"
+                :title="formatAge(row.original.submitDate).full"
               >
                 {{ meta(row.original) }}
               </p>
@@ -223,7 +217,7 @@ const columns: TableColumn<SaleRequestRow>[] = [
               <div class="flex flex-wrap items-center gap-2">
                 <button
                   type="button"
-                  :class="[OPEN, 'after:rounded-lg']"
+                  class="row-link after:rounded-lg"
                   @click="openRequest(row.id)"
                 >
                   {{ code(row) }}
@@ -259,7 +253,7 @@ const columns: TableColumn<SaleRequestRow>[] = [
                   />
                   {{ requestType(row)!.label }}
                 </span>
-                <span :title="submitDate(row.submitDate).full">{{ meta(row) }}</span>
+                <span :title="formatAge(row.submitDate).full">{{ meta(row) }}</span>
               </p>
               <UIcon
                 name="lucide:chevron-right"

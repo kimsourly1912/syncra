@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { useSaleRequestDetail } from '../composables/useSaleRequestDetail'
 import type { SaleRequestRow } from '../models/sale-request'
-import { SALE_REQUEST_SOURCE, SALE_REQUEST_STATUS, SALE_REQUEST_TYPE, submitDate } from '../utils/labels'
+import { SALE_REQUEST_SOURCE, SALE_REQUEST_STATUS, SALE_REQUEST_TYPE } from '../utils/labels'
 
 const props = defineProps<{
   /** The request to show; none closes the panel. */
@@ -31,13 +31,13 @@ const summary = computed(() => {
 
 const status = computed(() => (summary.value.status ? SALE_REQUEST_STATUS[summary.value.status] : undefined))
 const type = computed(() => (summary.value.type ? SALE_REQUEST_TYPE[summary.value.type] : undefined))
-const submitted = computed(() => submitDate(summary.value.submitted))
+const submitted = computed(() => formatAge(summary.value.submitted))
 
 const facts = computed(() => [
-  { label: 'Requested by', value: summary.value.name || '—' },
-  { label: 'Email address', value: summary.value.email || '—' },
-  { label: 'Source', value: summary.value.source ? SALE_REQUEST_SOURCE[summary.value.source] : '—' },
-  { label: 'Submitted', value: submitted.value.full ?? '—' },
+  { label: 'Requested by', value: summary.value.name },
+  { label: 'Email address', value: summary.value.email },
+  { label: 'Source', value: summary.value.source && SALE_REQUEST_SOURCE[summary.value.source] },
+  { label: 'Submitted', value: submitted.value.full },
 ])
 
 const modules = computed(() => detail.value?.moduleItems ?? [])
@@ -80,20 +80,9 @@ const hasItems = computed(() => modules.value.length > 0 || tokens.value != null
 
     <template #body>
       <div class="space-y-6">
-        <dl class="grid grid-cols-1 gap-4 sm:grid-cols-2">
-          <div
-            v-for="fact in facts"
-            :key="fact.label"
-            class="min-w-0"
-          >
-            <dt class="text-sm text-muted">
-              {{ fact.label }}
-            </dt>
-            <dd class="mt-0.5 wrap-anywhere text-highlighted">
-              {{ fact.value }}
-            </dd>
-          </div>
-        </dl>
+        <DetailGrid
+          :items="facts"
+        />
 
         <AlertApiError
           v-if="error"
@@ -197,7 +186,7 @@ const hasItems = computed(() => modules.value.length > 0 || tokens.value != null
                   />
                   Tokens
                 </span>
-                <span class="font-medium text-highlighted tabular-nums">{{ tokens.toLocaleString() }}</span>
+                <span class="font-medium text-highlighted tabular-nums">{{ formatCount(tokens) }}</span>
               </li>
               <li
                 v-if="seats != null"
@@ -211,7 +200,7 @@ const hasItems = computed(() => modules.value.length > 0 || tokens.value != null
                   />
                   Additional seats
                 </span>
-                <span class="font-medium text-highlighted tabular-nums">{{ seats.toLocaleString() }}</span>
+                <span class="font-medium text-highlighted tabular-nums">{{ formatCount(seats) }}</span>
               </li>
             </ul>
           </section>
