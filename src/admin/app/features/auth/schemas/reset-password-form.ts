@@ -1,8 +1,8 @@
 import * as v from 'valibot'
 import { vSaResetConfirmRequest } from '@/api'
 
-/** The password policy, one rule per hint shown under the field. */
-const PASSWORD_RULES = [
+/** The password policy, one rule per hint shown under the field. Staff invites (settings) check it too. */
+export const PASSWORD_RULES = [
   { text: 'No spaces', schema: v.pipe(v.string(), v.regex(/^\S+$/)) },
   { text: 'Contains at least 8 characters', schema: v.pipe(v.string(), v.minLength(8)) },
   { text: 'Contains both lower (a-z) and upper case letters (A-Z)', schema: v.pipe(v.string(), v.regex(/[a-z]/), v.regex(/[A-Z]/)) },

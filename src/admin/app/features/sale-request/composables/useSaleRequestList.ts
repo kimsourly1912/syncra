@@ -27,9 +27,14 @@ export const SALE_REQUEST_PAGE_SIZES = [20, 50, 100] as const
 
 /**
  * The sale request list: status, type, search, page, and page size in the URL
- * (`/sale-request?status=pending&type=token&search=acme`), plus the totals cards.
+ * (`/sale-request?status=pending&type=token&search=acme`), plus the status totals.
+ *
+ * The request open in the detail panel is `?request=5`. Opening and closing replace the URL, so
+ * Back leaves the list instead of stepping through panels. Changing a filter closes the panel.
  */
 export function useSaleRequestList() {
+  const route = useRoute()
+  const router = useRouter()
   const list = useListQuery(
     { status: Object.keys(STATUS) as SaleRequestStatusTab[], type: Object.keys(TYPE) as SaleRequestTypeFilter[] },
     { search: true, pageSizes: SALE_REQUEST_PAGE_SIZES },
@@ -61,6 +66,16 @@ export function useSaleRequestList() {
     if (totalPages !== undefined) list.clampPage(totalPages)
   })
 
+  const openId = computed(() => {
+    const value = Number(route.query.request)
+    return Number.isInteger(value) && value > 0 ? value : undefined
+  })
+
+  function setOpenId(id: number | undefined) {
+    const { request: _, ...query } = route.query
+    return router.replace({ query: id === undefined ? query : { ...query, request: String(id) } })
+  }
+
   return {
     tab: computed(() => list.filters.value.status),
     type: computed(() => list.filters.value.type),
@@ -85,5 +100,8 @@ export function useSaleRequestList() {
     showPage: list.setPage,
     setPageSize: list.setPageSize,
     clearFilters: list.clearFilters,
+    openId,
+    openRequest: (id: number) => setOpenId(id),
+    closeRequest: () => setOpenId(undefined),
   }
 }

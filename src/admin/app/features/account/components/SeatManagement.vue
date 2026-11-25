@@ -94,26 +94,66 @@ const history = computed(() => sampleSeatHistory.filter(row => activity.value ==
             />
           </div>
         </template>
-        <UTable
-          :data="members"
-          :columns="memberColumns"
-          :ui="tableUi"
-        >
-          <template #status-cell="{ row }">
-            <UBadge
-              :label="row.original.status"
-              color="success"
-              variant="subtle"
-            />
-          </template>
-          <template #empty>
+        <!-- A narrow card (below 30rem) lists members instead of a table. -->
+        <div class="@container">
+          <ul
+            v-if="members.length"
+            class="divide-y divide-default @min-[30rem]:hidden"
+            aria-label="Members"
+          >
+            <li
+              v-for="member in members"
+              :key="member.email"
+              class="flex items-start justify-between gap-3 px-4 py-3"
+            >
+              <div class="min-w-0">
+                <p class="text-sm font-medium text-highlighted">
+                  {{ member.name }}
+                </p>
+                <p class="text-xs wrap-anywhere text-muted">
+                  {{ member.email }} · {{ member.role }}
+                </p>
+              </div>
+              <UBadge
+                :label="member.status"
+                color="success"
+                variant="subtle"
+                size="sm"
+                class="shrink-0"
+              />
+            </li>
+          </ul>
+          <div
+            v-else
+            class="@min-[30rem]:hidden"
+          >
             <ListEmptyState
               noun="members"
               :filtered="!!memberSearch"
               @clear="memberSearch = ''"
             />
-          </template>
-        </UTable>
+          </div>
+          <UTable
+            :data="members"
+            :columns="memberColumns"
+            :ui="{ ...tableUi, root: 'hidden @min-[30rem]:block' }"
+          >
+            <template #status-cell="{ row }">
+              <UBadge
+                :label="row.original.status"
+                color="success"
+                variant="subtle"
+              />
+            </template>
+            <template #empty>
+              <ListEmptyState
+                noun="members"
+                :filtered="!!memberSearch"
+                @clear="memberSearch = ''"
+              />
+            </template>
+          </UTable>
+        </div>
       </UCard>
 
       <UCard
@@ -135,31 +175,68 @@ const history = computed(() => sampleSeatHistory.filter(row => activity.value ==
               v-model="activity"
               :items="activityTypes"
               aria-label="Seat activity"
-              class="w-40"
+              class="w-full sm:w-40"
             />
           </div>
         </template>
-        <UTable
-          :data="history"
-          :columns="historyColumns"
-          :ui="tableUi"
-        >
-          <template #change-cell="{ row }">
-            <span
-              class="font-medium"
-              :class="row.original.change > 0 ? 'text-success' : 'text-highlighted'"
+        <!-- A narrow card (below 30rem) lists seat changes instead of a table. -->
+        <div class="@container">
+          <ul
+            v-if="history.length"
+            class="divide-y divide-default @min-[30rem]:hidden"
+            aria-label="Seat changes"
+          >
+            <li
+              v-for="(row, index) in history"
+              :key="index"
+              class="flex items-start justify-between gap-3 px-4 py-3"
             >
-              {{ signedFormat.format(row.original.change) }}
-            </span>
-          </template>
-          <template #empty>
+              <div class="min-w-0">
+                <p class="text-sm font-medium text-highlighted">
+                  {{ row.activity }}
+                </p>
+                <p class="text-xs text-muted">
+                  {{ row.actor }} · {{ row.date }}
+                </p>
+              </div>
+              <span
+                class="shrink-0 text-sm font-medium tabular-nums"
+                :class="row.change > 0 ? 'text-success' : 'text-highlighted'"
+              >{{ signedFormat.format(row.change) }}</span>
+            </li>
+          </ul>
+          <div
+            v-else
+            class="@min-[30rem]:hidden"
+          >
             <ListEmptyState
               noun="seat changes"
               :filtered="activity !== allActivity"
               @clear="activity = allActivity"
             />
-          </template>
-        </UTable>
+          </div>
+          <UTable
+            :data="history"
+            :columns="historyColumns"
+            :ui="{ ...tableUi, root: 'hidden @min-[30rem]:block' }"
+          >
+            <template #change-cell="{ row }">
+              <span
+                class="font-medium"
+                :class="row.original.change > 0 ? 'text-success' : 'text-highlighted'"
+              >
+                {{ signedFormat.format(row.original.change) }}
+              </span>
+            </template>
+            <template #empty>
+              <ListEmptyState
+                noun="seat changes"
+                :filtered="activity !== allActivity"
+                @clear="activity = allActivity"
+              />
+            </template>
+          </UTable>
+        </div>
       </UCard>
     </div>
   </div>

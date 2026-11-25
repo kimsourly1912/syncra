@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import type { CommandPaletteGroup, DropdownMenuItem, NavigationMenuItem } from '@nuxt/ui'
+import { breakpointsTailwind, useBreakpoints } from '@vueuse/core'
 import { useSignOut } from '@/features/auth'
 import { useSession } from '@/features/session'
 
@@ -84,20 +85,45 @@ const sidebarItems = computed(() => visibleItems.map(item => (typeof item.to ===
   ? { ...item, active: isSectionActive(route.path, item.to, SECTION_PATHS[item.to]) }
   : item)))
 
-// Ctrl/⌘+K or the sidebar's Search button: go to any page in the sidebar. Nuxt UI adds the
-// light/dark commands.
-const searchGroups: CommandPaletteGroup[] = [{
-  id: 'pages',
-  label: 'Go to',
-  items: visibleItems
-    .filter(item => item.type !== 'label')
-    .map(item => ({ label: item.label, icon: item.icon as string | undefined, to: item.to })),
-}]
+// Keyboard: Ctrl/⌘+B shows or hides the sidebar (collapses it on a wide screen, opens or closes
+// the drawer below `lg`), and `?` lists every shortcut. Both pause while typing in a field.
+const sidebarCollapsed = ref(false)
+const sidebarOpen = ref(false)
+const wide = useBreakpoints(breakpointsTailwind).greaterOrEqual('lg')
+const shortcutsOpen = ref(false)
+
+defineShortcuts({
+  'meta_b': () => {
+    if (wide.value) sidebarCollapsed.value = !sidebarCollapsed.value
+    else sidebarOpen.value = !sidebarOpen.value
+  },
+  '?': () => {
+    shortcutsOpen.value = true
+  },
+})
+
+// Ctrl/⌘+K or the sidebar's Search button: go to any page in the sidebar, or see the shortcuts.
+// Nuxt UI adds the light/dark commands.
+const searchGroups: CommandPaletteGroup[] = [
+  {
+    id: 'pages',
+    label: 'Go to',
+    items: visibleItems
+      .filter(item => item.type !== 'label')
+      .map(item => ({ label: item.label, icon: item.icon as string | undefined, to: item.to })),
+  },
+  {
+    id: 'help',
+    label: 'Help',
+    items: [{ label: 'Keyboard shortcuts', icon: 'lucide:keyboard', kbds: ['?'], onSelect: () => { shortcutsOpen.value = true } }],
+  },
+]
 
 // The signed-in staff member's menu, at the bottom of the sidebar.
 const staffName = computed(() => staff.value?.username || staff.value?.email || 'Account')
 const staffMenu = computed<DropdownMenuItem[][]>(() => [
   [{ label: staff.value?.email ?? staffName.value, type: 'label' }],
+  [{ label: 'Keyboard shortcuts', icon: 'lucide:keyboard', kbds: ['?'], onSelect: () => { shortcutsOpen.value = true } }],
   [{ label: 'Log Out', icon: 'lucide:log-out', disabled: signOut.pending.value, onSelect: () => void signOut.submit() }],
 ])
 </script>
@@ -105,6 +131,8 @@ const staffMenu = computed<DropdownMenuItem[][]>(() => [
 <template>
   <UDashboardGroup unit="rem">
     <UDashboardSidebar
+      v-model:collapsed="sidebarCollapsed"
+      v-model:open="sidebarOpen"
       collapsible
       resizable
       :default-size="17"
@@ -177,5 +205,7 @@ const staffMenu = computed<DropdownMenuItem[][]>(() => [
       title="Search"
       description="Go to a page in Syncra Admin"
     />
+
+    <ModalShortcuts v-model:open="shortcutsOpen" />
   </UDashboardGroup>
 </template>

@@ -10,18 +10,24 @@ export default defineAppConfig({
     // Page width (ui.md → Page width): the navbar, the toolbar, and the body share one side
     // padding, `--page-gutter` (tailwind.css), which centers them on a wide screen. Forms opt into
     // the narrow width with `class="page-narrow"` on their UDashboardPanel.
+    // A title that doesn't fit ends in "…" instead of being cut mid-letter. Nuxt UI's title is a flex
+    // box, where `truncate` can't draw the ellipsis, so it's a block here (ui.md → Navbar on a phone).
     dashboardNavbar: {
-      slots: { root: 'px-(--page-gutter) sm:px-(--page-gutter)' },
+      slots: {
+        root: 'px-(--page-gutter) sm:px-(--page-gutter)',
+        title: 'block min-w-0 truncate',
+      },
     },
     dashboardPanel: {
       slots: { body: 'px-(--page-gutter) sm:px-(--page-gutter)' },
     },
     // On a phone the toolbar wraps instead of scrolling sideways: search on one line, filters on
-    // the next.
+    // the next. `#left` runs the toolbar's full height (its contents stay centered), so tabs in it
+    // (`ListToolbarTabs`, `self-end`) sit on the toolbar's bottom border, not in the middle.
     dashboardToolbar: {
       slots: {
         root: 'px-(--page-gutter) sm:px-(--page-gutter) max-sm:flex-wrap max-sm:gap-y-2 max-sm:py-2',
-        left: 'max-sm:min-w-0 max-sm:flex-1 max-sm:flex-wrap',
+        left: 'self-stretch max-sm:min-w-0 max-sm:flex-1 max-sm:flex-wrap',
       },
     },
     // Tabs never cut a label: a row that doesn't fit scrolls sideways (no scrollbar), and the link

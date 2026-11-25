@@ -1,21 +1,14 @@
-/** Fictional data for the account detail preview. The account list uses the live API separately. */
-export const sampleAccount = {
-  userId: 1042,
+/**
+ * Fictional data for the account detail's Modules, Tokens, and Seats tabs, which have no read
+ * endpoint yet. The header and Company tab read the API.
+ */
+const sampleAccount = {
   name: 'Dara Sok',
   email: 'dara@mekonggarment.example',
   role: 'Company Admin',
-  registered: '15 Dec 2025',
-  company: {
-    name: 'Mekong Garment Co.',
-    email: 'office@mekonggarment.example',
-    industry: 'Garment manufacturing',
-    size: '50 employees · Medium',
-  },
   representative: {
     name: 'Maly Chan',
-    position: 'Operations Manager',
     email: 'maly@mekonggarment.example',
-    phone: '+855 12 000 000',
   },
 }
 

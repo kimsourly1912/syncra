@@ -1,8 +1,8 @@
 import { reactive } from 'vue'
-import { afterEach, beforeEach, describe, expect, it } from 'vitest'
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import { flushPromises } from '@vue/test-utils'
 import { mockNuxtImport, mountSuspended } from '@nuxt/test-utils/runtime'
-import { clearNuxtData } from '#imports'
+import { clearNuxtData, useRouter } from '#imports'
 import AccountListScreen from '../../app/features/account/components/AccountListScreen.vue'
 import LeadListScreen from '../../app/features/lead-inquiry/components/LeadListScreen.vue'
 import SaleRequestListScreen from '../../app/features/sale-request/components/SaleRequestListScreen.vue'
@@ -82,12 +82,70 @@ describe('lead list screen', () => {
     expect(transport).toHaveBeenCalledWith('/admin/lead-inquiries', expect.objectContaining({
       query: { status: 'CONTACTED', search: 'example', page: 1, size: 50 },
     }))
-    const link = wrapper.find('a[href="/lead-inquiry/7"]')
-    expect(link.text()).toBe('Test Lead')
+    expect(wrapper.find('tbody button').text()).toBe('Test Lead')
+    expect(wrapper.text()).toContain('lead@example.test')
+    expect(wrapper.text()).toContain('Example Co')
+    // The detail isn't loaded until a lead is opened.
+    expect(transport).not.toHaveBeenCalledWith('/admin/lead-inquiries/7', expect.anything())
     expect(wrapper.text()).toContain('L-0007')
     expect(wrapper.text()).toContain('Contacted')
     expect(wrapper.text()).toContain('120')
     expect(wrapper.find('nav[aria-label="Pagination"]').text()).toContain('Page 2 of 3')
+  })
+
+  it('opens a lead from its row, keeping the list query', async () => {
+    route.query = { status: 'contacted' }
+    fakeApi({
+      'GET /admin/lead-inquiries': page([lead]),
+      'GET /admin/lead-inquiries/summary': {},
+    })
+    const replace = vi.spyOn(useRouter(), 'replace').mockResolvedValue(undefined)
+    const wrapper = await mount(LeadListScreen)
+
+    await wrapper.find('tbody button').trigger('click')
+
+    expect(replace).toHaveBeenCalledWith({ query: { status: 'contacted', lead: '7' } })
+    replace.mockRestore()
+  })
+
+  it('shows the open lead read-only: interests, goals, and no status actions', async () => {
+    route.query = { lead: '7' }
+    transport = fakeApi({
+      'GET /admin/lead-inquiries': page([lead]),
+      'GET /admin/lead-inquiries/summary': {},
+      'GET /admin/lead-inquiries/7': {
+        ...lead,
+        country: 'Exampleland',
+        interestedProduct: ['Doc AI'],
+        modules: [{ id: 1, code: 'DOC_AI', name: 'Doc AI' }, { id: 2, code: 'ERP', name: 'ERP Sync' }],
+        mainGoals: 'Sample goal text.',
+        agreedToContact: true,
+      },
+    }).transport
+    await mount(LeadListScreen)
+
+    expect(transport).toHaveBeenCalledWith('/admin/lead-inquiries/7', expect.anything())
+    const panel = document.body.textContent ?? ''
+    expect(panel).toContain('Sample goal text.')
+    expect(panel).toContain('Exampleland')
+    expect(panel).toContain('ERP Sync')
+    // Doc AI is both a product and a module, and is named once.
+    expect(panel.match(/Doc AI/g)).toHaveLength(1)
+    expect(panel).toContain('isn\'t available in Admin yet')
+    const dialogButtons = [...document.querySelectorAll('[role="dialog"] button')]
+    expect(dialogButtons.some(button => /contacted|converted|interested/i.test(button.textContent ?? ''))).toBe(false)
+  })
+
+  it('shows a retry when the open lead fails to load', async () => {
+    route.query = { lead: '7' }
+    fakeApi({
+      'GET /admin/lead-inquiries': page([lead]),
+      'GET /admin/lead-inquiries/summary': {},
+      'GET /admin/lead-inquiries/7': () => { throw httpError(500) },
+    })
+    await mount(LeadListScreen)
+
+    expect(document.body.textContent).toContain('Could not load this lead')
   })
 
   it('sends no status for All and leaves an empty search out', async () => {
@@ -221,7 +279,7 @@ describe('account list screen', () => {
 })
 
 describe('sale request list screen', () => {
-  it('sends status, type, and search, and lists requests without a link', async () => {
+  it('sends status, type, and search, and lists requests', async () => {
     route.query = { status: 'pending', type: 'token', search: 'buyer' }
     transport = fakeApi({
       'GET /admin/sale-requests': page([saleRequest]),
@@ -234,10 +292,59 @@ describe('sale request list screen', () => {
     }))
     expect(wrapper.text()).toContain('SR-0005')
     expect(wrapper.text()).toContain('Test Buyer')
+    expect(wrapper.text()).toContain('buyer@example.test')
     expect(wrapper.text()).toContain('Customer Portal')
     expect(wrapper.text()).toContain('Token')
-    // No detail page exists yet.
-    expect(wrapper.find('tbody a').exists()).toBe(false)
+    // The detail isn't loaded until a request is opened.
+    expect(transport).not.toHaveBeenCalledWith('/admin/sale-requests/5', expect.anything())
+  })
+
+  it('opens a request from its row, keeping the list query', async () => {
+    route.query = { status: 'pending' }
+    fakeApi({
+      'GET /admin/sale-requests': page([saleRequest]),
+      'GET /admin/sale-requests/dashboard': {},
+    })
+    const replace = vi.spyOn(useRouter(), 'replace').mockResolvedValue(undefined)
+    const wrapper = await mount(SaleRequestListScreen)
+
+    await wrapper.find('tbody button').trigger('click')
+
+    expect(replace).toHaveBeenCalledWith({ query: { status: 'pending', request: '5' } })
+    replace.mockRestore()
+  })
+
+  it('shows the open request read-only: message, modules, and no actions', async () => {
+    route.query = { request: '5' }
+    transport = fakeApi({
+      'GET /admin/sale-requests': page([saleRequest]),
+      'GET /admin/sale-requests/dashboard': {},
+      'GET /admin/sale-requests/5': {
+        summary: { requestCode: 'SR-0005', requestedByName: 'Test Buyer', requestedType: 'MODULE', requestStatus: 'PENDING', customerMessage: 'Please add sample features.' },
+        moduleItems: [{ id: 1, moduleCode: 'DOC_AI', moduleName: 'Doc AI', requestedFeatures: ['Invoices', 'TechPacks'] }],
+      },
+    }).transport
+    await mount(SaleRequestListScreen)
+
+    expect(transport).toHaveBeenCalledWith('/admin/sale-requests/5', expect.anything())
+    const panel = document.body.textContent ?? ''
+    expect(panel).toContain('Please add sample features.')
+    expect(panel).toContain('Doc AI')
+    expect(panel).toContain('TechPacks')
+    expect(panel).toContain('isn\'t available in Admin yet')
+    expect([...document.querySelectorAll('button')].some(button => /approve|reject/i.test(button.textContent ?? ''))).toBe(false)
+  })
+
+  it('shows a retry when the open request fails to load', async () => {
+    route.query = { request: '5' }
+    fakeApi({
+      'GET /admin/sale-requests': page([saleRequest]),
+      'GET /admin/sale-requests/dashboard': {},
+      'GET /admin/sale-requests/5': () => { throw httpError(500) },
+    })
+    await mount(SaleRequestListScreen)
+
+    expect(document.body.textContent).toContain('Could not load this sale request')
   })
 
   it('reads an unknown type in the URL as All types', async () => {

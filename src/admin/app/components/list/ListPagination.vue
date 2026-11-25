@@ -1,4 +1,6 @@
 <script setup lang="ts">
+import { breakpointsTailwind, useBreakpoints } from '@vueuse/core'
+
 /**
  * The pager under a paginated list: "Page n of N" (and rows per page, when the API takes a page
  * size) on the left, first, previous, page numbers, next, and last on the right. Nothing shows
@@ -27,6 +29,11 @@ const pageSize = computed({
     if (size !== undefined) emit('update:pageSize', size)
   },
 })
+
+// On a phone the full row (first, previous, five numbers, next, last) is ~360px of fixed-width
+// buttons and the page would scroll sideways. There the first and last pages stay as numbers and
+// the first/last buttons go, with no siblings: ‹ 1 2 3 … 6 › at the start, ‹ 1 … 3 … 6 › in the middle.
+const phone = useBreakpoints(breakpointsTailwind).smaller('sm')
 
 const sizes = computed(() => (props.pageSizes ?? []).map(size => ({ label: String(size), value: size })))
 const shown = computed(() => props.pageCount > 1 || (sizes.value.length > 0 && props.pageSize !== sizes.value[0]!.value))
@@ -62,7 +69,8 @@ const shown = computed(() => props.pageCount > 1 || (sizes.value.length > 0 && p
       :items-per-page="1"
       :disabled="disabled"
       show-edges
-      :sibling-count="1"
+      :sibling-count="phone ? 0 : 1"
+      :ui="{ first: 'max-sm:hidden', last: 'max-sm:hidden' }"
     />
   </nav>
 </template>
