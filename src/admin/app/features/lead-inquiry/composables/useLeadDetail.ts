@@ -7,10 +7,9 @@ import { leadDetailModel } from '../models/lead'
  */
 export function useLeadDetail(id: MaybeRefOrGetter<number | undefined>) {
   return useApiQuery(
-    () => `lead-inquiries:detail:${toValue(id) ?? ''}`,
+    () => `lead-inquiry:detail:${toValue(id) ?? ''}`,
     ({ signal }) => api.get('/admin/lead-inquiries/{id}', {
       path: { id: toValue(id)! },
-      envelope: false,
       signal,
       model: leadDetailModel,
     }),

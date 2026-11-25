@@ -2,7 +2,7 @@ import type * as v from 'valibot'
 import type { $Fetch, FetchOptions } from 'ofetch'
 import { parseData } from './contract'
 import { ApiError } from './errors'
-import { MULTIPART_ENDPOINTS } from './generated/endpoints.gen'
+import { MULTIPART_ENDPOINTS, UNENVELOPED_ENDPOINTS } from './generated/endpoints.gen'
 import type { Endpoints } from './generated/endpoints.gen'
 import { createSessionRecovery } from './recovery'
 import type { SessionRecoveryOptions } from './recovery'
@@ -22,7 +22,10 @@ interface CallOptions<S> {
   timeout?: number
   /** What the feature needs from the response. Without one, the request resolves to `undefined`. */
   model?: S
-  /** `false` for the few endpoints whose body isn't a `ResponseMsg*` envelope. */
+  /**
+   * Whether the body is a `ResponseMsg*` envelope to unwrap. Leave it out: the generated
+   * `UNENVELOPED_ENDPOINTS` (from the spec) decides. Set it only where the spec is known to be wrong.
+   */
   envelope?: boolean
   /** `false` for the calls that set or clear session cookies: a 401 is thrown as it is, with no renewal. */
   auth?: boolean
@@ -125,7 +128,7 @@ export function createApiClient({ fetch, lockName = 'syncra-admin:session-renewa
 
   function unwrap(body: unknown, options: AnyOptions, source: string) {
     let data = body
-    if (options.envelope !== false) {
+    if (options.envelope ?? !UNENVELOPED_ENDPOINTS.has(source)) {
       if (!isEnvelope(body)) throw new ApiError({ kind: 'contract', message: `Unexpected response from ${source} (not a response envelope)`, source })
       if (body.success !== true) {
         throw new ApiError({ kind: 'rejected', status: 200, reason: body.reason ?? undefined, code: body.msg ?? undefined, source })
