@@ -8,9 +8,9 @@ import ReviewWorkbookGrid from './ReviewWorkbookGrid.vue'
 import ReviewWorkbookReplacement from './ReviewWorkbookReplacement.vue'
 
 const { inspection: draft, workbook, actions } = useReviewDetail()
-const { inspection, pending, error } = draft
+const { inspection, pending, loading, refreshing, error } = draft
 const { sheets, sheet, sheetIndex, selection, flaggedCells, edits } = workbook
-const { busy } = actions
+const { busy, downloading } = actions
 
 const replacementOpen = ref(false)
 const workbookMenu = computed<DropdownMenuItem[]>(() => [{
@@ -46,6 +46,7 @@ const hasCheckedSheet = computed(() => sheets.value.some(sheet => sheet.gridHead
             variant="ghost"
             size="sm"
             :disabled="busy"
+            :loading="downloading === 'draft'"
             @click="actions.download('draft')"
           />
           <UDropdownMenu :items="workbookMenu">
@@ -122,23 +123,49 @@ const hasCheckedSheet = computed(() => sheets.value.some(sheet => sheet.gridHead
         </div>
         <ReviewInspectionDetails />
       </div>
-      <ReviewWorkbookGrid
-        :sheet="sheet"
-        :sheet-index="sheetIndex"
-        :selection="selection"
-        :flagged-cells="flaggedCells"
-        :edits="edits"
-      />
+      <!-- A reload after a save keeps the grid on screen, dimmed under a moving bar. -->
+      <ListRefresh
+        :active="refreshing"
+        fill
+      >
+        <ReviewWorkbookGrid
+          :sheet="sheet"
+          :sheet-index="sheetIndex"
+          :selection="selection"
+          :flagged-cells="flaggedCells"
+          :edits="edits"
+        />
+      </ListRefresh>
+    </div>
+    <!-- The grid's shape while the inspection runs, so nothing jumps when it arrives. -->
+    <div
+      v-else-if="loading || pending"
+      class="min-h-0 flex-1 overflow-hidden"
+      role="status"
+      aria-label="Reading draft workbook…"
+    >
+      <span class="sr-only">Reading draft workbook…</span>
+      <div class="flex gap-1 border-b border-default px-2 py-1.5">
+        <USkeleton class="h-6 w-28" />
+      </div>
+      <div
+        v-for="row in 8"
+        :key="row"
+        class="flex gap-3 border-b border-default px-3 py-2.5"
+      >
+        <USkeleton class="h-4 w-6 shrink-0" />
+        <USkeleton class="h-4 w-20 shrink-0" />
+        <USkeleton class="h-4 flex-1" />
+        <USkeleton class="h-4 w-12 shrink-0" />
+        <USkeleton class="h-4 w-12 shrink-0" />
+      </div>
     </div>
     <div
       v-else
-      class="min-h-72 flex-1 p-4 text-sm text-muted lg:@min-[46rem]:min-h-0"
+      class="min-h-0 flex-1 p-4 text-sm text-muted"
       role="status"
     >
-      <p v-if="pending">
-        Reading draft workbook…
-      </p>
-      <p v-else-if="!error">
+      <p v-if="!error">
         No worksheet could be shown. Download the workbook to review it.
       </p>
     </div>

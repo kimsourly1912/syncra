@@ -5,7 +5,7 @@ import type { ReviewFinding } from '../utils/findings'
 
 const props = defineProps<{ finding: ReviewFinding }>()
 
-const { workbook, actions } = useReviewDetail()
+const { workbook, actions, pane } = useReviewDetail()
 const { edits, originalValue, stage, undo } = workbook
 const { canEdit } = actions
 const original = computed(() => originalValue(props.finding))
@@ -78,6 +78,17 @@ const value = computed(() => edit.value ?? original.value)
         size="sm"
         :disabled="!canEdit"
         @click="stage(finding, finding.referenceValue)"
+      />
+      <!-- One pane at a time below xl: the PDF is already on this issue's page, one tap away. -->
+      <UButton
+        v-if="finding.sourcePage"
+        :label="`View in PDF (page ${finding.sourcePage})`"
+        icon="lucide:file-text"
+        color="neutral"
+        variant="ghost"
+        size="sm"
+        class="xl:hidden"
+        @click="pane = 'source'"
       />
     </div>
   </section>

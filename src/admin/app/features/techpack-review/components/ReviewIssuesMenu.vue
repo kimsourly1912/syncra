@@ -4,11 +4,12 @@ import { findingLabel } from '../utils/findings'
 import type { ReviewFinding } from '../utils/findings'
 
 const { inspection: draft, workbook, actions, showFinding } = useReviewDetail()
-const { inspection, findings, pdfFindings, blocksApproval } = draft
+const { inspection, findings, pdfFindings, blocksApproval, pending } = draft
 const open = ref(false)
 
 const layoutBlocked = computed(() => !!inspection.value?.sourceCheck?.blocksApproval && !pdfFindings.value.length)
 const issueCount = computed(() => findings.value.length + Number(layoutBlocked.value))
+const comparedCells = computed(() => inspection.value?.sourceCheck?.comparedCells ?? 0)
 
 function selectFinding(finding: ReviewFinding) {
   showFinding(finding)
@@ -85,6 +86,17 @@ function useAllPdfValues() {
     </template>
   </UPopover>
   <span
+    v-else-if="pending"
+    class="flex items-center gap-1 px-2 text-sm text-muted"
+    role="status"
+  >
+    <UIcon
+      name="lucide:loader-circle"
+      class="size-4 animate-spin"
+    />
+    Checking…
+  </span>
+  <span
     v-else-if="inspection?.sourceCheck?.verified && !blocksApproval"
     class="flex items-center gap-1 px-2 text-sm text-muted"
   >
@@ -93,5 +105,8 @@ function useAllPdfValues() {
       class="size-4 text-success"
     />
     No issues found
+    <template v-if="comparedCells">
+      · {{ comparedCells.toLocaleString() }} {{ comparedCells === 1 ? 'cell' : 'cells' }} compared
+    </template>
   </span>
 </template>

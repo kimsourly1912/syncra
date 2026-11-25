@@ -17,12 +17,16 @@ const [provideReviewDetail, injectReviewDetail] = createInjectionState((fileId: 
 
   useHead({ title: computed(() => `${record.review.value?.filename ?? 'TechPack review'} · Syncra Admin`) })
 
+  /** Below `xl` the workspace shows one pane at a time. */
+  const pane = ref<'source' | 'workbook'>('source')
+
   return {
     record,
     source,
     inspection,
     workbook,
     actions,
+    pane,
     backLink: computed(() => ({
       path: '/techpack-reviews',
       query: Object.fromEntries(Object.entries(route.query).filter(([key]) => key === 'status' || key === 'page')),

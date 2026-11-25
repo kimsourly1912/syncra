@@ -55,29 +55,59 @@ beforeEach(() => {
 
 describe('review queue screen', () => {
   it('lists reviews with a link to each open draft', async () => {
-    respondByEndpoint({ 'techpack-reviews': { success: true, data: { content: [item], totalPages: 1 } } })
+    respondByEndpoint({ 'techpack-reviews': { success: true, data: { content: [item], totalPages: 1, totalElements: 23 } } })
     const wrapper = await mountSuspended(ReviewQueueScreen)
     await flushPromises()
 
-    // The filename is the link into the review.
-    const link = wrapper.find('a[href="/techpack-reviews/101"]')
+    // One card per review; the filename is the link into it.
+    const cards = wrapper.findAll('ul[aria-label="TechPack reviews"] > li')
+    expect(cards).toHaveLength(1)
+    const link = cards[0]!.find('a[href="/techpack-reviews/101"]')
     expect(link.exists()).toBe(true)
     expect(link.text()).toBe('sample-techpack.pdf')
-    expect(wrapper.findAll('th').map(cell => cell.text())).toEqual(['TechPack file', 'Company ID', 'Job ID'])
-    expect(wrapper.findAll('td').map(cell => cell.text())).toEqual(['sample-techpack.pdf', '303', '202'])
+    expect(cards[0]!.text()).toContain('Company #303 · Job #202 · File #101')
+    expect(wrapper.find('table').exists()).toBe(false)
+    expect(wrapper.text()).toContain('23 waiting for review')
     expect(wrapper.find('[role="group"][aria-label="Review status"]').text()).toContain('In Review')
   })
 
-  it('shows the review date column and plain filenames for released records', async () => {
+  it('shows card placeholders while the first page loads', async () => {
+    respondByEndpoint({ 'techpack-reviews': new Promise(() => {}) })
+    const wrapper = await mountSuspended(ReviewQueueScreen)
+    await flushPromises()
+
+    expect(wrapper.find('[role="status"][aria-label="Loading reviews…"]').exists()).toBe(true)
+    expect(wrapper.text()).not.toContain('No TechPacks are waiting for review.')
+    wrapper.unmount()
+  })
+
+  it('leaves the count out when the API sends no total, or a malformed one', async () => {
+    respondByEndpoint({ 'techpack-reviews': ok({ content: [item], totalPages: 1 }) })
+    const wrapper = await mountSuspended(ReviewQueueScreen)
+    await flushPromises()
+    expect(wrapper.text()).not.toContain('waiting for review')
+    wrapper.unmount()
+
+    clearNuxtData()
+    respondByEndpoint({ 'techpack-reviews': ok({ content: [item], totalPages: 1, totalElements: 'many' }) })
+    const malformed = await mountSuspended(ReviewQueueScreen)
+    await flushPromises()
+    expect(malformed.text()).not.toContain('waiting for review')
+    expect(malformed.find('a[href="/techpack-reviews/101"]').exists()).toBe(true)
+  })
+
+  it('shows the review date and plain filenames for released records', async () => {
     route.query = { status: 'reviewed' }
     respondByEndpoint({
-      'techpack-reviews': ok({ content: [{ ...item, status: 'REVIEWED', draftUuid: null }], totalPages: 1 }),
+      'techpack-reviews': ok({ content: [{ ...item, status: 'REVIEWED', draftUuid: null }], totalPages: 1, totalElements: 140 }),
     })
     const wrapper = await mountSuspended(ReviewQueueScreen)
     await flushPromises()
 
-    expect(wrapper.text()).toContain('Reviewed at')
-    expect(wrapper.findAll('td').map(cell => cell.text())).toEqual(['sample-techpack.pdf', '303', '202', '—'])
+    expect(wrapper.text()).toContain('140 reviewed')
+    const card = wrapper.get('ul[aria-label="TechPack reviews"] > li')
+    expect(card.text()).toContain('sample-techpack.pdf')
+    expect(card.text()).toContain('Reviewed —')
     expect(wrapper.find('a[href="/techpack-reviews/101"]').exists()).toBe(false)
   })
 
@@ -153,7 +183,13 @@ describe('review detail screen', () => {
     const [pdf] = await openReviewIssues(wrapper)
     expect(pdf?.textContent).toContain('PDF difference')
     expect(pdf?.textContent).toContain('Measurements · B1')
-    expect(wrapper.text()).toContain('Resolve the PDF differences before approving.')
+    // The checklist names what's missing, so the line beside Approve doesn't repeat it.
+    expect(wrapper.text()).toContain('Complete the checklist to approve.')
+    expect(wrapper.text()).not.toContain('Resolve the PDF differences before approving.')
+    // The checklist shows every remaining step, not only the first blocker.
+    const checklist = wrapper.get('ul[aria-label="Approval checklist"]').text()
+    expect(checklist).toContain('1 PDF difference to resolve')
+    expect(checklist).toContain('No unsaved changes')
 
     const approve = wrapper.findAll('button').find(button => button.text().includes('Approve and release'))
     expect(approve?.attributes('disabled')).toBeDefined()
@@ -239,9 +275,101 @@ describe('review detail screen', () => {
     wrapper.unmount()
   })
 
-  it('approves only after the attestation, then opens the Reviewed queue', async () => {
+  it('shows placeholders, not blank panes, while the PDF and the inspection load', async () => {
+    respondByEndpoint({
+      'techpack-reviews/108': ok({ ...item, fileId: 108 }),
+      // Neither answers during the test.
+      'source-preview': new Promise(() => {}),
+      'draft-inspection': new Promise(() => {}),
+    })
+    const wrapper = await mountSuspended(ReviewDetailScreen, { props: { fileId: '108' } })
+    await flushPromises()
+
+    expect(wrapper.get('section[aria-label="Source PDF"]').text()).toContain('Loading PDF…')
+    expect(wrapper.find('[role="status"][aria-label="Reading draft workbook…"]').exists()).toBe(true)
+    expect(wrapper.text()).toContain('Checking…')
+    const checklist = wrapper.get('ul[aria-label="Approval checklist"]').text()
+    expect(checklist).toContain('Source PDF loading')
+    expect(checklist).toContain('Inspecting workbook')
+    wrapper.unmount()
+  })
+
+  it('offers View in PDF from an issue, which switches the narrow layout to the PDF pane', async () => {
+    respondByEndpoint({
+      'techpack-reviews/109': ok({ ...item, fileId: 109 }),
+      'source-preview': preview,
+      'draft-inspection': ok(inspection),
+    })
+    const wrapper = await mountSuspended(ReviewDetailScreen, { props: { fileId: '109' }, attachTo: document.body })
+    await flushPromises()
+
+    const [pdf] = await openReviewIssues(wrapper)
+    pdf!.click()
+    await flushPromises()
+    // The test window is narrower than xl: tabs, one pane shown, both kept mounted.
+    const shown = (label: string) => wrapper.get(`section[aria-label="${label}"]`).attributes('style')?.includes('display: none') !== true
+    expect(wrapper.find('[aria-label="Source PDF and draft workbook"]').exists()).toBe(false)
+    // The PDF pane is the default; picking the issue from the workbook pane doesn't change that.
+    expect(shown('Source PDF')).toBe(true)
+    expect(shown('Draft workbook')).toBe(false)
+
+    await wrapper.findAll('[role="tab"]').find(tab => tab.text().startsWith('Workbook'))!.trigger('mousedown', { button: 0 })
+    await flushPromises()
+    expect(shown('Source PDF')).toBe(false)
+    expect(shown('Draft workbook')).toBe(true)
+
+    await wrapper.findAll('button').find(button => button.text() === 'View in PDF (page 1)')!.trigger('click')
+    await flushPromises()
+    expect(shown('Source PDF')).toBe(true)
+    expect(shown('Draft workbook')).toBe(false)
+    wrapper.unmount()
+  })
+
+  it('puts the panes side by side in a resizable splitter from xl', async () => {
+    const happyDOM = (window as unknown as { happyDOM: { setViewport: (size: { width: number, height: number }) => void } }).happyDOM
+    happyDOM.setViewport({ width: 1440, height: 900 })
+    try {
+      respondByEndpoint({
+        'techpack-reviews/110': ok({ ...item, fileId: 110 }),
+        'source-preview': preview,
+        'draft-inspection': ok(clean),
+      })
+      const wrapper = await mountSuspended(ReviewDetailScreen, { props: { fileId: '110' } })
+      await flushPromises()
+
+      const splitter = wrapper.get('[aria-label="Source PDF and draft workbook"]')
+      expect(splitter.find('section[aria-label="Source PDF"]').exists()).toBe(true)
+      expect(splitter.find('section[aria-label="Draft workbook"]').exists()).toBe(true)
+      expect(splitter.find('[data-resize-handle]').exists()).toBe(true)
+      // No pane tabs in the wide layout.
+      expect(wrapper.findAll('[role="tab"]').some(tab => tab.text().startsWith('Workbook'))).toBe(false)
+      wrapper.unmount()
+    }
+    finally {
+      happyDOM.setViewport({ width: 1024, height: 768 })
+    }
+  })
+
+  it('makes Download PDF the main action when the PDF preview fails', async () => {
+    respondByEndpoint({
+      'techpack-reviews/105': ok({ ...item, fileId: 105 }),
+      'source-preview': { success: false, reason: 'Preview failed', data: null },
+      'draft-inspection': ok(clean),
+    })
+    const wrapper = await mountSuspended(ReviewDetailScreen, { props: { fileId: '105' } })
+    await flushPromises()
+
+    const source = wrapper.get('section[aria-label="Source PDF"]')
+    expect(source.text()).toContain('PDF preview unavailable')
+    expect(source.findAll('button').map(button => button.text())).toEqual(['Download PDF', 'Download PDF', 'Retry preview'])
+    expect(wrapper.get('ul[aria-label="Approval checklist"]').text()).toContain('Download the source PDF')
+    wrapper.unmount()
+  })
+
+  it('approves only after the attestation, then offers the next review', async () => {
     const replace = vi.spyOn(useRouter(), 'replace').mockResolvedValue(undefined)
     respondByEndpoint({
+      'techpack-reviews': ok({ content: [{ ...item, fileId: 103 }, { ...item, fileId: 106 }], totalPages: 1 }),
       'techpack-reviews/103': ok({ ...item, fileId: 103 }),
       'source-preview': preview,
       'draft-inspection': ok(clean),
@@ -254,9 +382,11 @@ describe('review detail screen', () => {
     expect(approve().attributes('disabled')).toBeDefined()
     expect(wrapper.find('[role="checkbox"]').exists()).toBe(false)
     expect(wrapper.text()).toContain('No issues found')
-    expect(wrapper.text()).toContain('Wait for the source PDF to load.')
+    expect(wrapper.text()).toContain('Complete the checklist to approve.')
+    expect(wrapper.get('ul[aria-label="Approval checklist"]').text()).toContain('Source PDF loading')
 
     await wrapper.get('img[alt^="Original TechPack PDF"]').trigger('load')
+    expect(wrapper.get('ul[aria-label="Approval checklist"]').text()).toContain('Source PDF opened')
     await wrapper.find('[role="checkbox"]').trigger('click')
     expect(approve().attributes('disabled')).toBeUndefined()
     await approve().trigger('click')
@@ -265,6 +395,44 @@ describe('review detail screen', () => {
     expect(api).toHaveBeenCalledWith('/admin/docai/techpack-reviews/103/approve', expect.objectContaining({
       method: 'POST', body: { draftUuid: item.draftUuid, sourceVerified: true },
     }))
-    expect(replace).toHaveBeenCalledWith({ path: '/techpack-reviews', query: { status: 'reviewed' } })
+    // The screen stays and shows the result; the next open draft is one click away.
+    expect(replace).not.toHaveBeenCalledWith(expect.objectContaining({ path: '/techpack-reviews' }))
+    const result = wrapper.get('section[aria-label="Review result"]')
+    expect(result.text()).toContain('Workbook approved and released')
+    expect(result.find('a[href="/techpack-reviews/106"]').text()).toContain('Open next review')
+    expect(result.find('a[href="/techpack-reviews"]').text()).toContain('Back to queue')
+  })
+
+  it('keeps the approval result when reloading the record fails afterwards', async () => {
+    // The record loads, approval succeeds, then reloading the record fails.
+    let approved = false
+    const routes: Record<string, () => unknown> = {
+      'approve': () => {
+        approved = true
+        return ok(null)
+      },
+      'draft-inspection': () => ok(clean),
+      'source-preview': () => preview,
+      'techpack-reviews/107': () => approved
+        ? { success: false, reason: 'Temporarily unavailable', data: null }
+        : ok({ ...item, fileId: 107 }),
+      'techpack-reviews': () => ok({ content: [], totalPages: 0 }),
+    }
+    api.mockImplementation(async (endpoint: string) => {
+      const match = Object.keys(routes).sort((a, b) => b.length - a.length).find(key => endpoint.endsWith(key))
+      if (!match) throw new Error(`unexpected ${endpoint}`)
+      return routes[match]!()
+    })
+    const wrapper = await mountSuspended(ReviewDetailScreen, { props: { fileId: '107' } })
+    await flushPromises()
+
+    await wrapper.get('img[alt^="Original TechPack PDF"]').trigger('load')
+    await wrapper.find('[role="checkbox"]').trigger('click')
+    await wrapper.findAll('button').find(button => button.text().includes('Approve and release'))!.trigger('click')
+    await flushPromises()
+
+    expect(wrapper.text()).toContain('Workbook approved and released')
+    expect(wrapper.text()).not.toContain('Temporarily unavailable')
+    expect(wrapper.text()).toContain('No other TechPacks are waiting for review.')
   })
 })

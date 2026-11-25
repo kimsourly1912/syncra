@@ -8,12 +8,16 @@
  * @example
  * <ListRefresh :active="refreshing"><UCard>…rows…</UCard></ListRefresh>
  */
-const props = defineProps<{ active: boolean }>()
+const props = defineProps<{
+  active: boolean
+  /** Fill a flex column's remaining height, so content that scrolls itself (a grid) keeps its size. */
+  fill?: boolean
+}>()
 const shown = useRefreshIndicator(() => props.active)
 </script>
 
 <template>
-  <div class="relative">
+  <div :class="['relative', fill && 'flex min-h-0 flex-1 flex-col']">
     <UProgress
       v-if="shown"
       size="2xs"
@@ -23,7 +27,7 @@ const shown = useRefreshIndicator(() => props.active)
     />
     <div
       class="transition-opacity duration-150 motion-reduce:transition-none"
-      :class="shown && 'opacity-60'"
+      :class="[shown && 'opacity-60', fill && 'flex min-h-0 flex-1 flex-col']"
     >
       <slot />
     </div>

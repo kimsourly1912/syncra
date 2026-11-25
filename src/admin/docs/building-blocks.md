@@ -32,7 +32,7 @@ Only what Nuxt UI doesn't provide and two or more screens use:
 | `ListToolbarTabs` | Page tabs in a `UDashboardToolbar`: the tabs drop their own bottom line and sit on the toolbar's. `items` (with `value`) and `v-model`. A row that does not fit scrolls sideways and the chosen tab is centered by `useCenteredTab`. |
 | `ListPagination` | The pager: "Page n of N", optional rows per page, and `UPagination` with first and last. Props: `pageCount` (the API's `totalPages`), `pageSizes` (leave out for a fixed API page size), `disabled`. Models: `page`, `pageSize`. Hidden while one page holds everything. |
 | `ListEmptyState` | An empty list, built on `UEmpty`. Props: `noun` ("leads"), `filtered` ("No leads match your filters" + Clear filters, emits `clear`), `createLabel` ("No leads yet" + a create button, emits `create`), and `title` or `description` to replace the default text. |
-| `ListRefresh` | Wraps content that reloads behind what's on screen (`refreshing`): a thin bar on its top edge, the content dimmed. Shows nothing for a reload under 150 ms. |
+| `ListRefresh` | Wraps content that reloads behind what's on screen (`refreshing`): a thin bar on its top edge, the content dimmed. Shows nothing for a reload under 150 ms. `fill` makes it fill a flex column's remaining height, for content that scrolls itself (the TechPack workbook grid). |
 | `AlertApiError` | A failed load in place of the content: `title`, the API reason from `errorMessage(error, fallback)`, and Retry (emits `retry`, `retrying` shows its spinner) |
 
 ## Composables
