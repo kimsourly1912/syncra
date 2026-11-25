@@ -95,7 +95,7 @@ There are no services: a composable calls `api` with a path from the spec and a 
 
 ## What lint enforces
 
-`eslint.config.mjs` turns these rules into errors, so `pnpm --filter admin exec eslint .` catches them: `~/` imports; importing a file inside a feature (`@/features/<f>/…`) instead of its `index.ts`; `@/api` in pages, shared components, or layouts; `try` and `navigateTo` in feature code (except `features/session`); `bg-white`, `bg-black`, `dark:`, and hex classes outside the two white-content files; a `UForm` without `:validate-on`. Extend the config when a new rule can be checked mechanically.
+`eslint.config.mjs` turns these rules into errors, so `pnpm --filter admin exec eslint .` catches them: `~/` imports; importing a file inside a feature (`@/features/<f>/…`) instead of its `index.ts`; `@/api` in pages, shared components, or layouts; `try` and `navigateTo` in feature code (except `features/session`); `bg-white`, `bg-black`, `dark:`, and hex classes outside the two white-content files; a `UForm` without `:validate-on`; a `ULink` with `row-link` but no `raw`. Extend the config when a new rule can be checked mechanically.
 
 ## Known gaps
 

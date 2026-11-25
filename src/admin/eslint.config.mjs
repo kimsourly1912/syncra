@@ -29,6 +29,10 @@ export default withNuxt(
         // Validation runs on submit, not on blur (docs/forms.md).
         selector: 'VElement[rawName="UForm"]:not(:has(VAttribute[directive=true][key.argument.name="validate-on"]))',
         message: 'Every UForm sets `:validate-on="[]"` (docs/forms.md).',
+      }, {
+        // Nuxt UI's class merge can't see that `row-link` replaces ULink's own colors (docs/ui.md → Rows).
+        selector: 'VElement[rawName="ULink"] > VStartTag:has(VAttribute[directive=false][key.name="class"][value.value=/(^|\\s)row-link(\\s|$)/]):not(:has(VAttribute[directive=false][key.name="raw"]))',
+        message: 'A ULink with `row-link` sets `raw`, or its own link color wins (docs/ui.md → Rows).',
       }],
     },
   },
