@@ -28,10 +28,11 @@ Only what Nuxt UI doesn't provide and two or more screens use:
 | `InputPassword` | A password field with a show/hide toggle |
 | `InputSearch` | A list toolbar's search box. `v-model` gets the trimmed text 300 ms after typing stops (`delay`), or at once on Enter or Clear. `/` focuses it; set `:shortcut="false"` on a page's second search box. The browser's own clear button is hidden. Bind it as `:model-value="list.search.value" @update:model-value="list.setSearch"`. Every search box uses it, including on static pages. |
 | `ListSkeleton` | Placeholder rows while a list has nothing to show for its query (`loading`): in `UTable`'s `#loading` slot, or in place of a list. Props: `label` (for screen readers), `rows` (default 5). |
-| `ListToolbarTabs` | Page or status tabs in a `UDashboardToolbar`: the tabs drop their own bottom line and sit on the toolbar's. `items` (with `value`) and `v-model`. A status filter puts each total in the item's `badge` (instead of a row of stat cards), sets `disabled` while loading, and names the group with `role="group"` and an `aria-label`; there's no implicit "All", so add it as an item if the API has one. A row that does not fit scrolls sideways and the chosen tab is centered by `useCenteredTab`. |
+| `ListToolbarTabs` | Page or status tabs in a `UDashboardToolbar`: the tabs drop their own bottom line and sit on the toolbar's. `items` (with `value`) and `v-model`. Items are `ToolbarTab<T>` (exported from the component). A status filter puts each total in the item's `count`, which shows as a badge (instead of a row of stat cards; a missing count shows none), sets `disabled` while loading, and names the group with `role="group"` and an `aria-label`; there's no implicit "All", so add it as an item if the API has one. A row that does not fit scrolls sideways and the chosen tab is centered by `useCenteredTab`. |
 | `ListPagination` | The pager: "Page n of N", optional rows per page, and `UPagination` with first and last. Props: `pageCount` (the API's `totalPages`), `pageSizes` (leave out for a fixed API page size), `disabled`. Models: `page`, `pageSize`. Hidden while one page holds everything. Below `sm` it drops the first and last buttons and keeps the first and last pages as numbers with no siblings (`‹ 1 2 3 … 6 ›`), so the pager fits a phone without scrolling sideways. |
 | `ListEmptyState` | An empty list, built on `UEmpty`. Props: `noun` ("leads"), `filtered` ("No leads match your filters" + Clear filters, emits `clear`), `createLabel` ("No leads yet" + a create button, emits `create`), and `title` or `description` to replace the default text. |
 | `ListRefresh` | Wraps content that reloads behind what's on screen (`refreshing`): a thin bar on its top edge, the content dimmed. Shows nothing for a reload under 150 ms. `fill` makes it fill a flex column's remaining height, for content that scrolls itself (the TechPack workbook grid). |
+| `DetailGrid` | A read-only record's facts as label-over-value pairs, one column on a phone and two from `sm` (`items: DetailItem[]`, `{ label, value }`; a missing value shows `—`). The lead and sale request slideovers use it. Rows with the label beside the value are `AccountDetailFields` (account only). |
 | `AlertApiError` | A failed load in place of the content: `title`, the API reason from `errorMessage(error, fallback)`, and Retry (emits `retry`, `retrying` shows its spinner) |
 
 ## Composables
@@ -41,7 +42,8 @@ Only what Nuxt UI doesn't provide and two or more screens use:
 | `useApiQuery(key, fetcher, { enabled })` | Reads: `data`, `loading`, `refreshing`, `pending`, `error` (`ApiError`), `refresh` ([reads](data-access.md#reads-useapiquery)) |
 | `useApiMutation(fn, { success, error, invalidate })` | Writes: `execute(input)` → `{ ok, data \| error }`, `pending`, `error` ([writes](data-access.md#writes-useapimutation)) |
 | `invalidateQueries(...prefixes)` | Refresh the queries on screen whose key starts with a prefix |
-| `useListQuery(choices, { search, pageSizes })` | A list's filters, search, 1-based page, and page size in the URL, plus `isFiltered` and `clearFilters` ([lists](data-access.md#lists-uselistquery)) |
+| `useListQuery(choices, { search, pageSizes })` | A list's filters, search, 1-based page, and page size in the URL, plus `isFiltered`, `clearFilters`, and `keepPageInRange(() => totalPages)` ([lists](data-access.md#lists-uselistquery)) |
+| `useUrlRecord(param)` | The id of a record open in a panel on a list (`?lead=7`): `id` (a positive whole number or undefined), `open(id)`, `close()`. Both replace the URL, so Back leaves the list. A filter change drops it. |
 | `useUrlTab(tabs, param?)` | A page's tab in `?tab=`: a writable computed. The first tab is the default and is left out of the URL; switching replaces the URL, so Back leaves the page. |
 | `useCenteredTab(root, active)` | Keeps a scrolling tab row's active tab centered: smooth on change, at once on mount and resize, and only the row scrolls. A row that fits does not move. `ListToolbarTabs` calls it; a page with its own `UTabs` passes a template ref. |
 | `useRefreshIndicator(refreshing)` | Whether to show a reload: after 150 ms, then for at least 300 ms. `ListRefresh` uses it. |
@@ -65,6 +67,7 @@ Imported explicitly, not auto-imported.
 
 | Export | File | Use for |
 | --- | --- | --- |
+| `formatCount`, `formatChange`, `formatMoney`, `formatDate`, `formatDateTime`, `formatAge`, `NO_VALUE` | `utils/format.ts` | Every number, amount, and date on screen, in one locale (`en-US`, since the text is English): `1,234`, `+50`, `$49.00`, `Nov 25, 2026, 3:04 PM`, and `formatAge(value)` → `{ age: '3 days ago', full }` for a `title` tooltip. A missing value is `NO_VALUE` (`—`); API text that isn't a date is shown as sent. Never call `toLocaleString` or `Intl` in a component. |
 | `saveFile(blob, filename)` | `utils/file.ts` | Hand a downloaded file to the browser |
 | `isSectionActive(path, to, also?)` | `utils/navigation.ts` | Whether a sidebar link is the current page's section (its page, pages under it, or under `also`). The layout uses it. |
 
@@ -73,4 +76,5 @@ Imported explicitly, not auto-imported.
 | Class | File | Use for |
 | --- | --- | --- |
 | `page-narrow` | `assets/css/tailwind.css` | On a form or settings page's `UDashboardPanel`: caps the page at 56rem instead of 80rem ([page width](ui.md#page-width)) |
+| `row-link` | `assets/css/tailwind.css` | The name link that opens a row's record, stretched over the `relative` row ([rows](ui.md#rows)) |
 | `scrollbar-none` | `assets/css/tailwind.css` | A row that scrolls sideways with no visible scrollbar |

@@ -30,7 +30,7 @@ api.download('/admin/docai/techpack-reviews/{fileId}/source', { path: { fileId }
 - `path` values are URL-encoded. A missing one throws before anything is sent.
 - **Multipart** endpoints (flagged in `MULTIPART_ENDPOINTS`) take a plain object body (`{ workbook }`) and send it as `FormData`.
 - `model` is what the feature needs from the response ([the API contract](#the-api-contract)). Without one, the call resolves to `undefined`.
-- `envelope: false` is for the few bodies without a `ResponseMsg*` envelope (`sale-requests`, `lead-inquiries`).
+- **Envelopes come from the spec.** `api:gen` lists every operation whose success body has no `success` flag in `UNENVELOPED_ENDPOINTS` (today `lead-inquiries/*`, `sale-requests/*`, and `sns/*`), and the client reads those bodies as they are. Don't pass `envelope`; set it only to override a spec that's known to be wrong, with a comment saying so.
 - `auth: false` is only for the calls that set session cookies or renew them (sign-in, password reset, refresh). A 401 is then thrown as it is, with no renewal. Logout renews like any other call, so a staff member whose access token expired can still sign out ([0014](../../../docs/decisions/0014-admin-session-survives-api-outages.md)).
 - `api` needs no Nuxt context, so it works after an `await`. Nothing is retried except one retry after a renewed session.
 - `configureApi` (called once by `plugins/session.client.ts`) sets the transport: `$fetch.create({ baseURL: apiProxyPath || apiURL, credentials: 'include', retry: false })`. In `nuxt dev`, `apiProxyPath` is `/_api` and Nitro's `devProxy` forwards it to `NUXT_PUBLIC_API_URL`, because the API's CORS allowlist rejects localhost and its cookies are scoped to `.syncra.app`.
@@ -39,7 +39,7 @@ api.download('/admin/docai/techpack-reviews/{fileId}/source', { path: { fileId }
 
 ```ts
 const review = useApiQuery(
-  `techpack-reviews:item:${fileId}`,
+  `techpack-review:item:${fileId}`,
   ({ signal }) => api.get('/admin/docai/techpack-reviews/{fileId}', { path: { fileId }, signal, model: reviewItemModel }),
   { enabled: fileId > 0 },
 )
@@ -50,7 +50,7 @@ review.error      // ApiError | undefined
 review.refresh()
 ```
 
-- **The key is `'<feature>:<name>:<inputs…>'`.** Use a getter (`() => \`…:${page.value}\``) when inputs change. A new key loads again, and while it loads `data` is `undefined` and `loading` is true: Nuxt keeps the previous key's data, but those are another filter's or page's rows, so the screen shows `ListSkeleton` rather than stale rows. Only a reload of the same key (Refresh, Retry, `invalidateQueries`) is `refreshing`. Put every input the request uses into the key.
+- **The key is `'<feature>:<name>:<inputs…>'`, and `<feature>` is the folder under `features/`** (`lead-inquiry:list:…`, not the API's `lead-inquiries`), so `invalidate: ['lead-inquiry']` finds it. In dev, `invalidateQueries` warns about a prefix no query in the tab has used. Use a getter (`() => \`…:${page.value}\``) when inputs change. A new key loads again, and while it loads `data` is `undefined` and `loading` is true: Nuxt keeps the previous key's data, but those are another filter's or page's rows, so the screen shows `ListSkeleton` rather than stale rows. Only a reload of the same key (Refresh, Retry, `invalidateQueries`) is `refreshing`. Put every input the request uses into the key.
 - Pass `signal` through: a newer load cancels the older one.
 - `enabled` (a boolean or getter) holds the load until its inputs exist, for example a `draftUuid`.
 - When a refresh fails for the connection or the server, the last good data stays on screen. A refusal (404, `success: false`) clears it.
@@ -62,7 +62,7 @@ review.refresh()
 ```ts
 const approve = useApiMutation(
   (item: ReviewItem) => api.post('/admin/docai/techpack-reviews/{fileId}/approve', { path: { fileId: item.fileId }, body: { draftUuid: item.draftUuid!, sourceVerified: true } }),
-  { success: 'Workbook reviewed and released.', error: 'Could not approve the workbook', invalidate: ['techpack-reviews'] },
+  { success: 'Workbook reviewed and released.', error: 'Could not approve the workbook', invalidate: ['techpack-review'] },
 )
 
 const result = await approve.execute(item)   // { ok: true, data } | { ok: false, error }; never throws
@@ -71,7 +71,7 @@ if (result.ok) await router.replace({ path: '/techpack-reviews', query: { status
 
 - **No `try`/`catch` in features.** The helper shows the toasts: `success` text on success, and on failure a toast titled `error` with the `ApiError`'s message. Silent errors (a cancelled request, an ended session) show nothing.
 - `pending` is true while a call runs. A second `execute` during that time is skipped, so a double click sends once.
-- `invalidate` refreshes the queries on screen whose key starts with one of the given prefixes (`'techpack-reviews'`, or a narrower `'techpack-reviews:item'`). `invalidateQueries(...)` does the same by hand.
+- `invalidate` refreshes the queries on screen whose key starts with one of the given prefixes (`'techpack-review'`, or a narrower `'techpack-review:item'`). `invalidateQueries(...)` does the same by hand.
 - Navigate with a router captured during setup (`const router = useRouter()`), not `navigateTo`, because the code runs after an `await`.
 - Use `useAppToast().failed(text)` for a failure the composable decides itself, such as `forgotPassword` resolving with `sent: false`.
 - Destructive actions ask first with `<ModalConfirm>`.
@@ -84,7 +84,7 @@ list.filters.value.status                  // from the URL; unknown values read 
 list.page.value                            // 1-based, from the URL
 list.setFilters({ status: 'reviewed' })    // back to page 1
 list.setPage(2)
-list.clampPage(totalPages)                 // after a load: past the end → last page
+list.keepPageInRange(() => query.data.value?.totalPages)   // past the end → last page, on every load
 
 // A list whose endpoint takes `search` and `size`:
 const leads = useListQuery({ status: ['all', 'new'] as const }, { search: true, pageSizes: [20, 50, 100] })
@@ -128,7 +128,7 @@ Every failure is one thrown `ApiError` (inside the helpers, a value in `error` o
 | Piece | Where | Notes |
 | --- | --- | --- |
 | Spec snapshot | `openapi/syncra.json` | Committed. Refresh it with `pnpm --filter admin api:pull`, which reads `NUXT_PUBLIC_API_URL` from `.env`. |
-| Generated contract | `app/api/generated/` | `pnpm --filter admin api:gen` runs `openapi-ts`, then `scripts/gen-endpoints.mjs`. Never edit these files. `Api.*` types, `v*` Valibot schemas, and the endpoint map, for `/admin/**` only. |
+| Generated contract | `app/api/generated/` | `pnpm --filter admin api:gen` runs `openapi-ts`, then `scripts/gen-endpoints.mjs`. Never edit these files. `Api.*` types, `v*` Valibot schemas, and the endpoint map (with `MULTIPART_ENDPOINTS` and `UNENVELOPED_ENDPOINTS`), for `/admin/**` only. |
 | Contract helpers | `app/api/contract.ts` | `defineModel`, `parseData`, `ApiErrorBody` |
 | Models | `features/<f>/models/<name>.ts` | What the feature needs from a response |
 

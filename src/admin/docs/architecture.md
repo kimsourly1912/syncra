@@ -7,23 +7,24 @@ Where Admin code goes, how routes and the sidebar work, and which files to copy.
 ```text
 src/admin/app/
 ├── pages/                       # staff routes; thin for new work
-│   ├── index.vue                # Account Management: list wired (AccountListScreen); its two dialogs are static
+│   ├── index.vue                # Account Management: list wired (AccountListScreen); its two dialogs (AccountListActions) are static
 │   ├── account/[id].vue         # Account Detail: summary and Company tab wired; Modules, Tokens, Seats sample data; tabs in ?tab=
 │   ├── techpack-reviews/        # review queue + [fileId] detail (wired)
 │   ├── lead-inquiry/index.vue   # lead list and read-only detail panel (wired); [id].vue redirects to the panel
 │   ├── sale-request/index.vue   # sale request list and read-only detail panel (wired)
 │   ├── product/ plan-pricing/   # list, create, [id] edit: UI only (sample data, Save disabled with a reason); routes are thin
-│   ├── hero.vue                 # UI shell: sample data, Save disabled with a reason
+│   ├── hero.vue                 # HeroScreen: UI shell, sample data, Save disabled with a reason
 │   ├── setting.vue              # Settings (wired), tabs in ?tab=
 │   ├── community/index.vue      # placeholder: says what's needed before it can be built
 │   └── auth/                    # sign-in, forgot, reset (guest)
-├── features/<feature>/          # one staff workflow (decision 0002)
-│   ├── account/                 # AccountListScreen + useAccountList + portal-user model; AccountDetailScreen + useAccountDetail + account-detail model; CompanyInformation (wired) and three sample-data panels
+├── features/<feature>/          # one staff workflow (decision 0002); every route is thin: definePageMeta + one screen from the feature's index.ts
+│   ├── account/                 # AccountListScreen (+ static AccountListActions) + useAccountList + portal-user model; AccountDetailScreen + useAccountDetail + account-detail model; CompanyInformation (wired) and three sample-data panels
 │   ├── lead-inquiry/            # LeadListScreen + LeadDetailSlideover, useLeadList + useLeadDetail, lead models, status labels
 │   ├── sale-request/            # SaleRequestListScreen + SaleRequestDetailSlideover, list and detail composables, models, labels
 │   ├── auth/                    # sign-in, sign-out, forgot, reset forms: composables/, schemas/, components/, models/, index.ts
 │   ├── session/                 # who is signed in: useSession (+ renewSession), useSessionSync, staff-profile model, index.ts
-│   ├── product/ plan-pricing/   # ProductFormScreen / PlanFormScreen (new and edit in one form) + sample fixtures shared with the lists
+│   ├── product/ plan-pricing/   # ProductListScreen / PlanListScreen and ProductFormScreen / PlanFormScreen (new and edit in one form), on sample fixtures
+│   ├── hero/                    # HeroScreen (UI only)
 │   ├── settings/                # SettingsScreen: own profile and logo, staff invites and sign-in by email, email templates and token packages (read-only)
 │   └── techpack-review/         # the reference feature
 │       ├── components/          # ReviewQueueScreen; ReviewDetailScreen + Source, Workbook, issue menu and editor, inspection details, WorkbookGrid, WorkbookReplacement, ActionsBar
@@ -31,10 +32,10 @@ src/admin/app/
 │       ├── models/ utils/       # response models; pure helpers (findings)
 │       └── index.ts
 ├── components/                  # shared, auto-registered WITH folder prefix (see below)
-│   └── alert/ card/ input/ list/ modal/ # AlertApiError, CardStats, InputPassword, InputSearch, List* (ToolbarTabs, Pagination, EmptyState, Refresh, Skeleton), ModalConfirm; the rest is Nuxt UI
-├── composables/                 # useApiQuery, useApiMutation, useListQuery, useUrlTab, useCenteredTab, useRefreshIndicator, useAppToast
+│   └── alert/ card/ detail/ input/ list/ modal/ # AlertApiError, CardStats, DetailGrid, InputPassword, InputSearch, List* (ToolbarTabs, Pagination, EmptyState, Refresh, Skeleton), ModalConfirm; the rest is Nuxt UI
+├── composables/                 # useApiQuery, useApiMutation, useListQuery, useUrlTab, useUrlRecord, useCenteredTab, useRefreshIndicator, useAppToast
 ├── api/                         # '@/api': client, errors, session recovery, contract helpers, generated/ (types, schemas, endpoint map; never edit)
-├── utils/                       # file.ts (saveFile), navigation.ts (isSectionActive)
+├── utils/                       # format.ts (numbers, money, dates), file.ts (saveFile), navigation.ts (isSectionActive)
 ├── types/page-meta.d.ts         # the `access` page meta
 ├── middleware/                  # access.global.ts: loads the session, checks `access`
 ├── layouts/                     # default (UDashboardGroup + UDashboardSidebar), auth
@@ -75,7 +76,7 @@ There are no services: a composable calls `api` with a path from the spec and a 
 | Pattern | Reference | Why |
 | --- | --- | --- |
 | API-backed list | `features/techpack-review/composables/useReviewQueue.ts` + `ReviewQueueScreen.vue` | `useListQuery` (status and 1-based page in the URL) + `useApiQuery` keyed by them. `ListToolbarTabs` in the toolbar, `AlertApiError`, card skeletons, `ListRefresh`, `ListEmptyState`, `ListPagination`; a card grid where the filename opens the record. A page past the end moves back. |
-| Searchable table list with totals | `features/lead-inquiry/composables/useLeadList.ts` + `LeadListScreen.vue` | `useListQuery` with `search` and `pageSizes`; `envelope: false` for this endpoint; a separate summary query feeds the count badges on `ListToolbarTabs` (its own error above the list). The screen owns the `UDashboardPanel`, so the toolbar can bind to the list state. A table from `md`, cards on a phone; the whole row opens the record. A read-only record opens in a `USlideover` kept in the URL (`?lead=`), loaded by its own `useApiQuery` with `enabled` (`LeadDetailSlideover` + `useLeadDetail`). Extra filters: `useSaleRequestList` (type select); navbar actions through a slot: `AccountListScreen`. |
+| Searchable table list with totals | `features/lead-inquiry/composables/useLeadList.ts` + `LeadListScreen.vue` | `useListQuery` with `search` and `pageSizes`; a separate summary query feeds the count badges on `ListToolbarTabs` (its own error above the list). The screen owns the `UDashboardPanel`, so the toolbar can bind to the list state. A table from `md`, cards on a phone; the whole row opens the record. A read-only record opens in a `USlideover` kept in the URL (`?lead=`), loaded by its own `useApiQuery` with `enabled` (`LeadDetailSlideover` + `useLeadDetail`). Extra filters: `useSaleRequestList` (type select); navbar actions through a slot: `AccountListScreen`. |
 | A screen split into panels | `useReviewDetail.ts` + `ReviewDetailScreen.vue` and its panels | Compose the record, source paging, draft inspection, workbook selection and edits, and release actions once. Panels receive the feature state through `createInjectionState`. The workbook grid owns scrolling and takes sheet data as props. |
 | Writes | `features/techpack-review/composables/useReviewActions.ts` | `useApiMutation` handles toasts, pending states, and double submissions. Each save sends the current `draftUuid`, clears attestation, and reloads the draft. Approval invalidates the review queries. |
 | Form with Valibot + pending | `pages/auth/sign-in.vue` + `features/auth/composables/useSignIn.ts` | `UForm` + a feature schema (`features/auth/schemas/`) + `FIELD_NAME satisfies { [K in keyof IForm]: K }`. The composable wraps the request in `useApiMutation` and acts on `result.ok`. |
@@ -89,8 +90,12 @@ There are no services: a composable calls `api` with a path from the spec and a 
 | Pattern | Problem | Do instead |
 | --- | --- | --- |
 | Hardcoded rows and totals (the account detail's Modules, Tokens, and Seats panels) | Looks real, but isn't | Wire to a confirmed endpoint, or label it static |
-| Form shells without submit handlers (`ProductFormScreen`, `PlanFormScreen`, `hero.vue`) | No validation or request yet | Follow the [CRUD recipe](crud-recipe.md) once the API contract is confirmed |
+| Form shells without submit handlers (`ProductFormScreen`, `PlanFormScreen`, `HeroScreen`, `AccountListActions`) | No validation or request yet | Follow the [CRUD recipe](crud-recipe.md) once the API contract is confirmed |
 | `~/` imports | Two aliases | `@/` ([0004](../../../docs/decisions/0004-import-alias.md)) |
+
+## What lint enforces
+
+`eslint.config.mjs` turns these rules into errors, so `pnpm --filter admin exec eslint .` catches them: `~/` imports; importing a file inside a feature (`@/features/<f>/…`) instead of its `index.ts`; `@/api` in pages, shared components, or layouts; `try` and `navigateTo` in feature code (except `features/session`); `bg-white`, `bg-black`, `dark:`, and hex classes outside the two white-content files; a `UForm` without `:validate-on`. Extend the config when a new rule can be checked mechanically.
 
 ## Known gaps
 
