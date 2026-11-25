@@ -23,8 +23,15 @@ export function useDraftInspection(draft: Readonly<Ref<ReviewDraft | undefined>>
   const pdfFindings = computed(() => pdfReviewFindings(inspection.value ?? null))
   const aiFindings = computed(() => aiReviewFindings(inspection.value ?? null))
 
+  // What approval may rely on: the inspection from the latest load only. When a reload after a
+  // save fails, the grid keeps the previous inspection on screen, but it describes a version that
+  // no longer exists, so approval treats the inspection as unavailable (compare by hand).
+  const current = computed(() => (query.error.value ? null : inspection.value ?? null))
+
   return {
     inspection,
+    /** The inspection approval may rely on: null when the latest load failed. */
+    current,
     pending: query.pending,
     /** Nothing to show yet for this draft version. */
     loading: query.loading,
@@ -35,7 +42,8 @@ export function useDraftInspection(draft: Readonly<Ref<ReviewDraft | undefined>>
     pdfFindings,
     aiFindings,
     findings: computed(() => [...pdfFindings.value, ...aiFindings.value]),
-    complete: computed(() => !!inspection.value && !inspection.value.partial && inspection.value.sheets.some(sheet => sheet.rows.length > 0)),
-    blocksApproval: computed(() => !!inspection.value?.sourceCheck?.blocksApproval || pdfFindings.value.length > 0),
+    /** The latest load covers the whole workbook, so it counts as checked without a download. */
+    complete: computed(() => !!current.value && !current.value.partial && current.value.sheets.some(sheet => sheet.rows.length > 0)),
+    blocksApproval: computed(() => !!current.value?.sourceCheck?.blocksApproval || !!current.value?.findings?.length),
   }
 }

@@ -4,8 +4,8 @@ Admin uses Vitest, with the projects defined in `vitest.config.ts`:
 
 | Project | Files | Environment | Use for |
 | --- | --- | --- | --- |
-| `unit` | `test/unit/*.test.ts` | Node | Pure code: the API client, errors, and session recovery (`api-client.test.ts`), contract helpers, feature utils |
-| `nuxt` | `test/nuxt/*.test.ts` | Nuxt (`@nuxt/test-utils`, happy-dom) | Composables, the query and mutation helpers, the route guard, and mounted screens (`api-composables.test.ts`, `session.test.ts`, `auth-forms.test.ts`, `techpack-review-screens.test.ts`) |
+| `unit` | `test/unit/*.test.ts` | Node | Pure code: the API client, errors, and session recovery (`api-client.test.ts`), contract helpers, `utils/format.ts`, feature utils |
+| `nuxt` | `test/nuxt/*.test.ts` | Nuxt (`@nuxt/test-utils`, happy-dom) | Composables, shared list components (`list-toolkit.test.ts`), the query and mutation helpers, the route guard, and mounted screens (`techpack-review-screens.test.ts`) |
 | `e2e` | `test/e2e/*.test.ts` | Node | None yet |
 
 ## Commands
@@ -37,8 +37,8 @@ pnpm dev:admin
 - **Mock the transport only.** `fakeApi({ 'GET /admin/docai/techpack-reviews/101': ok(data) })` from `test/fake-api.ts` replaces the HTTP transport (keys use the filled-in path), so tests run the real client, envelopes, models, and errors. Unknown requests fail.
 - **Screens:** mount them with `mountSuspended`, answer each endpoint through `fakeApi`, drive them through the UI (click, then `flushPromises()`), and assert the visible states and the requests sent. Call `clearNuxtData()` in `beforeEach`: queries share data by key across tests. `test/nuxt/techpack-review-screens.test.ts` is the reference.
 - **A composable on its own:** run it inside a mounted component (`inComponent` in `test/nuxt/api-composables.test.ts`), because `useApiQuery` needs a component scope.
-- **The session:** reset it in `beforeEach` (`await useSession().load()`, then `clearNuxtState(['session:status', 'session:staff'])`). Spy on the real router (`vi.spyOn(useRouter(), 'push')`); mocking `useRouter` breaks the Nuxt boot. `test/nuxt/session.test.ts` is the reference.
-- **Cover the failures** for an action: a `success: false` envelope (`refused(reason)`), a thrown error (`httpError(status)`), and a response that breaks the model.
+- **The session:** reset it in `beforeEach` (`await useSession().load()`, then `clearNuxtState(['session:status', 'session:staff'])`). Spy on the real router (`vi.spyOn(useRouter(), 'push')`); mocking `useRouter` breaks the Nuxt boot. `mountSuspended` itself calls `router.replace('/')`, so assert on the calls your code makes, not on none at all. `test/nuxt/session.test.ts` is the reference.
+- **Cover the failures** for an action: a `success: false` envelope (`refused(reason)`), a thrown error (`httpError(status)`), and a response that breaks the model. Where a decision depends on loaded data (an approval gate), also cover a reload that fails while the old data is still shown.
 - **Use sanitized fixtures** that are shaped like the API response. Never use real customer files, names, or credentials.
 - **Tests never reach a real API.** The `nuxt` project overrides `apiURL` to `http://api.test.invalid`, because the route guard loads the session when the app boots. Each test then installs `fakeApi`.
 - **The Nuxt boot is slow.** It takes about 15 seconds on a cold Windows run, so the `nuxt` project's `hookTimeout` is 60 seconds.
@@ -56,7 +56,7 @@ Screen tests mount components with a mocked API. They don't cover real layout, r
 | Product and plan forms (UI only) | New and Edit open from the list (⋮ → Edit, or the name). Edit is prefilled from the same sample row, shows Unsaved changes after an edit and Discard changes puts it back, and has Save, Deactivate, and Delete disabled with a reason. An unknown id shows Not found. The preview follows the fields; at 390px the navbar holds Preview and Save. |
 | Account Detail | `/account/<id>` loads the summary and Company tab (loading placeholders, an error with Retry, "Account not found" for a bad id or a 404). Switching tabs updates `?tab=`; Modules, Tokens, and Seats say Sample. At 390px the summary stacks, label/value rows stack, and token, member, and seat-history tables become lists. |
 | TechPack review queue | Switch In Review and Reviewed, change pages, land on an empty page and get sent back, see the error state with Retry when the API fails, and Refresh (the list dims under a thin bar) |
-| TechPack review detail | Load it, save a correction, upload a replacement, check that attestation resets when the draft changes, approve, and return to the queue |
+| TechPack review detail | Load it, save a correction, upload a replacement, check that attestation resets when the draft changes, approve, and return to the queue. With the inspection request failing after a save, the checklist says "Inspection unavailable" and asks for the workbook download. |
 | Auth and session | Signed out on a deep link → sign-in → back to the link. Sign out, also with a second tab open. An expired session (refresh refused) → "Session expired" and sign-in. An API outage during renewal keeps the session. An API outage when opening the app → the error page, then "Try again". Sign out after the access token expired. Forgot and reset password (the token leaves the address bar after the change). |
 | Wired CRUD | List with data, empty, and with an error; create, edit, and delete; Back after a filter or page change |
 

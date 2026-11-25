@@ -1,80 +1,79 @@
 # Admin building blocks
 
-These are Admin's shared components, composables, and utilities. Components and composables are auto-imported. Component names include their folder: `card/CardStats.vue` becomes `<CardStats>`. When you add or change a shared block, update this page in the same change.
+Admin's shared components, composables, and utilities: what exists and when to use it. Each file's JSDoc has the details and an example. When you add or change a shared block, update this page in the same change.
 
 ## Nuxt UI first
 
-Page chrome, cards, and states come straight from Nuxt UI ([0010](../../../docs/decisions/0010-admin-nuxt-ui-dashboard-shell.md)). Don't wrap these in Admin components:
+Page chrome, cards, and states come straight from Nuxt UI ([0010](../../../docs/decisions/0010-admin-nuxt-ui-dashboard-shell.md)); don't wrap these:
 
 | Need | Use |
 | --- | --- |
-| Page shell | `UDashboardPanel` → `#header`: `UDashboardNavbar` (`title`, back button in `#leading`, actions in `#right`) + optional `UDashboardToolbar` (list filters, page tabs) → `#body` |
+| Page shell | `UDashboardPanel` → `UDashboardNavbar` (+ optional `UDashboardToolbar`) → `#body` ([page anatomy](ui.md#page-anatomy)) |
 | Titled card | `UPageCard title variant="outline"` |
-| Section heading with actions | `UPageCard title variant="naked" orientation="horizontal"`, actions in the default slot |
-| Placeholder page | `UEmpty` (an empty *list* uses `ListEmptyState`, below) |
-| Page tabs | `ListToolbarTabs` in `UDashboardToolbar` (it drops the tabs' own line so only the toolbar's shows), bound to `useUrlTab` |
-| Page search | `UDashboardSearch` in the layout (Ctrl/⌘+K); don't add another palette |
+| Section heading with actions | `UPageCard title variant="naked" orientation="horizontal"` |
+| Placeholder page | `UEmpty` (an empty *list* is `ListEmptyState`) |
+| Command palette | The layout's `UDashboardSearch` (Ctrl/⌘+K); don't add another |
 | Round icon | `UBadge icon square class="rounded-full p-3"` |
 
 ## Components
 
-Only what Nuxt UI doesn't provide and two or more screens use:
+Only what Nuxt UI lacks and two or more screens use. Auto-imported, named with their folder.
 
 | Component | Use for |
 | --- | --- |
-| `CardStats` | A grid of compact stat tiles from `items: CardStat[]` (`label`, `value`, `icon`, `color`): a colored icon, the value, and a short label. Up to three tiles stay in one row even on a phone, so keep labels to a word or two ("Pending"); four or five wrap to two columns there. `#value="{ item }"` replaces the value. The `CardStat` type is exported from `CardStats.vue`. |
-| `ModalConfirm` | A `UModal` confirmation. `v-model` opens it. Props: `title` (default "Are you sure?") and `description` (or the `#description` slot). Emits `confirm` and `cancel`. **It has no loading prop.** |
-| `ModalShortcuts` | The keyboard shortcut list (information only), `v-model:open`. The layout opens it from `?`, the staff menu, and the search palette. Keep its list in step with the shortcuts that exist. |
+| `AlertApiError` | A failed load in place of the content: the API's reason and Retry |
+| `CardStats` | A row of compact stat tiles (`items: CardStat[]`); keep labels to a word or two |
+| `DetailGrid` | A read-only record's facts as label-over-value pairs, one or two columns (`items: DetailItem[]`). Label-beside-value rows are `AccountDetailFields` (account only). |
 | `InputPassword` | A password field with a show/hide toggle |
-| `InputSearch` | A list toolbar's search box. `v-model` gets the trimmed text 300 ms after typing stops (`delay`), or at once on Enter or Clear. `/` focuses it; set `:shortcut="false"` on a page's second search box. The browser's own clear button is hidden. Bind it as `:model-value="list.search.value" @update:model-value="list.setSearch"`. Every search box uses it, including on static pages. |
-| `ListSkeleton` | Placeholder rows while a list has nothing to show for its query (`loading`): in `UTable`'s `#loading` slot, or in place of a list. Props: `label` (for screen readers), `rows` (default 5). |
-| `ListToolbarTabs` | Page or status tabs in a `UDashboardToolbar`: the tabs drop their own bottom line and sit on the toolbar's. `items` (with `value`) and `v-model`. Items are `ToolbarTab<T>` (exported from the component). A status filter puts each total in the item's `count`, which shows as a badge (instead of a row of stat cards; a missing count shows none), sets `disabled` while loading, and names the group with `role="group"` and an `aria-label`; there's no implicit "All", so add it as an item if the API has one. A row that does not fit scrolls sideways and the chosen tab is centered by `useCenteredTab`. |
-| `ListPagination` | The pager: "Page n of N", optional rows per page, and `UPagination` with first and last. Props: `pageCount` (the API's `totalPages`), `pageSizes` (leave out for a fixed API page size), `disabled`. Models: `page`, `pageSize`. Hidden while one page holds everything. Below `sm` it drops the first and last buttons and keeps the first and last pages as numbers with no siblings (`‹ 1 2 3 … 6 ›`), so the pager fits a phone without scrolling sideways. |
-| `ListEmptyState` | An empty list, built on `UEmpty`. Props: `noun` ("leads"), `filtered` ("No leads match your filters" + Clear filters, emits `clear`), `createLabel` ("No leads yet" + a create button, emits `create`), and `title` or `description` to replace the default text. |
-| `ListRefresh` | Wraps content that reloads behind what's on screen (`refreshing`): a thin bar on its top edge, the content dimmed. Shows nothing for a reload under 150 ms. `fill` makes it fill a flex column's remaining height, for content that scrolls itself (the TechPack workbook grid). |
-| `DetailGrid` | A read-only record's facts as label-over-value pairs, one column on a phone and two from `sm` (`items: DetailItem[]`, `{ label, value }`; a missing value shows `—`). The lead and sale request slideovers use it. Rows with the label beside the value are `AccountDetailFields` (account only). |
-| `AlertApiError` | A failed load in place of the content: `title`, the API reason from `errorMessage(error, fallback)`, and Retry (emits `retry`, `retrying` shows its spinner) |
+| `InputSearch` | **Every** search box: trimmed text after 300 ms, or at once on Enter; `/` focuses it. Bind `:model-value="list.search.value" @update:model-value="list.setSearch"`. |
+| `ListToolbarTabs` | Page or status tabs in a `UDashboardToolbar` (`ToolbarTab<T>` items, `v-model`). A tab's `count` shows as a badge. For a status filter, disable the tabs while loading and give the group `role="group"` and an `aria-label`. |
+| `ListSkeleton` | Placeholder rows while a list is `loading`, in `UTable`'s `#loading` slot or in place of a list |
+| `ListRefresh` | Wraps content that is `refreshing`: dimmed, with a thin moving bar. `fill` for content that scrolls itself. |
+| `ListEmptyState` | An empty list: "No *X* yet" (`createLabel`) or "No *X* match your filters" (`filtered`, with Clear filters) |
+| `ListPagination` | The pager under a list; `pageSizes` adds rows per page. Hidden while one page holds everything. |
+| `ModalConfirm` | Confirms a destructive action (`v-model`, `title`, `description`, emits `confirm` and `cancel`). **No loading prop**: disable the trigger while the request runs. |
+| `ModalShortcuts` | The keyboard shortcut list. Keep it in step with the shortcuts that exist. |
 
 ## Composables
 
+Auto-imported.
+
 | Composable | Use for |
 | --- | --- |
-| `useApiQuery(key, fetcher, { enabled })` | Reads: `data`, `loading`, `refreshing`, `pending`, `error` (`ApiError`), `refresh` ([reads](data-access.md#reads-useapiquery)) |
-| `useApiMutation(fn, { success, error, invalidate })` | Writes: `execute(input)` → `{ ok, data \| error }`, `pending`, `error` ([writes](data-access.md#writes-useapimutation)) |
-| `invalidateQueries(...prefixes)` | Refresh the queries on screen whose key starts with a prefix |
-| `useListQuery(choices, { search, pageSizes })` | A list's filters, search, 1-based page, and page size in the URL, plus `isFiltered`, `clearFilters`, and `keepPageInRange(() => totalPages)` ([lists](data-access.md#lists-uselistquery)) |
-| `useUrlRecord(param)` | The id of a record open in a panel on a list (`?lead=7`): `id` (a positive whole number or undefined), `open(id)`, `close()`. Both replace the URL, so Back leaves the list. A filter change drops it. |
-| `useUrlTab(tabs, param?)` | A page's tab in `?tab=`: a writable computed. The first tab is the default and is left out of the URL; switching replaces the URL, so Back leaves the page. |
-| `useCenteredTab(root, active)` | Keeps a scrolling tab row's active tab centered: smooth on change, at once on mount and resize, and only the row scrolls. A row that fits does not move. `ListToolbarTabs` calls it; a page with its own `UTabs` passes a template ref. |
-| `useRefreshIndicator(refreshing)` | Whether to show a reload: after 150 ms, then for at least 300 ms. `ListRefresh` uses it. |
-| `useAppToast()` | `success(description, title?)`, `failed(description, title?)`, `error(e, title?)` (skips silent errors), `base` |
-
-## API and session
-
-Imported explicitly, not auto-imported.
-
-| Export | From | Use for |
-| --- | --- | --- |
-| `api.get/post/put/patch/delete/download` | `@/api` | Every API call, with the spec's path (`'/admin/x/{id}'`) ([calling the API](data-access.md#calling-the-api)) |
-| `ApiError`, `errorMessage(e, fallback)` | `@/api` | Reading a thrown error; inline alert text |
-| `defineModel`, `parseData`, `Api.*`, `v*` | `@/api` | Feature models and request types |
-| `useSession()` | `@/features/session` | `status`, `staff`, `signedIn`, `load`, `reload`, `signIn`, `signOut`, `end` ([session](data-access.md#the-session)) |
-| `SESSION_PATHS`, `redirectTarget(value)` | `@/features/session` | Home and sign-in paths; a safe `?redirect=` target |
-| `useSignIn`, `useSignOut`, `useForgotPassword`, `useResetPassword` | `@/features/auth` | The auth forms and the staff menu's Log Out |
-| `signInSchema`, `forgotPasswordSchema`, `resetPasswordSchema`, `PasswordSuggestion` | `@/features/auth` | Auth form schemas; the live password rule checklist |
+| `useApiQuery(key, fetcher, { enabled })` | Every read ([reads](data-access.md#reads-useapiquery)) |
+| `useApiMutation(fn, { success, error, invalidate })` | Every write ([writes](data-access.md#writes-useapimutation)) |
+| `invalidateQueries(...prefixes)` | Refresh on-screen queries by key prefix, by hand |
+| `useListQuery(choices, { search, pageSizes })` | A list's filters, search, page, and page size in the URL ([lists](data-access.md#lists-uselistquery)) |
+| `useUrlRecord(param)` | A record open in a panel on a list (`?lead=7`): `id`, `open(id)`, `close()` |
+| `useUrlTab(tabs, param?)` | A page's tab in `?tab=`, as a writable computed |
+| `useCenteredTab(root, active)` | Keeps a scrolling tab row's active tab in view (`ListToolbarTabs` calls it; a page's own `UTabs` passes a ref) |
+| `useRefreshIndicator(refreshing)` | When to show a reload (`ListRefresh` uses it) |
+| `useAppToast()` | `success(text)`, `failed(text)`, `error(e)`; for failures a composable decides itself |
 
 ## Utilities
 
-| Export | File | Use for |
-| --- | --- | --- |
-| `formatCount`, `formatChange`, `formatMoney`, `formatDate`, `formatDateTime`, `formatAge`, `NO_VALUE` | `utils/format.ts` | Every number, amount, and date on screen, in one locale (`en-US`, since the text is English): `1,234`, `+50`, `$49.00`, `Nov 25, 2026, 3:04 PM`, and `formatAge(value)` → `{ age: '3 days ago', full }` for a `title` tooltip. A missing value is `NO_VALUE` (`—`); API text that isn't a date is shown as sent. Never call `toLocaleString` or `Intl` in a component. |
-| `saveFile(blob, filename)` | `utils/file.ts` | Hand a downloaded file to the browser |
-| `isSectionActive(path, to, also?)` | `utils/navigation.ts` | Whether a sidebar link is the current page's section (its page, pages under it, or under `also`). The layout uses it. |
+Auto-imported.
 
-## CSS utilities
+| Export | Use for |
+| --- | --- |
+| `formatCount`, `formatChange`, `formatMoney`, `formatDate`, `formatDateTime`, `formatAge`, `NO_VALUE` (`utils/format.ts`) | **Every** number, amount, and date on screen, in one locale (`en-US`). `formatAge` gives `{ age, full }` for a `title` tooltip; a missing value is `NO_VALUE` (`—`). Never call `toLocaleString` or `Intl` in a component. |
+| `saveFile(blob, filename)` (`utils/file.ts`) | Hand a downloaded file to the browser |
+| `isSectionActive(path, to, also?)` (`utils/navigation.ts`) | Whether a sidebar link's section is the current page (the layout uses it) |
 
-| Class | File | Use for |
+## CSS utilities (`assets/css/tailwind.css`)
+
+| Class | Use for |
+| --- | --- |
+| `page-narrow` | On a form or settings page's `UDashboardPanel`: 56rem instead of 80rem |
+| `row-link` | The name link that opens a row's record, stretched over the `relative` row; a `ULink` adds `raw` ([rows](ui.md#rows)) |
+| `scrollbar-none` | A sideways-scrolling row with no visible scrollbar |
+
+## API and session
+
+Imported explicitly.
+
+| Export | From | Use for |
 | --- | --- | --- |
-| `page-narrow` | `assets/css/tailwind.css` | On a form or settings page's `UDashboardPanel`: caps the page at 56rem instead of 80rem ([page width](ui.md#page-width)) |
-| `row-link` | `assets/css/tailwind.css` | The name link that opens a row's record, stretched over the `relative` row ([rows](ui.md#rows)) |
-| `scrollbar-none` | `assets/css/tailwind.css` | A row that scrolls sideways with no visible scrollbar |
+| `api`, `ApiError`, `errorMessage`, `defineModel`, `Api.*`, `v*` | `@/api` | Calls, errors, and models ([data access](data-access.md)) |
+| `useSession`, `SESSION_PATHS`, `redirectTarget` | `@/features/session` | Who is signed in; safe redirects ([session](data-access.md#the-session)) |
+| `useSignIn`, `useSignOut`, `useForgotPassword`, `useResetPassword`, the auth schemas, `PasswordSuggestion` | `@/features/auth` | The auth forms and Log Out |

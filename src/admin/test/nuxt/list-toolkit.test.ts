@@ -4,8 +4,10 @@ import { mockNuxtImport, mountSuspended } from '@nuxt/test-utils/runtime'
 import { useRouter } from '#imports'
 import InputSearch from '../../app/components/input/InputSearch.vue'
 import ListEmptyState from '../../app/components/list/ListEmptyState.vue'
+import ListToolbarTabs from '../../app/components/list/ListToolbarTabs.vue'
 import { useListQuery } from '../../app/composables/useListQuery'
 import { REFRESH_MIN_SHOWN, REFRESH_SHOW_DELAY, useRefreshIndicator } from '../../app/composables/useRefreshIndicator'
+import { useUrlRecord } from '../../app/composables/useUrlRecord'
 import { useUrlTab } from '../../app/composables/useUrlTab'
 
 // Reactive, like the real route: the composables' computed values follow URL changes.
@@ -135,6 +137,85 @@ describe('useUrlTab', () => {
     tab.value = 'company-information'
     expect(router.replace).toHaveBeenLastCalledWith({ query: { from: 'list' } })
     expect(router.push).not.toHaveBeenCalled()
+  })
+})
+
+describe('useUrlRecord', () => {
+  it('reads a positive whole id, and anything else as none', async () => {
+    route.query = { lead: '7' }
+    const panel = await inComponent(() => useUrlRecord('lead'))
+    expect(panel.id.value).toBe(7)
+
+    for (const value of ['0', '-3', '2.5', 'abc', '']) {
+      route.query = { lead: value }
+      expect(panel.id.value).toBeUndefined()
+    }
+  })
+
+  it('opens and closes by replacing the URL, keeping the list query', async () => {
+    route.query = { status: 'new', page: '2' }
+    const panel = await inComponent(() => useUrlRecord('lead'))
+
+    await panel.open(7)
+    expect(router.replace).toHaveBeenLastCalledWith({ query: { status: 'new', page: '2', lead: '7' } })
+    expect(panel.id.value).toBe(7)
+
+    await panel.close()
+    expect(router.replace).toHaveBeenLastCalledWith({ query: { status: 'new', page: '2' } })
+    expect(panel.id.value).toBeUndefined()
+    expect(router.push).not.toHaveBeenCalled()
+  })
+
+  it('closes when a list filter changes', async () => {
+    route.query = { lead: '7' }
+    const { list, panel } = await inComponent(() => ({ list: useListQuery(STATUS), panel: useUrlRecord('lead') }))
+
+    await list.setFilters({ status: 'new' })
+    expect(panel.id.value).toBeUndefined()
+  })
+})
+
+describe('useListQuery keepPageInRange', () => {
+  it('moves a page past the end to the last page as loads come in, replacing the URL', async () => {
+    route.query = { page: '5' }
+    const totalPages = ref<number>()
+    const list = await inComponent(() => {
+      const query = useListQuery(STATUS)
+      query.keepPageInRange(() => totalPages.value)
+      return query
+    })
+
+    // Nothing loaded yet: the page stays.
+    await nextTick()
+    // (Mounting replaces the URL with '/' itself; only query changes are the composable's.)
+    expect(router.replace).not.toHaveBeenCalledWith(expect.objectContaining({ query: expect.anything() }))
+
+    totalPages.value = 3
+    await nextTick()
+    expect(router.replace).toHaveBeenLastCalledWith({ query: { page: '3' } })
+    expect(list.page.value).toBe(3)
+
+    // An empty list goes to page 1, which the URL leaves out.
+    totalPages.value = 0
+    await nextTick()
+    expect(router.replace).toHaveBeenLastCalledWith({ query: {} })
+  })
+})
+
+describe('ListToolbarTabs', () => {
+  it('shows a tab\'s count as a badge, and none for a missing count', async () => {
+    const wrapper = await mountSuspended(ListToolbarTabs, {
+      props: {
+        modelValue: 'all',
+        items: [
+          { label: 'All', value: 'all', count: 1520 },
+          { label: 'Pending', value: 'pending', count: 0 },
+          { label: 'Completed', value: 'completed', count: null },
+        ],
+      },
+    })
+    const tabs = wrapper.findAll('[role="tab"]').map(tab => tab.text())
+    expect(tabs).toEqual(['All1,520', 'Pending0', 'Completed'])
   })
 })
 

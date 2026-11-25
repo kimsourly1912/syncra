@@ -101,7 +101,7 @@ export function useReviewActions(
     if (replacement.value) return 'Save or cancel the workbook replacement before approving.'
     if (inspection.pending.value) return 'Wait for the workbook inspection to finish.'
     if (inspection.blocksApproval.value) {
-      return inspection.pdfFindings.value.length
+      return inspection.current.value?.findings?.length
         ? 'Resolve the PDF differences before approving.'
         : 'Resolve the workbook layout issues before approving.'
     }
@@ -118,7 +118,7 @@ export function useReviewActions(
    * `approvalBlocker` checks.
    */
   const checklist = computed<ReviewCheck[]>(() => {
-    const pdfDifferences = inspection.pdfFindings.value.length
+    const pdfDifferences = inspection.current.value?.findings?.length ?? 0
     const sourceDone = sourceDownloaded.value || source.shown.value
     const workbookDone = draftDownloaded.value || inspection.complete.value
     const saved = !workbook.staged.value.length && !replacement.value
@@ -139,7 +139,7 @@ export function useReviewActions(
                 ? `${pdfDifferences} PDF ${pdfDifferences === 1 ? 'difference' : 'differences'} to resolve`
                 : 'Layout issues to resolve',
             }
-          : inspection.inspection.value
+          : inspection.current.value
             ? { id: 'issues', done: true, label: 'No blocking issues' }
             // A failed inspection doesn't block approval, so the reviewer compares by hand.
             : { id: 'issues', done: true, warning: true, label: 'Inspection unavailable: compare by hand' },
