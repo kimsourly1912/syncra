@@ -162,6 +162,39 @@ describe('account list screen', () => {
     expect(wrapper.text()).toContain('3/10')
     expect(wrapper.text()).toContain('1,500')
     expect(wrapper.text()).toContain('100')
+    expect(wrapper.text()).toContain('User #42 · Company #9')
+    // The phone card ends with three labelled numbers.
+    const card = wrapper.find('ul[aria-label="Accounts"] > li')
+    expect(card.find('a[href="/account/42"]').exists()).toBe(true)
+    expect(card.findAll('dt').map(term => term.text())).toEqual(['Modules', 'Tokens', 'Seats'])
+    expect(card.findAll('dd').map(value => value.text())).toEqual(['2', '1,500', '3/10'])
+  })
+
+  it('shows the email once when the account has no name', async () => {
+    fakeApi({
+      'GET /admin/portal-users': ok(page([{ ...portalUser, firstname: null, lastname: null }])),
+      'GET /admin/portal-users/summary': ok({}),
+    })
+    const wrapper = await mount(AccountListScreen)
+
+    expect(wrapper.find('a[href="/account/42"]').text()).toBe('user@example.test')
+    // Once in the table and once in the phone card: the link text only, no second email line.
+    expect(wrapper.text().split('user@example.test')).toHaveLength(3)
+  })
+
+  it('shows the onboarding status filter disabled, since the API cannot filter by it', async () => {
+    transport = fakeApi({
+      'GET /admin/portal-users': ok(page([portalUser])),
+      'GET /admin/portal-users/summary': ok({}),
+    }).transport
+    const wrapper = await mount(AccountListScreen)
+
+    const select = wrapper.find('[aria-label="Onboarding status"]')
+    expect(select.exists()).toBe(true)
+    expect(select.attributes('disabled')).toBeDefined()
+    const call = transport.mock.calls.find(([endpoint]) => endpoint === '/admin/portal-users')!
+    expect(call[1]).toMatchObject({ query: { page: 0, size: 20 } })
+    expect((call[1] as { query: Record<string, unknown> }).query).not.toHaveProperty('onboardingStatus')
   })
 
   it('shows the API reason for a refused list', async () => {
