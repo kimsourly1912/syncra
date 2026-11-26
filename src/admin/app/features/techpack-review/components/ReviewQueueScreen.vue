@@ -10,7 +10,7 @@ const {
 
 // In the toolbar, so the tabs sit on its line (one border, not two).
 const tabs = computed<(TabsItem & { value: ReviewQueueTab })[]>(() => [
-  { label: 'In Review', value: 'in-review', disabled: pending.value },
+  { label: 'In review', value: 'in-review', disabled: pending.value },
   { label: 'Reviewed', value: 'reviewed', disabled: pending.value },
 ])
 
@@ -140,7 +140,7 @@ const GRID = 'grid gap-3 sm:grid-cols-2 lg:grid-cols-3 2xl:grid-cols-4'
               >
                 {{ item.filename }}
               </p>
-              <p class="text-xs text-dimmed tabular-nums">
+              <p class="text-xs text-muted tabular-nums">
                 Company #{{ item.companyId }} · Job #{{ item.jobId }} · File #{{ item.fileId }}
               </p>
               <p

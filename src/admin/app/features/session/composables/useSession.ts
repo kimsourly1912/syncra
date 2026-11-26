@@ -60,7 +60,8 @@ export function useSession() {
 
   /** Drops every query's data, so the next staff member in this tab never sees it. Call once the signed-out page is showing. */
   function forgetData() {
-    nuxtApp.runWithContext(() => clearNuxtData())
+    // Typed as maybe a promise; clearNuxtData itself is synchronous.
+    void nuxtApp.runWithContext(() => clearNuxtData())
   }
 
   /**

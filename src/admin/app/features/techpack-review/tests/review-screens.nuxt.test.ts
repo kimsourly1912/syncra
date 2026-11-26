@@ -6,6 +6,9 @@ import { clearNuxtData, useRouter } from '#imports'
 import ReviewQueueScreen from '../components/ReviewQueueScreen.vue'
 import ReviewDetailScreen from '../components/ReviewDetailScreen.vue'
 import { fakeApi, httpError, ok } from '#test/fake-api'
+import type * as v from 'valibot'
+import type { Api } from '@/api'
+import type { workbookInspectionModel } from '../models/workbook-inspection'
 
 const { navigate, route } = vi.hoisted(() => ({
   navigate: vi.fn(),
@@ -24,15 +27,17 @@ const item = {
   draftUuid: '00000000-0000-4000-8000-000000000001',
   status: 'IN_REVIEW',
   reviewedAt: null,
-}
+} satisfies Api.ReviewItem
 
+// The model's input, not `Api.TechPackWorkbookInspection`: the spec leaves out a PDF finding's
+// `pdfValue` (see models/workbook-inspection.ts).
 const inspection = {
   partial: false,
   sheets: [{ name: 'Measurements', columns: ['A', 'B'], rows: [{ number: 1, cells: ['Chest', '50'] }], gridHeaderRow: 0 }],
   findings: [{ rowNumber: 1, columnIndex: 1, measurement: 'Chest', column: 'M', sourcePage: 1, workbookValue: '50', pdfValue: '52' }],
   sourceCheck: { verified: false, blocksApproval: true, comparedCells: 1, notes: [] },
   aiReview: null,
-}
+} satisfies v.InferInput<typeof workbookInspectionModel>
 
 let api: ReturnType<typeof fakeApi>['transport']
 
@@ -68,7 +73,7 @@ describe('review queue screen', () => {
     expect(cards[0]!.text()).toContain('Company #303 · Job #202 · File #101')
     expect(wrapper.find('table').exists()).toBe(false)
     expect(wrapper.text()).toContain('23 waiting for review')
-    expect(wrapper.find('[role="group"][aria-label="Review status"]').text()).toContain('In Review')
+    expect(wrapper.find('[role="group"][aria-label="Review status"]').text()).toContain('In review')
   })
 
   it('shows card placeholders while the first page loads', async () => {

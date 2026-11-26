@@ -5,6 +5,7 @@ import { mockNuxtImport, mountSuspended } from '@nuxt/test-utils/runtime'
 import { clearNuxtData, useState } from '#imports'
 import AccountDetailScreen from '../components/AccountDetailScreen.vue'
 import { fakeApi, httpError, ok } from '#test/fake-api'
+import type { Api } from '@/api'
 
 const route = reactive({ query: {} as Record<string, string>, params: {}, path: '/account/42' })
 mockNuxtImport('useRoute', () => () => route)
@@ -16,7 +17,7 @@ const detail = {
     companyDetail: { companyName: 'Example Co', companyEmail: 'office@example.test', industryType: 'Garments', companySize: '11-50', country: 'Exampleland', phoneNumber: '+10000000000' },
     representative: { fullName: 'Test Representative', position: 'Manager', workEmail: 'rep@example.test', contactNumber: '+10000000001' },
   },
-}
+} satisfies Api.AccountDetailInitResponse
 
 const mounted: { unmount: () => void }[] = []
 afterEach(() => {

@@ -84,9 +84,17 @@ list.keepPageInRange(() => query.data.value?.totalPages)
 
 - A filter's first choice is its default and stays out of the URL; an unknown value reads as the default.
 - Filter, page, and size changes add history entries; a search replaces the current one. Each goes back to page 1, and a filter change also closes a `useUrlRecord` panel.
-- `page` is 1-based; the Admin API's is **zero-based**: send `page - 1`, and `pageSize` as `size`.
-- Turn on `search` and `pageSizes` only when the endpoint takes `search` and `size` (lead inquiries, portal users, sale requests; not TechPack reviews). `sort` isn't used: its format isn't confirmed ([open questions](../../../docs/product/open-questions.md#admin)).
+- `page` is 1-based; the Admin API's is **zero-based**. Send `list.apiQuery` (`{ page, size, search }`, ready to send), never `page - 1` by hand.
+- Turn on `search` and `pageSizes` (`LIST_PAGE_SIZES`) only when the endpoint takes `search` and `size` (lead inquiries, portal users, sale requests; not TechPack reviews). `sort` isn't used: its format isn't confirmed ([open questions](../../../docs/product/open-questions.md#admin)).
 - Links into a record pass the list's query along, so its Back link returns to the same tab and page.
+
+**A list that loads one page of an endpoint is `useApiList`**: `useListQuery` and its `useApiQuery` in one. Its key is `<name>:<list.stateKey>`, the whole URL state, so a new filter can't be left out of the key and serve another filter's cached rows. The fetcher gets `filters`, `query` (`apiQuery`), and `signal`, and uses nothing else; its model returns `{ items, totalPages }`. `useLeadList` is the reference. A list whose request needs other inputs builds from `useListQuery` and `useApiQuery`, with every input in the key.
+
+```ts
+const leads = useApiList('lead-inquiry:list', { status: LEAD_STATUS_TABS }, { search: true, pageSizes: LIST_PAGE_SIZES },
+  ({ filters, query, signal }) => api.get('/admin/lead-inquiries', { query: { ...query, status: STATUS[filters.status] }, signal, model: leadPageModel }))
+return { ...leads, tab: computed(() => leads.filters.value.status) }
+```
 
 ## Errors
 

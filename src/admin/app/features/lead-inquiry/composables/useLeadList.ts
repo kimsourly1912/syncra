@@ -16,9 +16,6 @@ export type LeadStatusTab = keyof typeof STATUS
 /** The status tabs in order; the first is the default. */
 export const LEAD_STATUS_TABS = Object.keys(STATUS) as LeadStatusTab[]
 
-/** Rows per page. The API's default is 20; its largest page isn't documented (open question). */
-export const LEAD_PAGE_SIZES = [20, 50, 100] as const
-
 /**
  * The lead list: status, search, page, and page size in the URL
  * (`/lead-inquiry?status=new&search=acme&page=2&size=50`), plus the status totals.
@@ -27,20 +24,12 @@ export const LEAD_PAGE_SIZES = [20, 50, 100] as const
  * leaves the list instead of stepping through panels. Changing a filter closes the panel.
  */
 export function useLeadList() {
-  const list = useListQuery(
+  const leads = useApiList(
+    'lead-inquiry:list',
     { status: LEAD_STATUS_TABS },
-    { search: true, pageSizes: LEAD_PAGE_SIZES },
-  )
-
-  const leads = useApiQuery(
-    () => `lead-inquiry:list:${list.filters.value.status}:${list.page.value}:${list.pageSize.value}:${list.search.value}`,
-    ({ signal }) => api.get('/admin/lead-inquiries', {
-      query: {
-        status: STATUS[list.filters.value.status],
-        search: list.search.value || undefined,
-        page: list.page.value - 1, // the API's page is zero-based
-        size: list.pageSize.value,
-      },
+    { search: true, pageSizes: LIST_PAGE_SIZES },
+    ({ filters, query, signal }) => api.get('/admin/lead-inquiries', {
+      query: { ...query, status: STATUS[filters.status] },
       signal,
       model: leadPageModel,
     }),
@@ -51,34 +40,16 @@ export function useLeadList() {
     ({ signal }) => api.get('/admin/lead-inquiries/summary', { signal, model: leadSummaryModel }),
   )
 
-  list.keepPageInRange(() => leads.data.value?.totalPages)
-
   const panel = useUrlRecord('lead')
 
   return {
-    tab: computed(() => list.filters.value.status),
-    search: list.search,
-    page: list.page,
-    pageSize: list.pageSize,
-    isFiltered: list.isFiltered,
-    items: computed(() => leads.data.value?.items ?? []),
-    totalPages: computed(() => leads.data.value?.totalPages ?? 0),
-    /** Rows are loaded for the current URL state (not the previous filter's, still shown). */
-    loaded: computed(() => leads.data.value != null),
-    loading: leads.loading,
-    refreshing: leads.refreshing,
-    pending: leads.pending,
-    error: leads.error,
-    refresh: leads.refresh,
+    ...leads,
+    tab: computed(() => leads.filters.value.status),
+    showStatus: (status: LeadStatusTab) => leads.setFilters({ status }),
     summary: summary.data,
     summaryLoading: summary.loading,
     summaryError: summary.error,
     refreshSummary: summary.refresh,
-    showStatus: (status: LeadStatusTab) => list.setFilters({ status }),
-    setSearch: list.setSearch,
-    showPage: list.setPage,
-    setPageSize: list.setPageSize,
-    clearFilters: list.clearFilters,
     openId: panel.id,
     openLead: panel.open,
     closeLead: panel.close,

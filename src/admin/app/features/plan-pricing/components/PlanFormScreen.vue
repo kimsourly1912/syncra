@@ -147,13 +147,13 @@ const previewFeatures = computed(() => featureTexts(features.value))
         >
           <p
             class="font-semibold wrap-anywhere"
-            :class="form.name.trim() ? 'text-highlighted' : 'text-dimmed'"
+            :class="form.name.trim() ? 'text-highlighted' : 'text-muted'"
           >
             {{ form.name.trim() || 'Plan name' }}
           </p>
           <p
             class="mt-1 line-clamp-3 text-sm wrap-anywhere"
-            :class="form.description.trim() ? 'text-muted' : 'text-dimmed'"
+            :class="form.description.trim() ? 'text-muted' : 'text-muted italic'"
           >
             {{ form.description.trim() || 'A short description of the plan.' }}
           </p>
@@ -167,7 +167,7 @@ const previewFeatures = computed(() => featureTexts(features.value))
             <p class="flex items-baseline gap-1">
               <span
                 class="text-2xl font-semibold tabular-nums"
-                :class="form.amount == null ? 'text-dimmed' : 'text-highlighted'"
+                :class="form.amount == null ? 'text-muted' : 'text-highlighted'"
               >{{ previewPrice }}</span>
               <span class="text-sm text-muted">/ {{ form.cycle }}</span>
             </p>
@@ -191,7 +191,7 @@ const previewFeatures = computed(() => featureTexts(features.value))
           </ul>
           <p
             v-else
-            class="mt-4 border-t border-default pt-3 text-sm text-dimmed"
+            class="mt-4 border-t border-default pt-3 text-sm text-muted"
           >
             Key features show here.
           </p>
@@ -214,7 +214,7 @@ const previewFeatures = computed(() => featureTexts(features.value))
       >
         <p class="text-sm text-muted">
           <span class="font-medium text-highlighted">{{ plan.name }}</span>
-          <span class="text-dimmed tabular-nums"> #{{ plan.id }}</span>
+          <span class="text-muted tabular-nums"> #{{ plan.id }}</span>
           · Updated {{ updated }}
         </p>
         <div
@@ -351,7 +351,7 @@ const previewFeatures = computed(() => featureTexts(features.value))
                 :key="feature.id"
                 class="flex items-center gap-2"
               >
-                <span class="w-5 shrink-0 text-right text-sm text-dimmed tabular-nums">{{ index + 1 }}</span>
+                <span class="w-5 shrink-0 text-right text-sm text-muted tabular-nums">{{ index + 1 }}</span>
                 <UInput
                   :id="`plan-feature-${feature.id}`"
                   v-model="feature.text"
@@ -458,7 +458,7 @@ const previewFeatures = computed(() => featureTexts(features.value))
             Preview
           </p>
           <ReusePreview />
-          <p class="text-xs text-dimmed">
+          <p class="text-xs text-muted">
             Saving isn't connected yet, so this preview is all that changes.
           </p>
         </aside>

@@ -6,7 +6,7 @@ import type { useAccountList } from './useAccountList'
 
 const searchAccounts = defineAgentTool({
   name: 'search_accounts',
-  description: 'Search customer accounts on Account Management by name, email, or company, and list the matches with onboarding status, active modules, tokens, and seats. Shows the same results on screen. Read-only.',
+  description: 'Search customer accounts on Account management by name, email, or company, and list the matches with onboarding status, active modules, tokens, and seats. Shows the same results on screen. Read-only.',
   input: toStandardJsonSchema(v.object({
     search: v.pipe(
       v.string(),

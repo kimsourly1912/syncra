@@ -4,8 +4,8 @@ import { ReviewDetailScreen } from '@/features/techpack-review'
 // Key by path so another review starts with a fresh workspace.
 definePageMeta({ key: route => route.path })
 
-const route = useRoute()
-const fileId = typeof route.params.fileId === 'string' ? route.params.fileId : ''
+const route = useRoute('techpack-reviews-fileId')
+const fileId = route.params.fileId
 </script>
 
 <template>

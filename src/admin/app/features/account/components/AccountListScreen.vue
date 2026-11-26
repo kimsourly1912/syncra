@@ -2,7 +2,7 @@
 import type { BadgeProps, SelectItem, TableColumn } from '@nuxt/ui'
 import type { CardStat } from '@/components/card/CardStats.vue'
 import { useAccountAgentTools } from '../composables/useAccountAgentTools'
-import { ACCOUNT_PAGE_SIZES, useAccountList } from '../composables/useAccountList'
+import { useAccountList } from '../composables/useAccountList'
 import type { OnboardingStatus, PortalUserRow } from '../models/portal-user'
 
 defineSlots<{
@@ -12,7 +12,7 @@ defineSlots<{
 
 const list = useAccountList()
 const {
-  search, page, pageSize, isFiltered, items, totalPages, loading, refreshing, pending, error, refresh,
+  search, page, pageSize, pageSizes, isFiltered, items, totalPages, loading, refreshing, pending, error, refresh,
   summary, summaryLoading, summaryError, refreshSummary, setSearch, showPage, setPageSize, clearFilters,
 } = list
 useAccountAgentTools(list)
@@ -64,7 +64,7 @@ const columns: TableColumn<PortalUserRow>[] = [
     <template #header>
       <UDashboardNavbar
         icon="lucide:building-2"
-        title="Account Management"
+        title="Account management"
       >
         <!-- On a phone the actions move under the navbar, so the title keeps its room. -->
         <template #right>
@@ -145,7 +145,7 @@ const columns: TableColumn<PortalUserRow>[] = [
         :filtered="isFiltered"
         :page="page"
         :page-count="totalPages"
-        :page-sizes="ACCOUNT_PAGE_SIZES"
+        :page-sizes="pageSizes"
         :page-size="pageSize"
         @retry="refresh"
         @clear="clearFilters"
@@ -172,7 +172,7 @@ const columns: TableColumn<PortalUserRow>[] = [
             >
               {{ row.original.email }}
             </p>
-            <p class="text-xs text-dimmed">
+            <p class="text-xs text-muted">
               {{ ids(row.original) }}
             </p>
           </div>
@@ -212,7 +212,7 @@ const columns: TableColumn<PortalUserRow>[] = [
                 variant="subtle"
                 size="sm"
               />
-              <span class="text-xs text-dimmed">{{ ids(user) }}</span>
+              <span class="text-xs text-muted">{{ ids(user) }}</span>
             </div>
           </div>
           <UIcon

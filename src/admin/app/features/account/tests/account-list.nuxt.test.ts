@@ -4,7 +4,8 @@ import { flushPromises } from '@vue/test-utils'
 import { mockNuxtImport, mountSuspended } from '@nuxt/test-utils/runtime'
 import { clearNuxtData } from '#imports'
 import AccountListScreen from '../components/AccountListScreen.vue'
-import { fakeApi, ok, refused } from '#test/fake-api'
+import { fakeApi, listPage, ok, refused } from '#test/fake-api'
+import type { Api } from '@/api'
 
 // Reactive, like the real route. Each test sets the list's URL query.
 const route = reactive({ query: {} as Record<string, string>, params: {}, path: '/' })
@@ -23,9 +24,7 @@ const portalUser = {
   token: 1500,
   seatUsed: 3,
   seatTotal: 10,
-}
-
-const page = (items: unknown[], totalPages = 1) => ({ page: 0, size: 20, totalItems: items.length, totalPages, items })
+} satisfies Api.UserResponseRow
 
 let transport: ReturnType<typeof fakeApi>['transport']
 const mounted: { unmount: () => void }[] = []
@@ -52,7 +51,7 @@ describe('account list screen', () => {
   it('sends search and page, lists accounts, and opens one from its name', async () => {
     route.query = { search: 'example' }
     transport = fakeApi({
-      'GET /admin/portal-users': ok(page([portalUser])),
+      'GET /admin/portal-users': ok(listPage([portalUser])),
       'GET /admin/portal-users/summary': ok({ accountRegistered: 100, completedOnboardingVerification: 60, pendingOnboardingVerification: 40 }),
     }).transport
     const wrapper = await mount(AccountListScreen)
@@ -75,7 +74,7 @@ describe('account list screen', () => {
 
   it('shows the email once when the account has no name', async () => {
     fakeApi({
-      'GET /admin/portal-users': ok(page([{ ...portalUser, firstname: null, lastname: null }])),
+      'GET /admin/portal-users': ok(listPage([{ ...portalUser, firstname: null, lastname: null }])),
       'GET /admin/portal-users/summary': ok({}),
     })
     const wrapper = await mount(AccountListScreen)
@@ -87,7 +86,7 @@ describe('account list screen', () => {
 
   it('shows the onboarding status filter disabled, since the API cannot filter by it', async () => {
     transport = fakeApi({
-      'GET /admin/portal-users': ok(page([portalUser])),
+      'GET /admin/portal-users': ok(listPage([portalUser])),
       'GET /admin/portal-users/summary': ok({}),
     }).transport
     const wrapper = await mount(AccountListScreen)
@@ -113,7 +112,7 @@ describe('account list screen', () => {
 
   it('shows its own error with Retry when the totals fail', async () => {
     fakeApi({
-      'GET /admin/portal-users': ok(page([portalUser])),
+      'GET /admin/portal-users': ok(listPage([portalUser])),
       'GET /admin/portal-users/summary': refused('Totals unavailable'),
     })
     const wrapper = await mount(AccountListScreen)

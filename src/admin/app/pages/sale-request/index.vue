@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { SaleRequestListScreen } from '@/features/sale-request'
 
-useHead({ title: 'Sale Requests' })
+definePageMeta({ title: 'Sale requests' })
 </script>
 
 <template>

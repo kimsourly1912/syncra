@@ -4,8 +4,9 @@ import { flushPromises } from '@vue/test-utils'
 import { mockNuxtImport, mountSuspended } from '@nuxt/test-utils/runtime'
 import { clearNuxtData, useRouter } from '#imports'
 import LeadListScreen from '../components/LeadListScreen.vue'
-import { fakeApi, httpError } from '#test/fake-api'
+import { fakeApi, httpError, listPage } from '#test/fake-api'
 import { installModelContext } from '#test/model-context'
+import type { Api } from '@/api'
 
 const route = reactive({ query: {} as Record<string, string>, params: {}, path: '/lead-inquiry' })
 
@@ -20,9 +21,8 @@ const lead = {
   workEmail: 'lead@example.test',
   interestedProduct: ['Doc AI'],
   status: 'CONTACTED',
-}
-const page = (items: unknown[], totalPages = 1) => ({ page: 0, size: 20, totalItems: items.length, totalPages, items })
-const summary = { leadReceived: 1, contacted: 1, converted: 0, rejected: 0 }
+} satisfies Api.ContactSaleInquiryResponse
+const summary = { leadReceived: 1, contacted: 1, converted: 0, rejected: 0 } satisfies Api.LeadDashboardCards
 
 const modelContext = installModelContext()
 let wrapper: { unmount: () => void } | undefined
@@ -56,7 +56,7 @@ async function mountList() {
 
 describe('lead list agent tools', () => {
   it('describes its tools to the agent as read-only, from the Valibot schema', async () => {
-    fakeApi({ 'GET /admin/lead-inquiries': page([lead]), 'GET /admin/lead-inquiries/summary': summary })
+    fakeApi({ 'GET /admin/lead-inquiries': listPage([lead]), 'GET /admin/lead-inquiries/summary': summary })
     await mountList()
 
     const tool = modelContext.tool('search_leads')
@@ -71,7 +71,7 @@ describe('lead list agent tools', () => {
 
   it('searches through the list\'s URL state and answers with the rows it loaded', async () => {
     const { transport } = fakeApi({
-      'GET /admin/lead-inquiries': ({ query }: { query?: unknown }) => (query as { search?: string }).search ? page([lead], 2) : page([]),
+      'GET /admin/lead-inquiries': ({ query }: { query?: unknown }) => (query as { search?: string }).search ? listPage([lead], 2) : listPage([]),
       'GET /admin/lead-inquiries/summary': summary,
     })
     await mountList()
@@ -89,7 +89,7 @@ describe('lead list agent tools', () => {
   })
 
   it('refuses input outside the schema without touching the list', async () => {
-    fakeApi({ 'GET /admin/lead-inquiries': page([lead]), 'GET /admin/lead-inquiries/summary': summary })
+    fakeApi({ 'GET /admin/lead-inquiries': listPage([lead]), 'GET /admin/lead-inquiries/summary': summary })
     await mountList()
 
     const result = await modelContext.call('search_leads', { status: 'archived' })
@@ -102,7 +102,7 @@ describe('lead list agent tools', () => {
     fakeApi({
       'GET /admin/lead-inquiries': ({ query }: { query?: unknown }) => {
         if ((query as { search?: string }).search) throw httpError(503)
-        return page([lead])
+        return listPage([lead])
       },
       'GET /admin/lead-inquiries/summary': summary,
     })
@@ -116,7 +116,7 @@ describe('lead list agent tools', () => {
 
   it('opens only a lead on screen, in the read-only panel', async () => {
     fakeApi({
-      'GET /admin/lead-inquiries': page([lead]),
+      'GET /admin/lead-inquiries': listPage([lead]),
       'GET /admin/lead-inquiries/summary': summary,
       'GET /admin/lead-inquiries/7': lead,
     })
@@ -135,7 +135,7 @@ describe('lead list agent tools', () => {
   })
 
   it('stops offering the tools when the list leaves the screen', async () => {
-    fakeApi({ 'GET /admin/lead-inquiries': page([lead]), 'GET /admin/lead-inquiries/summary': summary })
+    fakeApi({ 'GET /admin/lead-inquiries': listPage([lead]), 'GET /admin/lead-inquiries/summary': summary })
     await mountList()
 
     wrapper!.unmount()

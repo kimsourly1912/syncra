@@ -36,7 +36,11 @@ export default defineNuxtConfig({
   devtools: { enabled: true },
   app: {
     head: {
+      // English only (no i18n). Screen readers pick their voice and pronunciation from it.
+      htmlAttrs: { lang: 'en' },
       title: 'Syncra Admin',
+      // Staff only: never in search results (public/robots.txt also disallows every path).
+      meta: [{ name: 'robots', content: 'noindex, nofollow' }],
       link: [
         {
           rel: 'icon',
@@ -74,6 +78,9 @@ export default defineNuxtConfig({
   // tools register only where `runtimeConfig.public.agentTools` is on, and `navigate` only in dev.
   experimental: {
     webmcp: { navigate: false },
+    // Typed routes: `router.push`, `<NuxtLink to>`, and `useRoute('<name>')` params are checked
+    // against app/pages, so a renamed or mistyped page fails typecheck (decision 0021).
+    typedPages: true,
   },
   compatibilityDate: '2025-07-15',
   // Pre-bundle deps Vite would otherwise discover on first visit to a route, which

@@ -5,7 +5,7 @@ import type { Api } from '@/api'
 export type LeadStatus = NonNullable<Api.ContactSaleInquiryResponse['status']>
 
 // A row of the lead list. Only the id is needed to open the lead; the rest may be missing.
-export const leadRowModel = defineModel(vContactSaleInquiryResponse, {
+const leadRowModel = defineModel(vContactSaleInquiryResponse, {
   required: ['id'],
   optional: ['inquiryCode', 'fullName', 'companyName', 'workEmail', 'phoneNumber', 'interestedProduct', 'status'],
 })
@@ -37,5 +37,3 @@ export const leadDetailModel = v.object({
 })
 
 export type LeadRow = v.InferOutput<typeof leadRowModel>
-export type LeadSummary = v.InferOutput<typeof leadSummaryModel>
-export type LeadDetail = v.InferOutput<typeof leadDetailModel>

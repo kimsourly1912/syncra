@@ -81,7 +81,7 @@ const metadata = computed(() => current.value ? `Company ${current.value.company
           <UBadge
             v-if="current"
             :color="current.status === 'IN_REVIEW' && !approved ? 'warning' : 'success'"
-            :label="current.status === 'IN_REVIEW' && !approved ? 'In Review' : 'Reviewed'"
+            :label="current.status === 'IN_REVIEW' && !approved ? 'In review' : 'Reviewed'"
             class="shrink-0"
             variant="subtle"
           />

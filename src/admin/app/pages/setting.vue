@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { SettingsScreen } from '@/features/settings'
 
-useHead({ title: 'Settings' })
+definePageMeta({ title: 'Settings' })
 </script>
 
 <template>

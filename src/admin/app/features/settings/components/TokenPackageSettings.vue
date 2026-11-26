@@ -48,7 +48,7 @@ const columns: TableColumn<TokenPackage>[] = [
               <span class="font-medium text-highlighted">{{ row.original.name || 'Unnamed package' }}</span>
               <code
                 v-if="row.original.code"
-                class="text-xs text-dimmed"
+                class="text-xs text-muted"
               >{{ row.original.code }}</code>
             </p>
             <p
@@ -95,7 +95,7 @@ const columns: TableColumn<TokenPackage>[] = [
               <span class="font-medium text-highlighted">{{ item.name || 'Unnamed package' }}</span>
               <code
                 v-if="item.code"
-                class="text-xs text-dimmed"
+                class="text-xs text-muted"
               >{{ item.code }}</code>
             </p>
             <p

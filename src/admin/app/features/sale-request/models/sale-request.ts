@@ -7,7 +7,7 @@ export type SaleRequestType = NonNullable<Api.SaleRequestListItemDto['requestTyp
 export type SaleRequestSource = NonNullable<Api.SaleRequestListItemDto['source']>
 
 // A row of the sale request list.
-export const saleRequestRowModel = defineModel(vSaleRequestListItemDto, {
+const saleRequestRowModel = defineModel(vSaleRequestListItemDto, {
   required: ['id'],
   optional: ['requestCode', 'userName', 'emailAddress', 'requestType', 'source', 'submitDate', 'status'],
 })
@@ -25,10 +25,9 @@ export const saleRequestSummaryModel = defineModel(vSaleRequestDashboardDto, {
 })
 
 export type SaleRequestRow = v.InferOutput<typeof saleRequestRowModel>
-export type SaleRequestSummary = v.InferOutput<typeof saleRequestSummaryModel>
 
 // One requested module in the detail. The features are the names the customer picked.
-export const saleRequestModuleItemModel = defineModel(vSaleRequestModuleItemDto, {
+const saleRequestModuleItemModel = defineModel(vSaleRequestModuleItemDto, {
   required: [],
   optional: ['id', 'moduleCode', 'moduleName', 'requestedFeatures'],
 })
@@ -43,6 +42,3 @@ export const saleRequestDetailModel = v.object({
   moduleItems: v.nullish(v.array(saleRequestModuleItemModel), () => []),
   ...defineModel(vSaleRequestDetailDto, { required: [], optional: ['tokenAmount', 'additionalSeats'] }).entries,
 })
-
-export type SaleRequestDetail = v.InferOutput<typeof saleRequestDetailModel>
-export type SaleRequestModuleItem = v.InferOutput<typeof saleRequestModuleItemModel>

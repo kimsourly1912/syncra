@@ -32,15 +32,11 @@ Admin (`src/admin`, package `admin`, port 555) is Syncra's internal staff consol
 Run from the repository root:
 
 ```bash
-pnpm --filter admin exec eslint .
+pnpm --filter admin verify   # lint, typecheck, test
 ```
 
 ```bash
-pnpm --filter admin typecheck
-```
-
-```bash
-pnpm --filter admin test
+pnpm knip --workspace src/admin
 ```
 
 ```bash

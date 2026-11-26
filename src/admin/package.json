@@ -15,14 +15,17 @@
     "test:e2e": "vitest run --project e2e",
     "typecheck": "nuxt typecheck",
     "lint": "eslint .",
-    "lint:fix": "eslint . --fix"
+    "lint:fix": "eslint . --fix",
+    "verify": "pnpm lint && pnpm typecheck && pnpm test"
   },
   "dependencies": {
+    "@internationalized/date": "^3.12.4",
     "@nuxt/ui": "4.13.0",
     "@valibot/to-json-schema": "^1.8.0",
     "@vueuse/core": "^15.0.0",
     "@vueuse/integrations": "^15.0.0",
     "nuxt": "^4.7.0",
+    "ofetch": "^1.5.1",
     "sortablejs": "^1.15.6",
     "tailwindcss": "^4.3.5",
     "valibot": "^1.5.0",
@@ -30,6 +33,7 @@
     "vue-router": "^5.5.1"
   },
   "devDependencies": {
+    "@axe-core/playwright": "^4.14.1",
     "@hey-api/openapi-ts": "0.99.0",
     "@iconify-json/lucide": "^1.2.157",
     "@nuxt/devtools": "^4.2.1",
@@ -37,8 +41,12 @@
     "@nuxt/test-utils": "^4.4.0",
     "@vue/test-utils": "^2.4.6",
     "eslint": "^10.15.0",
+    "eslint-import-resolver-typescript": "^4.4.5",
+    "eslint-plugin-better-tailwindcss": "^4.11.0",
+    "eslint-plugin-boundaries": "^7.4.4",
     "eslint-plugin-format": "^2.0.1",
     "happy-dom": "^21.0.4",
+    "msw": "^2.15.0",
     "playwright-core": "^1.56.1",
     "typescript": "^6.0.3",
     "vitest": "^4.1.12",

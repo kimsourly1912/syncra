@@ -22,9 +22,6 @@ const TYPE = {
 export type SaleRequestStatusTab = keyof typeof STATUS
 export type SaleRequestTypeFilter = keyof typeof TYPE
 
-/** Rows per page. The API's default is 20; its largest page isn't documented (open question). */
-export const SALE_REQUEST_PAGE_SIZES = [20, 50, 100] as const
-
 /**
  * The sale request list: status, type, search, page, and page size in the URL
  * (`/sale-request?status=pending&type=token&search=acme`), plus the status totals.
@@ -33,21 +30,12 @@ export const SALE_REQUEST_PAGE_SIZES = [20, 50, 100] as const
  * Back leaves the list instead of stepping through panels. Changing a filter closes the panel.
  */
 export function useSaleRequestList() {
-  const list = useListQuery(
+  const requests = useApiList(
+    'sale-request:list',
     { status: Object.keys(STATUS) as SaleRequestStatusTab[], type: Object.keys(TYPE) as SaleRequestTypeFilter[] },
-    { search: true, pageSizes: SALE_REQUEST_PAGE_SIZES },
-  )
-
-  const requests = useApiQuery(
-    () => `sale-request:list:${list.filters.value.status}:${list.filters.value.type}:${list.page.value}:${list.pageSize.value}:${list.search.value}`,
-    ({ signal }) => api.get('/admin/sale-requests', {
-      query: {
-        status: STATUS[list.filters.value.status],
-        type: TYPE[list.filters.value.type],
-        search: list.search.value || undefined,
-        page: list.page.value - 1, // the API's page is zero-based
-        size: list.pageSize.value,
-      },
+    { search: true, pageSizes: LIST_PAGE_SIZES },
+    ({ filters, query, signal }) => api.get('/admin/sale-requests', {
+      query: { ...query, status: STATUS[filters.status], type: TYPE[filters.type] },
       signal,
       model: saleRequestPageModel,
     }),
@@ -58,34 +46,18 @@ export function useSaleRequestList() {
     ({ signal }) => api.get('/admin/sale-requests/dashboard', { signal, model: saleRequestSummaryModel }),
   )
 
-  list.keepPageInRange(() => requests.data.value?.totalPages)
-
   const panel = useUrlRecord('request')
 
   return {
-    tab: computed(() => list.filters.value.status),
-    type: computed(() => list.filters.value.type),
-    search: list.search,
-    page: list.page,
-    pageSize: list.pageSize,
-    isFiltered: list.isFiltered,
-    items: computed(() => requests.data.value?.items ?? []),
-    totalPages: computed(() => requests.data.value?.totalPages ?? 0),
-    loading: requests.loading,
-    refreshing: requests.refreshing,
-    pending: requests.pending,
-    error: requests.error,
-    refresh: requests.refresh,
+    ...requests,
+    tab: computed(() => requests.filters.value.status),
+    type: computed(() => requests.filters.value.type),
+    showStatus: (status: SaleRequestStatusTab) => requests.setFilters({ status }),
+    showType: (type: SaleRequestTypeFilter) => requests.setFilters({ type }),
     summary: summary.data,
     summaryLoading: summary.loading,
     summaryError: summary.error,
     refreshSummary: summary.refresh,
-    showStatus: (status: SaleRequestStatusTab) => list.setFilters({ status }),
-    showType: (type: SaleRequestTypeFilter) => list.setFilters({ type }),
-    setSearch: list.setSearch,
-    showPage: list.setPage,
-    setPageSize: list.setPageSize,
-    clearFilters: list.clearFilters,
     openId: panel.id,
     openRequest: panel.open,
     closeRequest: panel.close,

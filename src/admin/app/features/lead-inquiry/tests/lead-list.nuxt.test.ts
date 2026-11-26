@@ -4,7 +4,8 @@ import { flushPromises } from '@vue/test-utils'
 import { mockNuxtImport, mountSuspended } from '@nuxt/test-utils/runtime'
 import { clearNuxtData, useRouter } from '#imports'
 import LeadListScreen from '../components/LeadListScreen.vue'
-import { fakeApi, httpError } from '#test/fake-api'
+import { fakeApi, httpError, listPage } from '#test/fake-api'
+import type { Api } from '@/api'
 
 // Reactive, like the real route. Each test sets the list's URL query.
 const route = reactive({ query: {} as Record<string, string>, params: {}, path: '/' })
@@ -20,9 +21,7 @@ const lead = {
   workEmail: 'lead@example.test',
   phoneNumber: '+10000000000',
   status: 'CONTACTED',
-}
-
-const page = (items: unknown[], totalPages = 1) => ({ page: 0, size: 20, totalItems: items.length, totalPages, items })
+} satisfies Api.ContactSaleInquiryResponse
 
 let transport: ReturnType<typeof fakeApi>['transport']
 const mounted: { unmount: () => void }[] = []
@@ -49,7 +48,7 @@ describe('lead list screen', () => {
   it('sends the URL state as the API query, lists leads, and shows the totals', async () => {
     route.query = { status: 'contacted', search: 'example', page: '2', size: '50' }
     transport = fakeApi({
-      'GET /admin/lead-inquiries': page([lead], 3),
+      'GET /admin/lead-inquiries': listPage([lead], 3),
       'GET /admin/lead-inquiries/summary': { leadReceived: 120, contacted: 30, converted: 12, rejected: 4 },
     }).transport
     const wrapper = await mount(LeadListScreen)
@@ -72,7 +71,7 @@ describe('lead list screen', () => {
   it('opens a lead from its row, keeping the list query', async () => {
     route.query = { status: 'contacted' }
     fakeApi({
-      'GET /admin/lead-inquiries': page([lead]),
+      'GET /admin/lead-inquiries': listPage([lead]),
       'GET /admin/lead-inquiries/summary': {},
     })
     const replace = vi.spyOn(useRouter(), 'replace').mockResolvedValue(undefined)
@@ -87,7 +86,7 @@ describe('lead list screen', () => {
   it('shows the open lead read-only: interests, goals, and no status actions', async () => {
     route.query = { lead: '7' }
     transport = fakeApi({
-      'GET /admin/lead-inquiries': page([lead]),
+      'GET /admin/lead-inquiries': listPage([lead]),
       'GET /admin/lead-inquiries/summary': {},
       'GET /admin/lead-inquiries/7': {
         ...lead,
@@ -115,7 +114,7 @@ describe('lead list screen', () => {
   it('shows a retry when the open lead fails to load', async () => {
     route.query = { lead: '7' }
     fakeApi({
-      'GET /admin/lead-inquiries': page([lead]),
+      'GET /admin/lead-inquiries': listPage([lead]),
       'GET /admin/lead-inquiries/summary': {},
       'GET /admin/lead-inquiries/7': () => { throw httpError(500) },
     })
@@ -126,7 +125,7 @@ describe('lead list screen', () => {
 
   it('sends no status for All and leaves an empty search out', async () => {
     transport = fakeApi({
-      'GET /admin/lead-inquiries': page([]),
+      'GET /admin/lead-inquiries': listPage([]),
       'GET /admin/lead-inquiries/summary': {},
     }).transport
     const wrapper = await mount(LeadListScreen)
@@ -143,7 +142,7 @@ describe('lead list screen', () => {
   it('tells a filtered empty list apart, with Clear filters', async () => {
     route.query = { search: 'nobody' }
     fakeApi({
-      'GET /admin/lead-inquiries': page([]),
+      'GET /admin/lead-inquiries': listPage([]),
       'GET /admin/lead-inquiries/summary': {},
     })
     const wrapper = await mount(LeadListScreen)
@@ -169,7 +168,7 @@ describe('lead list screen', () => {
 
   it('shows a contract error when a row breaks the model', async () => {
     fakeApi({
-      'GET /admin/lead-inquiries': page([{ ...lead, id: null }]),
+      'GET /admin/lead-inquiries': listPage([{ ...lead, id: null }]),
       'GET /admin/lead-inquiries/summary': {},
     })
     const wrapper = await mount(LeadListScreen)

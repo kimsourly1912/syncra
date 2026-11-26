@@ -56,7 +56,7 @@ const fileSize = (file: File) => `${(file.size / 1024 / 1024).toFixed(1)} MB`
     <template #header>
       <UDashboardNavbar
         icon="lucide:panels-top-left"
-        title="HeroPage Management"
+        title="Hero page management"
       >
         <template #right>
           <!-- From `sm` to `lg` the preview isn't beside the content; this opens it. On a phone the
@@ -133,7 +133,7 @@ const fileSize = (file: File) => `${(file.size / 1024 / 1024).toFixed(1)} MB`
             />
             <div
               v-else
-              class="flex size-full flex-col items-center justify-center gap-2 text-dimmed"
+              class="flex size-full flex-col items-center justify-center gap-2 text-muted"
             >
               <UIcon
                 name="lucide:circle-play"
@@ -144,13 +144,13 @@ const fileSize = (file: File) => `${(file.size / 1024 / 1024).toFixed(1)} MB`
           </div>
           <h2
             class="text-xl font-semibold text-balance wrap-anywhere"
-            :class="shown.tagline.trim() ? 'text-highlighted' : 'text-dimmed'"
+            :class="shown.tagline.trim() ? 'text-highlighted' : 'text-muted'"
           >
             {{ shown.tagline.trim() || 'Your tagline' }}
           </h2>
           <p
             class="text-sm text-pretty wrap-anywhere"
-            :class="shown.description.trim() ? 'text-muted' : 'text-dimmed'"
+            :class="shown.description.trim() ? 'text-muted' : 'text-muted italic'"
           >
             {{ shown.description.trim() || 'A sentence or two under the tagline.' }}
           </p>

@@ -3,7 +3,7 @@ import { reviewPageModel } from '../models/review-item'
 
 /**
  * The next TechPack waiting for review after `fileId`: the first open draft on the queue's first
- * In Review page. Used after an approval, so the reviewer can go straight on.
+ * In review page. Used after an approval, so the reviewer can go straight on.
  */
 export function useNextReview(fileId: number) {
   const query = useApiQuery(

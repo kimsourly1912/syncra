@@ -1,3 +1,4 @@
+import { CalendarDate, DateFormatter, getLocalTimeZone, parseDate } from '@internationalized/date'
 import { formatTimeAgo } from '@vueuse/core'
 
 /**
@@ -36,28 +37,37 @@ export function formatMoney(amount: number | null | undefined, currency: string 
 }
 
 /** `2026-11-25`: a calendar day with no time (the spec's `format: date`). */
-const CALENDAR_DAY = /^(\d{4})-(\d{2})-(\d{2})$/
+const CALENDAR_DAY = /^\d{4}-\d{2}-\d{2}$/
 
-/** A calendar day as local midnight, or undefined for one that doesn't exist (`2026-02-31`). */
-function calendarDay(value: string) {
-  const match = CALENDAR_DAY.exec(value)
-  if (!match) return undefined
-  const [year, month, day] = [Number(match[1]), Number(match[2]) - 1, Number(match[3])]
-  const date = new Date(year, month, day)
-  return date.getFullYear() === year && date.getMonth() === month && date.getDate() === day ? date : undefined
+/** A calendar day is the same day for every reader, so it's formatted in UTC from UTC midnight. */
+const dayFormat = new DateFormatter(LOCALE, { dateStyle: 'medium', timeZone: 'UTC' })
+
+/**
+ * `'2026-11-25'` as a `CalendarDate` (`@internationalized/date`, the type `UCalendar` and
+ * `UInputDate` use), or undefined when it isn't one: not that shape, or a day that doesn't exist
+ * (`2026-02-31`).
+ */
+export function parseCalendarDay(value: string): CalendarDate | undefined {
+  if (!CALENDAR_DAY.test(value)) return undefined
+  try {
+    return parseDate(value)
+  }
+  catch {
+    return undefined
+  }
 }
 
 /**
- * The API's date strings aren't verified (some may have no time zone). Returns the parsed date,
- * the text as sent when it doesn't parse, or undefined when there's none.
+ * The API's date strings aren't verified (some may have no time zone). Returns a calendar day,
+ * an instant, the text as sent when it's neither, or undefined when there's none.
  *
- * A calendar day is that day wherever the reader is. `new Date('2026-11-25')` would read it as
- * UTC midnight, which is Nov 24 west of UTC.
+ * A calendar day stays a day: `new Date('2026-11-25')` would read it as UTC midnight, which is
+ * Nov 24 west of UTC. A timestamp is read in the reader's zone.
  */
-function parse(value: string | Date | null | undefined) {
+function parse(value: string | Date | null | undefined): CalendarDate | Date | string | undefined {
   if (value == null || value === '') return undefined
   if (value instanceof Date) return Number.isNaN(value.getTime()) ? String(value) : value
-  if (CALENDAR_DAY.test(value)) return calendarDay(value) ?? value
+  if (CALENDAR_DAY.test(value)) return parseCalendarDay(value) ?? value
   const date = new Date(value)
   return Number.isNaN(date.getTime()) ? value : date
 }
@@ -65,24 +75,26 @@ function parse(value: string | Date | null | undefined) {
 /** `Nov 25, 2026`. Text that isn't a date is shown as sent; missing → undefined. */
 export function formatDate(value: string | Date | null | undefined) {
   const date = parse(value)
+  if (date instanceof CalendarDate) return dayFormat.format(date.toDate('UTC'))
   return date instanceof Date ? date.toLocaleDateString(LOCALE, { dateStyle: 'medium' }) : date
 }
 
 /** `Nov 25, 2026, 3:04 PM`; a calendar day has no time, so it's `Nov 25, 2026`. Text that isn't a date is shown as sent; missing → undefined. */
 export function formatDateTime(value: string | Date | null | undefined) {
-  if (typeof value === 'string' && CALENDAR_DAY.test(value)) return formatDate(value)
   const date = parse(value)
+  if (date instanceof CalendarDate) return dayFormat.format(date.toDate('UTC'))
   return date instanceof Date ? date.toLocaleString(LOCALE, { dateStyle: 'medium', timeStyle: 'short' }) : date
 }
 
 /**
  * A date as an age (`3 days ago`) and in full, for its tooltip:
  * `<span :title="when.full">{{ when.age }}</span>`. Text that isn't a date is shown as sent in
- * both; missing → `—` and no tooltip.
+ * both; missing → `—` and no tooltip. A calendar day's age counts from its local midnight.
  */
 export function formatAge(value: string | Date | null | undefined, now: Date | number = Date.now()) {
   const date = parse(value)
   if (date === undefined) return { age: NO_VALUE, full: undefined }
-  if (!(date instanceof Date)) return { age: date, full: date }
-  return { age: formatTimeAgo(date, {}, now), full: formatDateTime(value) }
+  if (typeof date === 'string') return { age: date, full: date }
+  const instant = date instanceof CalendarDate ? date.toDate(getLocalTimeZone()) : date
+  return { age: formatTimeAgo(instant, {}, now), full: formatDateTime(value) }
 }

@@ -157,7 +157,7 @@ const hasItems = computed(() => modules.value.length > 0 || tokens.value != null
                   <span class="font-medium text-highlighted">{{ item.moduleName || item.moduleCode || 'Module' }}</span>
                   <span
                     v-if="item.moduleName && item.moduleCode"
-                    class="text-xs text-dimmed"
+                    class="text-xs text-muted"
                   >{{ item.moduleCode }}</span>
                 </div>
                 <div

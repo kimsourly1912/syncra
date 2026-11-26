@@ -2,7 +2,7 @@
 import type { TableColumn } from '@nuxt/ui'
 import type { ToolbarTab } from '@/components/list/ListToolbarTabs.vue'
 import { useLeadAgentTools } from '../composables/useLeadAgentTools'
-import { LEAD_PAGE_SIZES, useLeadList } from '../composables/useLeadList'
+import { useLeadList } from '../composables/useLeadList'
 import type { LeadStatusTab } from '../composables/useLeadList'
 import type { LeadRow } from '../models/lead'
 import { LEAD_STATUS } from '../utils/status'
@@ -10,7 +10,7 @@ import LeadDetailSlideover from './LeadDetailSlideover.vue'
 
 const list = useLeadList()
 const {
-  tab, search, page, pageSize, isFiltered, items, totalPages, loading, refreshing, pending, error, refresh,
+  tab, search, page, pageSize, pageSizes, isFiltered, items, totalPages, loading, refreshing, pending, error, refresh,
   summary, summaryError, refreshSummary, showStatus, setSearch, showPage, setPageSize, clearFilters,
   openId, openLead, closeLead,
 } = list
@@ -52,7 +52,7 @@ const columns: TableColumn<LeadRow>[] = [
     <template #header>
       <UDashboardNavbar
         icon="lucide:inbox"
-        title="Lead Inquiries"
+        title="Lead inquiries"
       />
 
       <UDashboardToolbar>
@@ -101,7 +101,7 @@ const columns: TableColumn<LeadRow>[] = [
         :filtered="isFiltered"
         :page="page"
         :page-count="totalPages"
-        :page-sizes="LEAD_PAGE_SIZES"
+        :page-sizes="pageSizes"
         :page-size="pageSize"
         card-class="space-y-2 pe-9"
         @retry="refresh"
@@ -123,7 +123,7 @@ const columns: TableColumn<LeadRow>[] = [
                 aria-hidden="true"
               />
             </button>
-            <p class="text-xs text-dimmed wrap-anywhere">
+            <p class="text-xs text-muted wrap-anywhere">
               {{ ids(row.original) }}
             </p>
           </div>
@@ -194,7 +194,7 @@ const columns: TableColumn<LeadRow>[] = [
               size="sm"
             />
           </div>
-          <p class="text-xs text-dimmed wrap-anywhere">
+          <p class="text-xs text-muted wrap-anywhere">
             {{ ids(row) }}
           </p>
           <div class="min-w-0 text-sm">

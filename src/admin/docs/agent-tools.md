@@ -6,9 +6,9 @@ How Admin offers tools to an AI agent running in a staff member's browser, throu
 
 | Tool | Screen | Does |
 | --- | --- | --- |
-| `search_accounts` | Account Management (`/`) | Sets `?search=` and lists the accounts loaded |
-| `search_leads` | Lead Inquiries | Sets `?status=` and `?search=` and lists the leads loaded |
-| `open_lead` | Lead Inquiries | Opens a lead **on screen** in the read-only panel (`?lead=`); its targets are the rows shown |
+| `search_accounts` | Account management (`/`) | Sets `?search=` and lists the accounts loaded |
+| `search_leads` | Lead inquiries | Sets `?status=` and `?search=` and lists the leads loaded |
+| `open_lead` | Lead inquiries | Opens a lead **on screen** in the read-only panel (`?lead=`); its targets are the rows shown |
 | `navigate` | Any | Nuxt's own tool listing the app's pages; dev only |
 
 ## Rules

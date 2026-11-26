@@ -26,11 +26,12 @@ export interface ApiMutationOptions<I, R> {
  *   except with `error: false`, where the form shows `error` inline.
  *
  * @example
+ * const router = useRouter() // captured in setup: feature code doesn't call navigateTo (lint)
  * const approve = useApiMutation(
  *   (item: ReviewItem) => api.post('/admin/docai/techpack-reviews/{fileId}/approve', { path: { fileId: item.fileId }, body }),
  *   { success: 'Workbook reviewed and released', error: 'Could not approve the workbook', invalidate: ['techpack-review'] },
  * )
- * if ((await approve.execute(item)).ok) await navigateTo('/techpack-reviews?status=reviewed')
+ * if ((await approve.execute(item)).ok) await router.push('/techpack-reviews?status=reviewed')
  */
 export function useApiMutation<I = void, R = unknown>(fn: (input: I) => Promise<R>, options: ApiMutationOptions<I, R> = {}) {
   const toast = useAppToast()

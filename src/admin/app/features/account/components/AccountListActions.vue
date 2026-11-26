@@ -40,7 +40,7 @@ watch(() => open.create, (isOpen) => {
 <template>
   <!-- Several roots, so the buttons are the slot's own children in the navbar and the phone grid. -->
   <UButton
-    label="Add Member"
+    label="Add member"
     variant="outline"
     color="neutral"
     @click="open.create = true"
@@ -52,7 +52,7 @@ watch(() => open.create, (isOpen) => {
 
   <UModal
     v-model:open="open.create"
-    title="Add Member"
+    title="Add member"
     description="Add a person to a company workspace and choose their role"
   >
     <template #body>

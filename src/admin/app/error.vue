@@ -91,7 +91,7 @@ useHead({ title: () => view.value.title })
           :ui="{ root: 'p-6 sm:p-8 lg:p-8' }"
         >
           <template #footer>
-            <p class="text-xs text-dimmed">
+            <p class="text-xs text-muted">
               {{ status }} · {{ view.eyebrow }}
             </p>
             <p

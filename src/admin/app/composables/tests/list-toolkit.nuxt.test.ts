@@ -67,6 +67,19 @@ describe('useListQuery search and page size', () => {
     expect(list.isFiltered.value).toBe(false)
   })
 
+  it('keys every URL input, and sends the zero-based page', async () => {
+    route.query = { status: 'new', search: ' acme ', size: '50', page: '3' }
+    const list = await inComponent(() => useListQuery(STATUS, { search: true, pageSizes: [20, 50] }))
+
+    expect(list.stateKey.value).toBe('status=new&page=3&size=50&search=acme')
+    expect(list.apiQuery.value).toEqual({ page: 2, size: 50, search: 'acme' })
+
+    // Defaults are keyed too, so `all` and a missing status can't share a key with another filter.
+    route.query = {}
+    expect(list.stateKey.value).toBe('status=all&page=1&size=20')
+    expect(list.apiQuery.value).toStrictEqual({ page: 0, size: 20, search: undefined })
+  })
+
   it('has no page size when the API has a fixed one', async () => {
     const list = await inComponent(() => useListQuery(STATUS))
     expect(list.pageSize.value).toBeUndefined()

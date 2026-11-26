@@ -1,11 +1,11 @@
 <script setup lang="ts">
 import { ProductEditScreen } from '@/features/product'
 
-useHead({ title: 'Edit product' })
+definePageMeta({ title: 'Edit product' })
 
-const route = useRoute()
+const route = useRoute('product-id')
 </script>
 
 <template>
-  <ProductEditScreen :id="String(route.params.id)" />
+  <ProductEditScreen :id="route.params.id" />
 </template>

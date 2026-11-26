@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { ReviewQueueScreen } from '@/features/techpack-review'
 
-useHead({ title: 'TechPack Reviews' })
+definePageMeta({ title: 'TechPack reviews' })
 </script>
 
 <template>

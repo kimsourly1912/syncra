@@ -1,15 +1,7 @@
-export { useSignIn } from './composables/useSignIn'
-export { RESEND_COOLDOWN, useForgotPassword } from './composables/useForgotPassword'
-export { useResetPassword } from './composables/useResetPassword'
-export type { ResetLinkState } from './composables/useResetPassword'
-export { AUTH_PATHS, useAuthLinks } from './composables/useAuthLinks'
+// What other code uses from auth (decision 0015): the screens for its routes, sign-out for the
+// layout, and the password rules that staff invites and Portal admins share.
 export { useSignOut } from './composables/useSignOut'
-export { signInSchema } from './schemas/sign-in-form'
-export type { ISignInSchema } from './schemas/sign-in-form'
-export { forgotPasswordSchema } from './schemas/forgot-password-form'
-export type { IForgotPasswordSchema } from './schemas/forgot-password-form'
-export { PASSWORD_RULES, resetPasswordSchema } from './schemas/reset-password-form'
-export type { IResetPasswordSchema } from './schemas/reset-password-form'
+export { PASSWORD_RULES } from './schemas/reset-password-form'
 export { default as PasswordSuggestion } from './components/PasswordSuggestion.vue'
 export { default as SignInScreen } from './components/SignInScreen.vue'
 export { default as ForgotPasswordScreen } from './components/ForgotPasswordScreen.vue'
