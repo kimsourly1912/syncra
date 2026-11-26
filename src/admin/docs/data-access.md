@@ -45,7 +45,7 @@ review.loading     // nothing to show for this key: the first load, or a new key
 review.refreshing  // reloading the same key with its data shown
 ```
 
-- **The key is `'<feature>:<name>:<inputs…>'`**, `<feature>` being the folder under `features/` (`lead-inquiry:list:…`, not the API's `lead-inquiries`), so `invalidate: ['lead-inquiry']` finds it. Put every input the request uses into the key, with a getter when they change. In dev, `invalidateQueries` warns about a prefix no query has used.
+- **The key is `'<feature>:<name>:<inputs…>'`**, `<feature>` being the folder under `features/` (`lead-inquiry:list:…`, not the API's `lead-inquiries`), so `invalidate: ['lead-inquiry']` finds it. Keys and `invalidate` are typed (`QueryKey`, `QueryFeature`): a feature not in `QUERY_FEATURES` (`composables/useApiQuery.ts`) fails typecheck, so add a feature there with its first query. Put every input the request uses into the key, with a getter when they change. In dev, `invalidateQueries` warns about a prefix no query has used.
 - A new key is `loading` with `data` undefined, so a filter or page change shows `ListSkeleton`, never another query's rows. Only a reload of the same key is `refreshing`.
 - Pass `signal` through: a newer load cancels the older one. `enabled` holds the load until its inputs exist.
 - Components using the same key share one request.
@@ -67,7 +67,8 @@ if (result.ok) await router.replace('/techpack-reviews?status=reviewed')
 - `pending` is true while a call runs, and a second `execute` meanwhile is skipped, so a double click sends once.
 - `invalidate` refreshes the on-screen queries whose key starts with a prefix; `invalidateQueries(...)` does it by hand.
 - Navigate with a router captured in setup, not `navigateTo` (lint enforces it): the code runs after an `await`.
-- `useAppToast().failed(text)` reports a failure the composable decides itself (`forgotPassword` resolving `sent: false`).
+- `useAppToast().failed(text)` reports a failure the composable decides itself.
+- `error: false` skips the failure toast, for a form that shows the returned `error` inline (the auth pages, [forms](forms.md#rules)).
 - Destructive actions ask first with `<ModalConfirm>`.
 
 ## Lists: `useListQuery`
@@ -93,13 +94,15 @@ Every failure is one `ApiError` (inside the helpers, `error` or `result.error`):
 
 | `kind` | When | `message` |
 | --- | --- | --- |
-| `rejected` | `success: false` (any status but 401 and 403), or another 4xx | The API's `reason` |
+| `rejected` | `success: false` (any status but 401, 403, and 429), or another 4xx | The API's `reason` |
 | `validation`, `not_found`, `conflict`, `forbidden` | 400/422, 404, 409, 403 | The API's `reason` |
 | `unauthorized` | A 401 that couldn't be recovered | "Your session has expired…" |
 | `contract` | The response doesn't match the `model` | `Unexpected response from GET /admin/… (field: issue)` |
-| `server`, `network`, `timeout`, `aborted`, `unknown` | 5xx without an envelope, no response, timeout, cancelled, other | A fixed, user-safe message |
+| `server`, `network`, `timeout`, `rate_limited`, `aborted`, `unknown` | 5xx without an envelope, no response, timeout, 429 (with or without an envelope), cancelled, other | A fixed, user-safe message |
 
-`retryable` is true for `network`, `timeout`, and `server`; `silent` for cancelled requests and the 401 that ended the session. `ApiError.from(e)` unwraps one from inside other errors.
+`retryable` is true for `network`, `timeout`, `server`, and `rate_limited`, so a rate-limited session renewal keeps the session; `silent` for cancelled requests and the 401 that ended the session. `ApiError.from(e)` unwraps one from inside other errors.
+
+**Reporting.** `contract` and `unknown` errors shown by a toast, a failed profile load, and errors nothing caught (`plugins/report-errors.client.ts`) go to `reportAppError` (`utils/report.ts`). It logs to the console until a reporting service is chosen ([open questions](../../../docs/product/open-questions.md#admin)); connect one with `setErrorReporter`. Call `reportAppError` yourself only for a failure the team must see that none of these cover; never `console.error`.
 
 ## The API contract
 

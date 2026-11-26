@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import type { DropdownMenuItem, TableColumn } from '@nuxt/ui'
 import { SAMPLE_PLANS } from '../fixtures/plans'
-import type { Plan } from '../fixtures/plans'
+import type { Plan } from '../models/plan'
 
 // Static page: sample rows until the plan API exists (open question). The navbar says so.
 const plans = SAMPLE_PLANS

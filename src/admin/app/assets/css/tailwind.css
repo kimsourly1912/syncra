@@ -40,7 +40,8 @@
  * and its navbar, toolbar, and body line up on one edge. `app.config.ts` applies `--page-gutter` as
  * their side padding; `100%` there is the panel's width, so it holds beside the sidebar. Below the
  * cap the padding is Nuxt UI's own (1rem, 1.5rem from `sm`). Pages set no max-width: lists and
- * details get 80rem, and a form or settings page adds `page-narrow` to its UDashboardPanel (56rem).
+ * details get 80rem, a form or settings page adds `page-narrow` to its UDashboardPanel (56rem), and
+ * the TechPack review workspace adds `page-wide` (96rem, 1536px) so its two panes have room.
  */
 :root {
   --page-max: var(--container-7xl);
@@ -57,6 +58,11 @@
 /* --page-gutter is restated: a custom property's var() resolves where it's declared. */
 @utility page-narrow {
   --page-max: var(--container-4xl);
+  --page-gutter: max(var(--page-pad), calc((100% - var(--page-max)) / 2));
+}
+
+@utility page-wide {
+  --page-max: var(--breakpoint-2xl);
   --page-gutter: max(var(--page-pad), calc((100% - var(--page-max)) / 2));
 }
 

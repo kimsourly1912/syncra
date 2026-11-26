@@ -19,6 +19,8 @@ const model = defineModel<string>()
         color="neutral"
         variant="link"
         :icon="show ? 'lucide:eye-off' : 'lucide:eye'"
+        :aria-label="show ? 'Hide password' : 'Show password'"
+        :aria-pressed="show"
         @click="show = !show"
       />
     </template>

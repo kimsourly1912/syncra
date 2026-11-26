@@ -64,7 +64,8 @@ These rules are the same in Web, Portal, and Admin. Each app's docs cover only h
 | Model (Admin) | `app/features/<feature>/models/<name>.ts`, kebab-case | `<name>Model = defineModel(v<Schema>, …)` and `type <Name> = v.InferOutput<typeof <name>Model>` ([0007](decisions/0007-generated-api-contract.md)) |
 | Form schema | `app/features/<feature>/schemas/<name>-form.ts` (new), or `app/schema/<resource>.schema.ts` (existing; Portal and Web) | `<name>Schema` and `type I<Name>Schema = v.InferOutput<typeof <name>Schema>` |
 | Feature folder | `app/features/<kebab-name>/` | Public API in `index.ts` |
-| Test | `test/unit/<subject>.test.ts` or `test/nuxt/<subject>.test.ts` | `describe('<behavior>')` |
+| Test (Portal, Web) | `test/unit/<subject>.test.ts` or `test/nuxt/<subject>.test.ts` | `describe('<behavior>')` |
+| Test (Admin) | `<folder>/tests/<subject>.test.ts` (Node) or `<subject>.nuxt.test.ts` (Nuxt), beside the code ([0016](decisions/0016-admin-tests-beside-the-code.md)) | `describe('<behavior>')` |
 
 **Existing misspellings:** `setingCompany.dto.ts`, `SatisticCard.vue`, `settingcompanyRepresentative.vue`, `company-infomation`, `privatecy`. Keep these names when you only edit nearby code, because renaming touches every importer. Never copy the spelling into new names. A rename belongs in its own change.
 

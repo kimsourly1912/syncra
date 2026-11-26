@@ -25,16 +25,17 @@ Before you touch a static screen, add this to the PR or the feature spec:
 ## Files
 
 ```text
-app/features/product/models/product.ts                 defineModel(vProductResponse, { required, optional }) + list model
+app/features/product/models/product.ts                 exists (the UI's shape): replace with defineModel(vProductResponse, …) + list model
 app/features/product/schemas/product-form.ts            form schema + toProductRequest(form)
 app/features/product/composables/useProductList.ts      useListQuery + useApiQuery
 app/features/product/composables/useProductActions.ts   useApiMutation per write
 app/features/product/components/ProductListScreen.vue   exists (sample data): switch it to useProductList
 app/features/product/components/ProductFormScreen.vue   exists (UI only): wire its Save to useProductActions
-app/pages/product/index.vue, create.vue, [id].vue       already thin; [id].vue loads the record instead of a fixture
+app/features/product/components/ProductEditScreen.vue   exists: swap findSampleProduct(id) for a useApiQuery of the record
+app/pages/product/index.vue, create.vue, [id].vue       already thin; leave them
 ```
 
-Delete `fixtures/products.ts` once nothing reads it.
+Delete `fixtures/products.ts` once nothing reads it. `ProductFormScreen` (about 420 lines) is one file only because nothing is wired yet: as you wire it, move each form section and the preview into its own component in `components/`, so the screen holds the form state, the save, and the layout.
 
 There is no service file: composables call `api` with the spec's paths. Every page is staff-only by default (`middleware/access.global.ts`), so `/product/**` needs no guard setup. The sidebar shows the Product link once a page exists.
 
@@ -93,5 +94,5 @@ The action acts only on `result.ok`. For review-style workflows, carry the recor
 ## Verify
 
 - `pnpm --filter admin exec eslint .`, `pnpm --filter admin typecheck`, `pnpm --filter admin test`, and `pnpm --filter admin build`
-- Add a `test/nuxt/<feature>-screens.test.ts` that answers through `fakeApi` and covers the model, a refused request, a contract error, and the requests each action sends ([testing](testing.md))
+- Add a `features/<feature>/tests/<screen>.nuxt.test.ts` that answers through `fakeApi` and covers the model, a refused request, a contract error, and the requests each action sends ([testing](testing.md))
 - In the browser: the list with data, empty, and with a failed request; creating, editing, and deleting a record; and page and filter changes, including Back

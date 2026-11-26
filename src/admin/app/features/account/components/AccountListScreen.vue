@@ -128,155 +128,112 @@ const columns: TableColumn<PortalUserRow>[] = [
         </template>
       </CardStats>
 
-      <AlertApiError
-        v-if="error"
+      <ListResults
+        :items="items"
+        :columns="columns"
+        :row-key="row => row.userId"
+        noun="accounts"
+        label="Accounts"
         :error="error"
-        title="Could not load accounts"
-        :retrying="pending"
-        @retry="refresh"
-      />
-      <ListRefresh
-        v-else
-        :active="refreshing"
-      >
-        <!-- Tablet and up: a table. -->
-        <UTable
-          :data="items"
-          :columns="columns"
-          :loading="loading"
-          :ui="{ root: 'hidden md:block rounded-lg border border-default', tr: 'relative' }"
-          aria-label="Accounts"
-        >
-          <template #account-cell="{ row }">
-            <div class="min-w-0 space-y-0.5">
-              <ULink
-                :to="`/account/${row.original.userId}`"
-                raw
-                class="row-link"
-              >
-                {{ title(row.original) }}
-                <UIcon
-                  name="lucide:chevron-right"
-                  class="absolute inset-e-3 top-1/2 size-4 -translate-y-1/2 text-muted"
-                  aria-hidden="true"
-                />
-              </ULink>
-              <p
-                v-if="showsEmail(row.original)"
-                class="text-muted wrap-anywhere"
-              >
-                {{ row.original.email }}
-              </p>
-              <p class="text-xs text-dimmed">
-                {{ ids(row.original) }}
-              </p>
-            </div>
-          </template>
-          <template #onboarding-cell="{ row }">
-            <UBadge
-              v-if="onboarding(row.original)"
-              :label="onboarding(row.original)!.label"
-              :color="onboarding(row.original)!.color"
-              variant="subtle"
-            />
-            <template v-else>
-              —
-            </template>
-          </template>
-          <template #loading>
-            <ListSkeleton label="Loading accounts…" />
-          </template>
-          <template #empty>
-            <ListEmptyState
-              noun="accounts"
-              :filtered="isFiltered"
-              @clear="clearFilters"
-            />
-          </template>
-        </UTable>
-
-        <!-- Phone: one card per account. -->
-        <div class="md:hidden">
-          <ListSkeleton
-            v-if="loading"
-            label="Loading accounts…"
-          />
-          <ListEmptyState
-            v-else-if="!items.length"
-            noun="accounts"
-            :filtered="isFiltered"
-            @clear="clearFilters"
-          />
-          <ul
-            v-else
-            class="space-y-3"
-            aria-label="Accounts"
-          >
-            <li
-              v-for="user in items"
-              :key="user.userId"
-              class="relative rounded-lg border border-default bg-elevated/40 p-4"
-            >
-              <!-- The name gets the full width, so a long email doesn't break beside the badge. -->
-              <div class="min-w-0 space-y-1 pe-6">
-                <ULink
-                  :to="`/account/${user.userId}`"
-                  raw
-                  class="row-link block after:rounded-lg"
-                >
-                  {{ title(user) }}
-                </ULink>
-                <p
-                  v-if="showsEmail(user)"
-                  class="text-sm text-muted wrap-anywhere"
-                >
-                  {{ user.email }}
-                </p>
-                <div class="flex flex-wrap items-center gap-x-2 gap-y-1">
-                  <UBadge
-                    v-if="onboarding(user)"
-                    :label="onboarding(user)!.label"
-                    :color="onboarding(user)!.color"
-                    variant="subtle"
-                    size="sm"
-                  />
-                  <span class="text-xs text-dimmed">{{ ids(user) }}</span>
-                </div>
-              </div>
-              <UIcon
-                name="lucide:chevron-right"
-                class="absolute inset-e-3 top-4 size-4 text-muted"
-                aria-hidden="true"
-              />
-              <!-- Three equal columns: a value can grow without wrapping the row. -->
-              <dl class="mt-3 grid grid-cols-3 divide-x divide-default border-t border-default pt-3 text-center">
-                <div
-                  v-for="stat in cardStats(user)"
-                  :key="stat.label"
-                  class="min-w-0 px-1"
-                >
-                  <dt class="text-xs text-muted">
-                    {{ stat.label }}
-                  </dt>
-                  <dd class="truncate font-medium text-highlighted tabular-nums">
-                    {{ stat.value }}
-                  </dd>
-                </div>
-              </dl>
-            </li>
-          </ul>
-        </div>
-      </ListRefresh>
-
-      <ListPagination
+        error-title="Could not load accounts"
+        :loading="loading"
+        :refreshing="refreshing"
+        :pending="pending"
+        :filtered="isFiltered"
         :page="page"
         :page-count="totalPages"
         :page-sizes="ACCOUNT_PAGE_SIZES"
         :page-size="pageSize"
-        :disabled="pending"
+        @retry="refresh"
+        @clear="clearFilters"
         @update:page="showPage"
         @update:page-size="setPageSize"
-      />
+      >
+        <template #account-cell="{ row }">
+          <div class="min-w-0 space-y-0.5">
+            <ULink
+              :to="`/account/${row.original.userId}`"
+              raw
+              class="row-link"
+            >
+              {{ title(row.original) }}
+              <UIcon
+                name="lucide:chevron-right"
+                class="absolute inset-e-3 top-1/2 size-4 -translate-y-1/2 text-muted"
+                aria-hidden="true"
+              />
+            </ULink>
+            <p
+              v-if="showsEmail(row.original)"
+              class="text-muted wrap-anywhere"
+            >
+              {{ row.original.email }}
+            </p>
+            <p class="text-xs text-dimmed">
+              {{ ids(row.original) }}
+            </p>
+          </div>
+        </template>
+        <template #onboarding-cell="{ row }">
+          <UBadge
+            v-if="onboarding(row.original)"
+            :label="onboarding(row.original)!.label"
+            :color="onboarding(row.original)!.color"
+            variant="subtle"
+          />
+          <template v-else>
+            —
+          </template>
+        </template>
+        <template #card="{ row: user }">
+          <!-- The name gets the full width, so a long email doesn't break beside the badge. -->
+          <div class="min-w-0 space-y-1 pe-6">
+            <ULink
+              :to="`/account/${user.userId}`"
+              raw
+              class="row-link block after:rounded-lg"
+            >
+              {{ title(user) }}
+            </ULink>
+            <p
+              v-if="showsEmail(user)"
+              class="text-sm text-muted wrap-anywhere"
+            >
+              {{ user.email }}
+            </p>
+            <div class="flex flex-wrap items-center gap-x-2 gap-y-1">
+              <UBadge
+                v-if="onboarding(user)"
+                :label="onboarding(user)!.label"
+                :color="onboarding(user)!.color"
+                variant="subtle"
+                size="sm"
+              />
+              <span class="text-xs text-dimmed">{{ ids(user) }}</span>
+            </div>
+          </div>
+          <UIcon
+            name="lucide:chevron-right"
+            class="absolute inset-e-3 top-4 size-4 text-muted"
+            aria-hidden="true"
+          />
+          <!-- Three equal columns: a value can grow without wrapping the row. -->
+          <dl class="mt-3 grid grid-cols-3 divide-x divide-default border-t border-default pt-3 text-center">
+            <div
+              v-for="stat in cardStats(user)"
+              :key="stat.label"
+              class="min-w-0 px-1"
+            >
+              <dt class="text-xs text-muted">
+                {{ stat.label }}
+              </dt>
+              <dd class="truncate font-medium text-highlighted tabular-nums">
+                {{ stat.value }}
+              </dd>
+            </div>
+          </dl>
+        </template>
+      </ListResults>
     </template>
   </UDashboardPanel>
 </template>

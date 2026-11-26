@@ -5,7 +5,7 @@ A decision record explains an architecture or documentation choice that had real
 | ID | Decision | Status |
 | --- | --- | --- |
 | [0001](0001-agent-documentation-layout.md) | Root instructions plus one instruction file per app | Accepted |
-| [0002](0002-feature-folders-and-public-api.md) | Feature folders with a public `index.ts` | Accepted. Lint enforcement pending. |
+| [0002](0002-feature-folders-and-public-api.md) | Feature folders with a public `index.ts` | Accepted. Lint pending for Portal and Web. Items 3–4 superseded for Admin by 0015. |
 | [0003](0003-request-and-error-flow.md) | Service → feature composable → component, with both API failure paths handled | Accepted for Portal and Web. Superseded for Admin by 0008. |
 | [0004](0004-import-alias.md) | `@/` is the only app import alias | Accepted. Existing `~/` imports not yet migrated. |
 | [0005](0005-shared-conventions-location.md) | Shared code conventions live at the root; app docs keep only their differences | Accepted |
@@ -18,6 +18,8 @@ A decision record explains an architecture or documentation choice that had real
 | [0012](0012-admin-page-width-and-layout-overrides.md) | Admin page width (`--page-gutter`, `page-narrow`), layout-only `app.config.ts` overrides, brand-800 light primary, sidebar section highlight | Accepted. Admin only. |
 | [0013](0013-validate-forms-on-submit.md) | Forms validate on submit only (`:validate-on="[]"`), not on blur, input, or change | Accepted. All apps. |
 | [0014](0014-admin-session-survives-api-outages.md) | Admin session survives API outages (error page, not sign-in), logout renews first, sign-out forgets data | Accepted. Admin only. |
+| [0015](0015-admin-feature-index-exports-screens.md) | Admin feature indexes export their screens; lint enforces the boundary | Accepted. Admin only. |
+| [0016](0016-admin-tests-beside-the-code.md) | Admin tests sit in `tests/` beside the code; the `.nuxt.test.ts` suffix picks the environment | Accepted. Admin only. |
 
 ## Template
 

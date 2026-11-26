@@ -1,14 +1,18 @@
 import { ApiError } from '@/api'
+import type { QueryFeature, QueryKey } from './useApiQuery'
 
 export type MutationResult<R> = { ok: true, data: R } | { ok: false, error: ApiError }
 
 export interface ApiMutationOptions<I, R> {
   /** Success toast text, or `false` for none. Default: none. */
   success?: string | false | ((data: R, input: I) => string | false)
-  /** Failure toast title; the description is the error's user-safe message. Default: "Failed". */
-  error?: string | ((input: I) => string)
+  /**
+   * Failure toast title; the description is the error's user-safe message. Default: "Failed".
+   * `false` shows no toast, for a form that shows the returned `error` inline (the auth forms).
+   */
+  error?: string | false | ((input: I) => string)
   /** Feature keys to refresh after success (`invalidateQueries`). */
-  invalidate?: string[]
+  invalidate?: (QueryFeature | QueryKey)[]
 }
 
 /**
@@ -18,7 +22,8 @@ export interface ApiMutationOptions<I, R> {
  * - `execute(input)` resolves to `{ ok: true, data }` or `{ ok: false, error }`; it never throws.
  *   Act on success with `if (result.ok)`.
  * - A call while the previous one is still running is skipped (a double click).
- * - Failures show a toast, except silent ones (a cancelled request, an ended session).
+ * - Failures show a toast, except silent ones (a cancelled request, an ended session), and
+ *   except with `error: false`, where the form shows `error` inline.
  *
  * @example
  * const approve = useApiMutation(
@@ -46,7 +51,7 @@ export function useApiMutation<I = void, R = unknown>(fn: (input: I) => Promise<
     catch (e) {
       const err = ApiError.from(e)
       error.value = err
-      toast.error(err, typeof options.error === 'function' ? options.error(input) : options.error)
+      if (options.error !== false) toast.error(err, typeof options.error === 'function' ? options.error(input) : options.error)
       return { ok: false, error: err }
     }
     finally {

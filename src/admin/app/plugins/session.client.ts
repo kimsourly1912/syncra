@@ -2,8 +2,8 @@ import type { $Fetch } from 'ofetch'
 import { configureApi } from '@/api'
 import { renewSession, useSession, useSessionSync } from '@/features/session'
 
-// Connects the API client to the staff session. The only plugin: the route guard
-// (middleware/access.global.ts) loads the session when the first page needs it.
+// Connects the API client to the staff session. It doesn't load the session: the route guard
+// (middleware/access.global.ts) does, when the first page needs it.
 export default defineNuxtPlugin({
   name: 'session',
   setup() {

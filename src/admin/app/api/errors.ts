@@ -11,6 +11,7 @@ export type ApiErrorKind
     | 'not_found'
     | 'validation' // 400, 422
     | 'conflict' // 409
+    | 'rate_limited' // 429: transient, never a refusal
     | 'rejected' // the API refused: a `success: false` envelope, or another 4xx
     | 'server' // 5xx without an envelope
     | 'contract' // the response doesn't match the feature's model
@@ -25,6 +26,7 @@ const MESSAGES: Record<ApiErrorKind, string> = {
   not_found: 'The requested item was not found.',
   validation: 'Some of the submitted data is invalid.',
   conflict: 'This change conflicts with the current data. Reload and try again.',
+  rate_limited: 'Too many requests. Wait a moment and try again.',
   rejected: 'The request could not be completed.',
   server: 'Something went wrong on the server. Please try again.',
   contract: 'The server sent an unexpected response.',
@@ -78,7 +80,7 @@ export class ApiError extends Error {
 
   /** A failure of the connection or the server, worth trying again; not a refusal. */
   get retryable() {
-    return this.kind === 'network' || this.kind === 'timeout' || this.kind === 'server'
+    return this.kind === 'network' || this.kind === 'timeout' || this.kind === 'server' || this.kind === 'rate_limited'
   }
 
   /** The same error, marked so no toast or alert shows it. */
@@ -131,10 +133,12 @@ function fromFetchError(error: FetchError, source?: string): ApiError {
 }
 
 // The API also answers refusals with a `success: false` envelope on 5xx statuses, so an
-// envelope means "rejected" whatever the status. 401 and 403 keep their meaning.
+// envelope means "rejected" whatever the status. 401, 403, and 429 keep their meaning: a
+// rate-limited session renewal must not read as refused and sign staff out.
 function kindOf(status: number, envelope: boolean): ApiErrorKind {
   if (status === 401) return 'unauthorized'
   if (status === 403) return 'forbidden'
+  if (status === 429) return 'rate_limited'
   if (envelope) return 'rejected'
   if (status === 400 || status === 422) return 'validation'
   if (status === 404) return 'not_found'

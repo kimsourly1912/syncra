@@ -45,6 +45,15 @@ pnpm --filter @syncra/portal test:unit --run
 pnpm --filter @syncra/portal test:nuxt --run
 ```
 
+### Git hooks
+
+There's no CI. `pnpm install` sets up git hooks ([lefthook.yml](lefthook.yml)) that check only the app a commit or push touches:
+
+- **On commit:** ESLint on the staged files of that app, and for Admin, that `app/api/generated` still matches the OpenAPI spec.
+- **On push:** Admin's typecheck, tests, and e2e smoke tests, and Portal's unit tests. Web has no push check yet. The e2e tests need Playwright's Chromium once per machine: `pnpm --filter admin exec playwright-core install chromium-headless-shell`.
+
+A failed hook stops the commit or push and prints what to fix. Run a hook by hand with `pnpm exec lefthook run pre-commit` (or `pre-push`). The plain build isn't in the hooks: run it before a merge request.
+
 Each app lists its own checks in its `AGENTS.md` and explains them in `docs/testing.md`: [Portal](src/portal/docs/testing.md), [Admin](src/admin/docs/testing.md), [Web](src/web/docs/testing.md).
 
 ## Documentation

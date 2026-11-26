@@ -1,5 +1,16 @@
 import { ApiError } from '@/api'
 
+/**
+ * The features that load queries: their folder names under `features/`. A key starts with one,
+ * so a mistyped key or `invalidate` fails typecheck instead of silently refreshing nothing.
+ * Add a feature here when it gets its first query (a test checks each name is a real folder).
+ */
+export const QUERY_FEATURES = ['account', 'auth', 'lead-inquiry', 'sale-request', 'settings', 'techpack-review'] as const
+export type QueryFeature = typeof QUERY_FEATURES[number]
+
+/** `'<feature>:<name>:<inputs…>'`, e.g. `lead-inquiry:list:new:1`. */
+export type QueryKey = `${QueryFeature}:${string}`
+
 /** The queries on screen, so `invalidateQueries` can refresh them after a write. */
 const mounted = new Set<{ key: () => string, refresh: () => Promise<unknown> }>()
 
@@ -10,7 +21,7 @@ const seenFeatures = new Set<string>()
  * Refreshes every query on screen whose key starts with one of `features` (`'techpack-review'`
  * matches `techpack-review:list:…`). Queries that aren't on screen load fresh when next shown.
  */
-export async function invalidateQueries(...features: string[]) {
+export async function invalidateQueries(...features: (QueryFeature | QueryKey)[]) {
   const matches = [...mounted].filter(query => features.some(feature => query.key().startsWith(`${feature}:`)))
   if (import.meta.dev) {
     for (const feature of features) {
@@ -43,7 +54,7 @@ export async function invalidateQueries(...features: string[]) {
  * )
  */
 export function useApiQuery<T>(
-  key: MaybeRefOrGetter<string>,
+  key: MaybeRefOrGetter<QueryKey>,
   fetcher: (context: { signal: AbortSignal }) => Promise<T>,
   options: {
     /** `false` waits for `refresh()`; a getter is re-read on each change, e.g. to wait for an input. */

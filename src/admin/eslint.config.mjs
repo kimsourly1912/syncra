@@ -33,6 +33,11 @@ export default withNuxt(
         // Nuxt UI's class merge can't see that `row-link` replaces ULink's own colors (docs/ui.md → Rows).
         selector: 'VElement[rawName="ULink"] > VStartTag:has(VAttribute[directive=false][key.name="class"][value.value=/(^|\\s)row-link(\\s|$)/]):not(:has(VAttribute[directive=false][key.name="raw"]))',
         message: 'A ULink with `row-link` sets `raw`, or its own link color wins (docs/ui.md → Rows).',
+      }, {
+        // A button that shows only an icon has no name for a screen reader (docs/ui.md).
+        // `children.length=0` keeps `:has` to the button's own attributes; a `v-bind="…"` spread may carry the name.
+        selector: 'VElement[rawName="UButton"][children.length=0]:matches(:has(VAttribute[key.name="icon"]), :has(VAttribute[key.argument.name="icon"])):not(:has(VAttribute[key.name=/^(label|aria-label)$/])):not(:has(VAttribute[key.argument.name=/^(label|aria-label)$/])):not(:has(VAttribute[directive=true][key.name.name="bind"][key.argument=null]))',
+        message: 'An icon-only UButton sets `aria-label` (or `label`), so screen readers can name it (docs/ui.md).',
       }],
     },
   },
@@ -52,12 +57,28 @@ export default withNuxt(
   // Feature code: `useApiMutation` handles failures, and navigation uses a router captured in setup.
   {
     files: ['app/features/**/*.{ts,vue}'],
-    ignores: ['app/features/session/**'],
+    // Tests drive the code from outside, so they may catch what it throws.
+    ignores: ['app/features/session/**', 'app/**/tests/**'],
     rules: {
       'no-restricted-syntax': ['error',
         { selector: 'TryStatement', message: 'No try/catch in features: wrap the request in useApiMutation or useApiQuery (docs/data-access.md).' },
         { selector: 'CallExpression[callee.name="navigateTo"]', message: 'Use a router captured in setup (`useRouter()`), not navigateTo (docs/data-access.md).' },
       ],
+    },
+  },
+
+  // Errors the team must see go to `reportAppError` (utils/report.ts), the one place that logs them.
+  {
+    files: ['app/**/*.{ts,vue}'],
+    ignores: ['app/utils/report.ts', 'app/**/tests/**'],
+    rules: { 'no-console': ['error', { allow: ['warn'] }] },
+  },
+
+  // Tests outside app/ (the app shell, shared helpers, e2e) import the app as app code does.
+  {
+    files: ['test/**/*.ts'],
+    rules: {
+      'no-restricted-imports': ['error', { patterns: [TILDE, FEATURE_INTERNALS] }],
     },
   },
 

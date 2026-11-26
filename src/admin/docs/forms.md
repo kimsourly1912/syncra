@@ -1,16 +1,17 @@
 # Admin forms
 
-Admin forms use the same rules as the shared [form conventions](../../../docs/conventions.md#forms). The working reference is `pages/auth/sign-in.vue` with `features/auth/composables/useSignIn.ts`.
+Admin forms use the same rules as the shared [form conventions](../../../docs/conventions.md#forms). The working reference is `features/auth/components/SignInScreen.vue` with `features/auth/composables/useSignIn.ts`.
 
 ## Pattern
 
 ```vue
 <script setup lang="ts">
 import type { FormSubmitEvent } from '@nuxt/ui'
-import { signInSchema, useSignIn } from '@/features/auth'
-import type { ISignInSchema } from '@/features/auth'
+import { signInSchema } from '../schemas/sign-in-form'
+import type { ISignInSchema } from '../schemas/sign-in-form'
+import { useSignIn } from '../composables/useSignIn'
 
-const { pending, submit } = useSignIn()
+const { pending, error, submit } = useSignIn()   // the route only renders <SignInScreen />
 
 const data = reactive<ISignInSchema>({ email: '', password: '' })
 const FIELD_NAME = { email: 'email', password: 'password' } satisfies { [K in keyof ISignInSchema]: K }
@@ -35,15 +36,16 @@ export const signInSchema = v.object({
 // features/auth/composables/useSignIn.ts (excerpt)
 const signIn = useApiMutation(
   (form: ISignInSchema) => session.signIn({ email: form.email, password: form.password }),   // maps form → request body
-  { success: 'Welcome to Syncra', error: 'Could not sign in' },                              // toasts, both ways
+  { success: 'Welcome to Syncra', error: false },                                            // success toast; the failure shows inline
 )
 
 async function submit(form: ISignInSchema) {
   const result = await signIn.execute(form)   // never throws
-  if (result.ok) await router.push(redirectTarget(route.query.redirect))
-  return result.ok
+  if (!result.ok) return false
+  await router.push(redirectTarget(route.query.redirect))
+  return true
 }
-// returns { pending: signIn.pending, submit }
+// returns { pending: signIn.pending, error: <the failure's message>, submit }
 ```
 
 ## Where the pieces go
@@ -67,4 +69,5 @@ async function submit(form: ISignInSchema) {
 - Validate on submit only: every `UForm` sets `:validate-on="[]"` (lint enforces it). No errors on blur, input, or change ([conventions → forms](../../../docs/conventions.md#forms)).
 - Disable the fields and the submit button while `pending` is true. Keep the form open until the request finishes.
 - On failure `useApiMutation` already toasts the API's reason; keep the input as entered. Use `useAppToast().failed(text)` only for a failure the composable decides itself.
+- A full-page form with nothing else on screen (the auth pages) shows its failure inline instead: `useApiMutation(fn, { error: false })`, then the composable returns the error's message and `AuthCard` shows it above the form. Keep it until a submit succeeds, so a retry doesn't make it flash away and back; never clear it on input.
 - Pages with Save and Cancel in the `UDashboardNavbar #right` slot (products, plans) put the form outside `UForm`'s submit button. Bind Save to the form with a template ref, or move the button inside the form. Never leave Save enabled but unconnected. Until a form's API exists, disable it and say why, as `ProductFormScreen` and `PlanFormScreen` do.

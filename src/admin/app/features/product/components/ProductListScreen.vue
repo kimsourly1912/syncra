@@ -4,7 +4,7 @@ import { usePreferredReducedMotion } from '@vueuse/core'
 import { useSortable } from '@vueuse/integrations/useSortable'
 import type { UseSortableOptions } from '@vueuse/integrations/useSortable'
 import { SAMPLE_PRODUCTS } from '../fixtures/products'
-import type { Product } from '../fixtures/products'
+import type { Product } from '../models/product'
 
 // Static page: sample rows until the product API exists (open question). The navbar says so.
 const data = shallowRef<Product[]>([...SAMPLE_PRODUCTS])

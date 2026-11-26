@@ -84,179 +84,137 @@ const columns: TableColumn<LeadRow>[] = [
         @retry="refreshSummary"
       />
 
-      <AlertApiError
-        v-if="error"
+      <ListResults
+        :items="items"
+        :columns="columns"
+        :row-key="row => row.id"
+        noun="leads"
+        label="Leads"
         :error="error"
-        title="Could not load leads"
-        :retrying="pending"
-        @retry="refresh"
-      />
-      <ListRefresh
-        v-else
-        :active="refreshing"
-      >
-        <!-- Tablet and up: a table. -->
-        <UTable
-          :data="items"
-          :columns="columns"
-          :loading="loading"
-          :ui="{ root: 'hidden md:block rounded-lg border border-default', tr: 'relative' }"
-          aria-label="Leads"
-        >
-          <template #lead-cell="{ row }">
-            <div class="min-w-0 space-y-0.5">
-              <button
-                type="button"
-                class="row-link"
-                @click="openLead(row.original.id)"
-              >
-                {{ name(row.original) }}
-                <UIcon
-                  name="lucide:chevron-right"
-                  class="absolute inset-e-3 top-1/2 size-4 -translate-y-1/2 text-muted"
-                  aria-hidden="true"
-                />
-              </button>
-              <p class="text-xs text-dimmed wrap-anywhere">
-                {{ ids(row.original) }}
-              </p>
-            </div>
-          </template>
-          <template #contact-cell="{ row }">
-            <div class="min-w-0 space-y-0.5">
-              <p class="wrap-anywhere text-highlighted">
-                {{ row.original.workEmail || NO_VALUE }}
-              </p>
-              <p
-                v-if="row.original.phoneNumber"
-                class="text-muted tabular-nums"
-              >
-                {{ row.original.phoneNumber }}
-              </p>
-            </div>
-          </template>
-          <template #interest-cell="{ row }">
-            <div
-              v-if="interests(row.original).shown.length"
-              class="flex flex-wrap gap-1"
-            >
-              <UBadge
-                v-for="product in interests(row.original).shown"
-                :key="product"
-                :label="product"
-                color="neutral"
-                variant="soft"
-                size="sm"
-              />
-              <UBadge
-                v-if="interests(row.original).more"
-                :label="`+${interests(row.original).more}`"
-                color="neutral"
-                variant="outline"
-                size="sm"
-              />
-            </div>
-            <template v-else>
-              —
-            </template>
-          </template>
-          <template #status-cell="{ row }">
-            <UBadge
-              v-if="status(row.original)"
-              :label="status(row.original)!.label"
-              :color="status(row.original)!.color"
-              variant="subtle"
-            />
-            <template v-else>
-              —
-            </template>
-          </template>
-          <template #loading>
-            <ListSkeleton label="Loading leads…" />
-          </template>
-          <template #empty>
-            <ListEmptyState
-              noun="leads"
-              :filtered="isFiltered"
-              @clear="clearFilters"
-            />
-          </template>
-        </UTable>
-
-        <!-- Phone: one card per lead. -->
-        <div class="md:hidden">
-          <ListSkeleton
-            v-if="loading"
-            label="Loading leads…"
-          />
-          <ListEmptyState
-            v-else-if="!items.length"
-            noun="leads"
-            :filtered="isFiltered"
-            @clear="clearFilters"
-          />
-          <ul
-            v-else
-            class="space-y-3"
-            aria-label="Leads"
-          >
-            <li
-              v-for="row in items"
-              :key="row.id"
-              class="relative space-y-2 rounded-lg border border-default bg-elevated/40 p-4 pe-9"
-            >
-              <div class="flex flex-wrap items-center gap-2">
-                <button
-                  type="button"
-                  class="row-link after:rounded-lg"
-                  @click="openLead(row.id)"
-                >
-                  {{ name(row) }}
-                </button>
-                <UBadge
-                  v-if="status(row)"
-                  :label="status(row)!.label"
-                  :color="status(row)!.color"
-                  variant="subtle"
-                  size="sm"
-                />
-              </div>
-              <p class="text-xs text-dimmed wrap-anywhere">
-                {{ ids(row) }}
-              </p>
-              <div class="min-w-0 text-sm">
-                <p
-                  v-if="row.workEmail"
-                  class="wrap-anywhere text-highlighted"
-                >
-                  {{ row.workEmail }}
-                </p>
-                <p
-                  v-if="row.phoneNumber"
-                  class="text-muted tabular-nums"
-                >
-                  {{ row.phoneNumber }}
-                </p>
-              </div>
-              <UIcon
-                name="lucide:chevron-right"
-                class="absolute inset-e-3 top-4 size-4 text-muted"
-                aria-hidden="true"
-              />
-            </li>
-          </ul>
-        </div>
-      </ListRefresh>
-
-      <ListPagination
+        error-title="Could not load leads"
+        :loading="loading"
+        :refreshing="refreshing"
+        :pending="pending"
+        :filtered="isFiltered"
         :page="page"
         :page-count="totalPages"
         :page-sizes="LEAD_PAGE_SIZES"
         :page-size="pageSize"
-        :disabled="pending"
+        card-class="space-y-2 pe-9"
+        @retry="refresh"
+        @clear="clearFilters"
         @update:page="showPage"
         @update:page-size="setPageSize"
-      />
+      >
+        <template #lead-cell="{ row }">
+          <div class="min-w-0 space-y-0.5">
+            <button
+              type="button"
+              class="row-link"
+              @click="openLead(row.original.id)"
+            >
+              {{ name(row.original) }}
+              <UIcon
+                name="lucide:chevron-right"
+                class="absolute inset-e-3 top-1/2 size-4 -translate-y-1/2 text-muted"
+                aria-hidden="true"
+              />
+            </button>
+            <p class="text-xs text-dimmed wrap-anywhere">
+              {{ ids(row.original) }}
+            </p>
+          </div>
+        </template>
+        <template #contact-cell="{ row }">
+          <div class="min-w-0 space-y-0.5">
+            <p class="wrap-anywhere text-highlighted">
+              {{ row.original.workEmail || NO_VALUE }}
+            </p>
+            <p
+              v-if="row.original.phoneNumber"
+              class="text-muted tabular-nums"
+            >
+              {{ row.original.phoneNumber }}
+            </p>
+          </div>
+        </template>
+        <template #interest-cell="{ row }">
+          <div
+            v-if="interests(row.original).shown.length"
+            class="flex flex-wrap gap-1"
+          >
+            <UBadge
+              v-for="product in interests(row.original).shown"
+              :key="product"
+              :label="product"
+              color="neutral"
+              variant="soft"
+              size="sm"
+            />
+            <UBadge
+              v-if="interests(row.original).more"
+              :label="`+${interests(row.original).more}`"
+              color="neutral"
+              variant="outline"
+              size="sm"
+            />
+          </div>
+          <template v-else>
+            —
+          </template>
+        </template>
+        <template #status-cell="{ row }">
+          <UBadge
+            v-if="status(row.original)"
+            :label="status(row.original)!.label"
+            :color="status(row.original)!.color"
+            variant="subtle"
+          />
+          <template v-else>
+            —
+          </template>
+        </template>
+        <template #card="{ row }">
+          <div class="flex flex-wrap items-center gap-2">
+            <button
+              type="button"
+              class="row-link after:rounded-lg"
+              @click="openLead(row.id)"
+            >
+              {{ name(row) }}
+            </button>
+            <UBadge
+              v-if="status(row)"
+              :label="status(row)!.label"
+              :color="status(row)!.color"
+              variant="subtle"
+              size="sm"
+            />
+          </div>
+          <p class="text-xs text-dimmed wrap-anywhere">
+            {{ ids(row) }}
+          </p>
+          <div class="min-w-0 text-sm">
+            <p
+              v-if="row.workEmail"
+              class="wrap-anywhere text-highlighted"
+            >
+              {{ row.workEmail }}
+            </p>
+            <p
+              v-if="row.phoneNumber"
+              class="text-muted tabular-nums"
+            >
+              {{ row.phoneNumber }}
+            </p>
+          </div>
+          <UIcon
+            name="lucide:chevron-right"
+            class="absolute inset-e-3 top-4 size-4 text-muted"
+            aria-hidden="true"
+          />
+        </template>
+      </ListResults>
 
       <LeadDetailSlideover
         :id="openId"

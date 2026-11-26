@@ -1,4 +1,6 @@
 <script setup lang="ts">
+useHead({ title: 'Community Management' })
+
 // Placeholder: Community Management has no requirement and no API yet (open question). The page
 // says so and lists what's needed, so it isn't mistaken for a broken or empty screen.
 const NEEDED = [

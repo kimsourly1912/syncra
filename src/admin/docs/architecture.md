@@ -6,7 +6,7 @@ Where Admin code goes, how routes and the sidebar work, and which files to copy.
 
 ```text
 src/admin/app/
-├── pages/                       # thin routes: definePageMeta + one screen from a feature's index.ts
+├── pages/                       # thin routes: definePageMeta, useHead title, one screen from a feature's index.ts
 │   ├── index.vue                # Account Management (list wired; its dialogs static)
 │   ├── account/[id].vue         # Account Detail (summary and Company tab wired; Modules, Tokens, Seats sample), ?tab=
 │   ├── techpack-reviews/        # review queue + [fileId] review (wired)
@@ -15,7 +15,7 @@ src/admin/app/
 │   ├── setting.vue              # Settings (wired; templates and packages read-only), ?tab=
 │   ├── community/index.vue      # placeholder: says what's needed before it can be built
 │   └── auth/                    # sign-in, forgot, reset (guest)
-├── features/<feature>/          # one staff workflow (decision 0002): components/ composables/ models/ schemas/ utils/ fixtures/ + index.ts
+├── features/<feature>/          # one staff workflow (decisions 0002, 0015): components/ composables/ models/ schemas/ utils/ fixtures/ tests/ + index.ts
 │   ├── techpack-review/         # the reference feature
 │   ├── account/ lead-inquiry/ sale-request/ settings/  # wired screens
 │   ├── product/ plan-pricing/ hero/                    # UI shells on fixtures
@@ -23,10 +23,11 @@ src/admin/app/
 ├── components/                  # shared, auto-registered WITH their folder prefix: alert/ card/ detail/ input/ list/ modal/
 ├── composables/                 # useApiQuery, useApiMutation, useListQuery, useUrlTab, useUrlRecord, useCenteredTab, useRefreshIndicator, useAppToast
 ├── api/                         # '@/api': client, errors, session recovery, contract helpers, generated/ (never edit)
-├── utils/                       # format.ts, file.ts, navigation.ts
+├── utils/                       # format.ts, file.ts, navigation.ts, report.ts (reportAppError: where errors the team must see go)
 ├── middleware/access.global.ts  # loads the session, checks `access`
 ├── layouts/                     # default (dashboard + sidebar), auth
-└── plugins/session.client.ts    # configures the API client, starts tab sync
+└── plugins/                     # session.client.ts: configures the API client, starts tab sync; report-errors.client.ts: uncaught errors → reportAppError
+src/admin/test/                  # only what no folder owns: app-shell/ (guard, layout), support/ (fakeApi), e2e/ (decision 0016)
 ```
 
 - **Components** are named with their folder: `components/card/CardStats.vue` is `<CardStats>`, so a file starts with its folder name (`modal/ModalConfirm.vue`). A component's prop types live in its own `<script lang="ts">` block.
@@ -44,6 +45,7 @@ No services: a composable calls `api` with the spec's path and a model ([data ac
 
 ## Routes, guards, and the sidebar
 
+- **A new route is named after its feature folder**, in kebab-case: `features/sale-request` → `/sale-request`, `/sale-request/[id]`. `/techpack-reviews` and `/setting` predate this and stay, because renaming them breaks bookmarks and shared links; rename one only with a redirect from the old path.
 - **Every page is staff-only by default.** `middleware/access.global.ts` awaits `useSession().load()` on navigation, then checks the page's `access` meta. Never add a per-page `middleware: 'auth'`.
   - Signed out on a staff page → `/auth/sign-in?redirect=<page>`.
   - Guest pages set `definePageMeta({ access: 'guest', layout: 'auth' })`; signed in → the `redirect` target, or home.
@@ -59,8 +61,9 @@ No services: a composable calls `api` with the spec's path and a model ([data ac
 | Searchable table list with totals and a URL panel | `lead-inquiry/composables/useLeadList.ts` + `LeadListScreen.vue` + `LeadDetailSlideover.vue`; an extra filter: `useSaleRequestList`; route-added actions: `AccountListScreen` `#actions` |
 | A screen split into panels | `techpack-review/composables/useReviewDetail.ts` (one `createInjectionState`) + `ReviewDetailScreen.vue` |
 | Writes on a versioned record | `techpack-review/composables/useReviewActions.ts`: each save sends the current `draftUuid` and reloads; approval invalidates the queue |
-| Form with Valibot and pending | `pages/auth/sign-in.vue` + `auth/composables/useSignIn.ts` ([forms](forms.md)) |
+| Form with Valibot and pending | `auth/components/SignInScreen.vue` + `auth/composables/useSignIn.ts` ([forms](forms.md)) |
 | Request with a model | `auth/composables/useForgotPassword.ts` + `auth/models/forgot-password.ts` |
+| Page that checks its link before showing a form | `auth/components/ResetPasswordScreen.vue` + `auth/composables/useResetPassword.ts` (one `state`: checking, ready, invalid, unavailable, done) |
 | Tabs in the URL | `account/components/AccountDetailScreen.vue` (`useUrlTab`) |
 | Page layout | `product/components/ProductFormScreen.vue` |
 
@@ -77,10 +80,12 @@ No services: a composable calls `api` with the spec's path and a model ([data ac
 - `~/` imports
 - importing a file inside a feature instead of its `index.ts`
 - `@/api` in pages, shared components, or layouts
-- `try` or `navigateTo` in feature code (except `features/session`)
+- `try` or `navigateTo` in feature code (except `features/session` and tests)
+- `console.log` or `console.error` in app code (use `reportAppError`; `console.warn` is for dev warnings)
 - `bg-white`, `bg-black`, `dark:`, or hex classes (except the TechPack PDF page and the email preview)
 - a `UForm` without `:validate-on`
 - a `ULink` with `row-link` and no `raw`
+- an icon-only `UButton` with no `aria-label` or `label`
 
 When a new rule can be checked mechanically, add it to `eslint.config.mjs` instead of only the docs.
 

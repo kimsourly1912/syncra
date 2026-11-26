@@ -27,6 +27,7 @@ Only what Nuxt UI lacks and two or more screens use. Auto-imported, named with t
 | `InputPassword` | A password field with a show/hide toggle |
 | `InputSearch` | **Every** search box: trimmed text after 300 ms, or at once on Enter; `/` focuses it. Bind `:model-value="list.search.value" @update:model-value="list.setSearch"`. |
 | `ListToolbarTabs` | Page or status tabs in a `UDashboardToolbar` (`ToolbarTab<T>` items, `v-model`). A tab's `count` shows as a badge. For a status filter, disable the tabs while loading and give the group `role="group"` and an `aria-label`. |
+| `ListResults` | The body of a table list: the list error with Retry, `UTable` from `md` and one card per row on a phone (both with loading and empty states), `ListRefresh`, and `ListPagination`. Pass `#<column>-cell` slots as on `UTable`, and `#card="{ row }"`. The screen keeps its header. |
 | `ListSkeleton` | Placeholder rows while a list is `loading`, in `UTable`'s `#loading` slot or in place of a list |
 | `ListRefresh` | Wraps content that is `refreshing`: dimmed, with a thin moving bar. `fill` for content that scrolls itself. |
 | `ListEmptyState` | An empty list: "No *X* yet" (`createLabel`) or "No *X* match your filters" (`filtered`, with Clear filters) |
@@ -65,6 +66,7 @@ Auto-imported.
 | Class | Use for |
 | --- | --- |
 | `page-narrow` | On a form or settings page's `UDashboardPanel`: 56rem instead of 80rem |
+| `page-wide` | On the TechPack review workspace's `UDashboardPanel`: 96rem (1536px) instead of 80rem |
 | `row-link` | The name link that opens a row's record, stretched over the `relative` row; a `ULink` adds `raw` ([rows](ui.md#rows)) |
 | `scrollbar-none` | A sideways-scrolling row with no visible scrollbar |
 
@@ -76,4 +78,4 @@ Imported explicitly.
 | --- | --- | --- |
 | `api`, `ApiError`, `errorMessage`, `defineModel`, `Api.*`, `v*` | `@/api` | Calls, errors, and models ([data access](data-access.md)) |
 | `useSession`, `SESSION_PATHS`, `redirectTarget` | `@/features/session` | Who is signed in; safe redirects ([session](data-access.md#the-session)) |
-| `useSignIn`, `useSignOut`, `useForgotPassword`, `useResetPassword`, the auth schemas, `PasswordSuggestion` | `@/features/auth` | The auth forms and Log Out |
+| `SignInScreen`, `ForgotPasswordScreen`, `ResetPasswordScreen`, `useSignIn`, `useSignOut`, `useForgotPassword`, `useResetPassword`, `useAuthLinks`, the auth schemas, `PasswordSuggestion` | `@/features/auth` | The guest pages (framed by `AuthCard`, keeping `?redirect=` between them) and Log Out |

@@ -1,6 +1,8 @@
 <script setup lang="ts">
 import { AccountDetailScreen } from '@/features/account'
 
+useHead({ title: 'Account' })
+
 // `/account/42`: anything that isn't a positive whole number shows "Account not found".
 const route = useRoute()
 const userId = computed(() => {
