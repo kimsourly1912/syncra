@@ -40,7 +40,7 @@ pnpm --filter admin test:e2e   # builds the app, then drives it in Chromium; fir
 pnpm dev:admin
 ```
 
-There's no CI. The git hooks in the root `lefthook.yml` run the checks instead, when a commit or push touches `src/admin`: on commit, ESLint on the staged files, plus `scripts/check-api-contract.mjs` when the spec, the generator, or `app/api/generated` changes; on push, `typecheck` and `test` (about 90 seconds). Run `build` and `test:e2e` yourself before a merge request.
+There's no CI. The git hooks in the root `lefthook.yml` run the checks instead, when a commit or push touches `src/admin`: on commit, ESLint on the staged files, plus `scripts/check-api-contract.mjs` when the spec, the generator, or `app/api/generated` changes; on push, `typecheck`, `test`, then `test:e2e`, stopping at the first failure (about 80 seconds). Run `build` yourself before a merge request.
 
 ## Writing tests
 

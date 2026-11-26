@@ -3,8 +3,9 @@
 # Admin change never runs Portal or Web checks.
 #
 #   On commit: ESLint on the staged files of the app you touched (seconds).
-#   On push:   typecheck and tests of each app with changes in the pushed commits (a minute or two).
-#   By hand:   build and e2e, before a merge request (the commands are in each app's AGENTS.md).
+#   On push:   typecheck and tests of each app with changes in the pushed commits, and Admin's e2e
+#              smoke tests (about 1–2 minutes for an Admin push).
+#   By hand:   the plain build, before a merge request (the commands are in each app's AGENTS.md).
 #
 # Run a hook without committing: `pnpm exec lefthook run pre-commit` (or `pre-push`).
 # Skip once, when you must: `git commit --no-verify` (or `git push --no-verify`).
@@ -36,14 +37,23 @@ pre-commit:
       run: pnpm exec eslint --no-warn-ignored {staged_files}
 
 pre-push:
+  # Stop at the first failure: no e2e build after failing tests.
+  piped: true
   jobs:
     - name: admin typecheck and tests
       root: src/admin/
       glob: "*"
       run: pnpm typecheck && pnpm test
 
-    # Only Portal's unit tests: 65 of its 69 Nuxt tests fail on main (open in docs/product/open-questions.md).
-    # Add `pnpm test:nuxt --run` here once they pass.
+    # Builds the app and drives it in Chromium with a mocked API (test/e2e). Needs Playwright's
+    # Chromium once per machine: `pnpm --filter admin exec playwright-core install chromium-headless-shell`.
+    - name: admin e2e
+      root: src/admin/
+      glob: "*"
+      run: pnpm test:e2e
+
+    # Only Portal's unit tests: 65 of its 69 Nuxt tests fail on main. Add `pnpm test:nuxt --run`
+    # here once they pass.
     - name: portal unit tests
       root: src/portal/
       glob: "*"
