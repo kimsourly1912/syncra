@@ -23,11 +23,11 @@ src/admin/app/
 ├── components/                  # shared, auto-registered WITH their folder prefix: alert/ card/ detail/ input/ list/ modal/
 ├── composables/                 # useApiQuery, useApiMutation, useListQuery, useUrlTab, useUrlRecord, useCenteredTab, useRefreshIndicator, useAppToast
 ├── api/                         # '@/api': client, errors, session recovery, contract helpers, generated/ (never edit)
-├── utils/                       # format.ts, file.ts, navigation.ts, report.ts (reportAppError: where errors the team must see go)
+├── utils/                       # format.ts, file.ts, navigation.ts, report.ts (reportAppError: where errors the team must see go), agent-tools.ts (WebMCP list tools)
 ├── middleware/access.global.ts  # loads the session, checks `access`
 ├── layouts/                     # default (dashboard + sidebar), auth
 └── plugins/                     # session.client.ts: configures the API client, starts tab sync; report-errors.client.ts: uncaught errors → reportAppError
-src/admin/test/                  # only what no folder owns: app-shell/ (guard, layout), support/ (fakeApi), e2e/ (decision 0016)
+src/admin/test/                  # only what no folder owns: app-shell/ (guard, layout), support/ (fakeApi, model-context), e2e/ (decision 0016)
 ```
 
 - **Components** are named with their folder: `components/card/CardStats.vue` is `<CardStats>`, so a file starts with its folder name (`modal/ModalConfirm.vue`). A component's prop types live in its own `<script lang="ts">` block.

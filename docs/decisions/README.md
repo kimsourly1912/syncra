@@ -20,6 +20,7 @@ A decision record explains an architecture or documentation choice that had real
 | [0014](0014-admin-session-survives-api-outages.md) | Admin session survives API outages (error page, not sign-in), logout renews first, sign-out forgets data | Accepted. Admin only. |
 | [0015](0015-admin-feature-index-exports-screens.md) | Admin feature indexes export their screens; lint enforces the boundary | Accepted. Admin only. |
 | [0016](0016-admin-tests-beside-the-code.md) | Admin tests sit in `tests/` beside the code; the `.nuxt.test.ts` suffix picks the environment | Accepted. Admin only. |
+| [0017](0017-admin-webmcp-pilot.md) | Admin pilots WebMCP with read-only list tools, on only in `nuxt dev` | Accepted. Admin only. |
 
 ## Template
 

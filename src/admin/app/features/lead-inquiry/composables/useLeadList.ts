@@ -13,6 +13,9 @@ const STATUS = {
 
 export type LeadStatusTab = keyof typeof STATUS
 
+/** The status tabs in order; the first is the default. */
+export const LEAD_STATUS_TABS = Object.keys(STATUS) as LeadStatusTab[]
+
 /** Rows per page. The API's default is 20; its largest page isn't documented (open question). */
 export const LEAD_PAGE_SIZES = [20, 50, 100] as const
 
@@ -25,7 +28,7 @@ export const LEAD_PAGE_SIZES = [20, 50, 100] as const
  */
 export function useLeadList() {
   const list = useListQuery(
-    { status: Object.keys(STATUS) as LeadStatusTab[] },
+    { status: LEAD_STATUS_TABS },
     { search: true, pageSizes: LEAD_PAGE_SIZES },
   )
 
@@ -60,6 +63,8 @@ export function useLeadList() {
     isFiltered: list.isFiltered,
     items: computed(() => leads.data.value?.items ?? []),
     totalPages: computed(() => leads.data.value?.totalPages ?? 0),
+    /** Rows are loaded for the current URL state (not the previous filter's, still shown). */
+    loaded: computed(() => leads.data.value != null),
     loading: leads.loading,
     refreshing: leads.refreshing,
     pending: leads.pending,

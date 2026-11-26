@@ -10,7 +10,7 @@ Admin uses Vitest, with the projects defined in `vitest.config.ts`:
 
 ### Where a test goes
 
-In a `tests/` folder beside the code it covers ([0016](../../../docs/decisions/0016-admin-tests-beside-the-code.md)): `features/<f>/tests/`, `api/tests/`, `composables/tests/`, `utils/tests/`. The suffix picks the project: `.nuxt.test.ts` needs the Nuxt app, plain `.test.ts` runs in Node. One feature per file. `test/` holds only `app-shell/` (guard, layout), `support/` (`fakeApi`), and `e2e/`.
+In a `tests/` folder beside the code it covers ([0016](../../../docs/decisions/0016-admin-tests-beside-the-code.md)): `features/<f>/tests/`, `api/tests/`, `composables/tests/`, `utils/tests/`. The suffix picks the project: `.nuxt.test.ts` needs the Nuxt app, plain `.test.ts` runs in Node. One feature per file. `test/` holds only `app-shell/` (guard, layout), `support/` (`fakeApi`, `installModelContext` for [agent tools](agent-tools.md#testing)), and `e2e/`.
 
 ## Commands
 
@@ -50,7 +50,7 @@ There's no CI. The git hooks in the root `lefthook.yml` run the checks instead, 
 - **The session:** reset it in `beforeEach` (`await useSession().load()`, then `clearNuxtState(['session:status', 'session:staff'])`). Spy on the real router (`vi.spyOn(useRouter(), 'push')`); mocking `useRouter` breaks the Nuxt boot. `mountSuspended` itself calls `router.replace('/')`, so assert on the calls your code makes, not on none at all. `features/session/tests/session.nuxt.test.ts` is the reference.
 - **Cover the failures** for an action: a `success: false` envelope (`refused(reason)`), a thrown error (`httpError(status)`), and a response that breaks the model. Where a decision depends on loaded data (an approval gate), also cover a reload that fails while the old data is still shown.
 - **Use sanitized fixtures** that are shaped like the API response. Never use real customer files, names, or credentials.
-- **Tests never reach a real API.** The `nuxt` project overrides `apiURL` to `http://api.test.invalid`, because the route guard loads the session when the app boots. Each test then installs `fakeApi`.
+- **Tests never reach a real API.** The `nuxt` project overrides `apiURL` to `http://api.test.invalid`, because the route guard loads the session when the app boots. Each test then installs `fakeApi`. It also turns `agentTools` on, as in `nuxt dev`.
 - **The Nuxt boot is slow.** It takes about 15 seconds on a cold Windows run, so the `nuxt` project's `hookTimeout` is 60 seconds.
 - **Imports:** a test imports its own feature relatively (`../components/LeadListScreen.vue`), and everything else through `@/` (another feature only through its `index.ts`). `unit` tests import relatively: the Node project has no Nuxt aliases. Lint and typecheck cover tests like the code beside them.
 

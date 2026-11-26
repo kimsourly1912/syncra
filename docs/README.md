@@ -36,6 +36,7 @@ Every app uses the same file names, so you can find a topic in any app the same 
 | End-to-end CRUD recipe | [crud-recipe](../src/portal/docs/crud-recipe.md) | [crud-recipe](../src/admin/docs/crud-recipe.md) | Not needed: Web has one public write |
 | Shared components, composables, utils | [building-blocks](../src/portal/docs/building-blocks.md) | [building-blocks](../src/admin/docs/building-blocks.md) | [building-blocks](../src/web/docs/building-blocks.md) |
 | Tests and verification | [testing](../src/portal/docs/testing.md) | [testing](../src/admin/docs/testing.md) | [testing](../src/web/docs/testing.md) |
+| Agent tools (WebMCP) | Not used | [agent-tools](../src/admin/docs/agent-tools.md) | Not used |
 
 ## Maintaining the docs
 

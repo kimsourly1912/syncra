@@ -24,6 +24,7 @@ Admin (`src/admin`, package `admin`, port 555) is Syncra's internal staff consol
 | Forms | [forms](docs/forms.md) |
 | Wiring a static screen, or a new staff CRUD | [crud-recipe](docs/crud-recipe.md) |
 | Verification | [testing](docs/testing.md) |
+| Agent tools (WebMCP) | [agent-tools](docs/agent-tools.md) |
 | TechPack review behavior | [Doc AI](../../docs/features/doc-ai.md) |
 
 ## Verify

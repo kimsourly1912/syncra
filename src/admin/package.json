@@ -19,18 +19,20 @@
   },
   "dependencies": {
     "@nuxt/ui": "4.13.0",
+    "@valibot/to-json-schema": "^1.8.0",
     "@vueuse/core": "^15.0.0",
     "@vueuse/integrations": "^15.0.0",
-    "nuxt": "^4.6.4",
+    "nuxt": "^4.7.0",
     "sortablejs": "^1.15.6",
     "tailwindcss": "^4.3.5",
     "valibot": "^1.5.0",
-    "vue": "^3.5.45",
+    "vue": "^3.5.46",
     "vue-router": "^5.5.1"
   },
   "devDependencies": {
     "@hey-api/openapi-ts": "0.99.0",
     "@iconify-json/lucide": "^1.2.157",
+    "@nuxt/devtools": "^4.2.1",
     "@nuxt/eslint": "1.17.0",
     "@nuxt/test-utils": "^4.4.0",
     "@vue/test-utils": "^2.4.6",

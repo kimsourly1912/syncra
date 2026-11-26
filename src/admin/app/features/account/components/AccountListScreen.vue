@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import type { BadgeProps, SelectItem, TableColumn } from '@nuxt/ui'
 import type { CardStat } from '@/components/card/CardStats.vue'
+import { useAccountAgentTools } from '../composables/useAccountAgentTools'
 import { ACCOUNT_PAGE_SIZES, useAccountList } from '../composables/useAccountList'
 import type { OnboardingStatus, PortalUserRow } from '../models/portal-user'
 
@@ -9,10 +10,12 @@ defineSlots<{
   actions?(): unknown
 }>()
 
+const list = useAccountList()
 const {
   search, page, pageSize, isFiltered, items, totalPages, loading, refreshing, pending, error, refresh,
   summary, summaryLoading, summaryError, refreshSummary, setSearch, showPage, setPageSize, clearFilters,
-} = useAccountList()
+} = list
+useAccountAgentTools(list)
 
 const ONBOARDING: Record<OnboardingStatus, { label: string, color: BadgeProps['color'] }> = {
   COMPLETED: { label: 'Completed', color: 'success' },
