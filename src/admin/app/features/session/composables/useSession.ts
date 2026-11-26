@@ -82,7 +82,7 @@ export function useSession() {
           clear()
           return undefined
         }
-        console.error('Could not load the staff profile', e)
+        reportAppError(e, { source: 'GET /admin/users/me/profile', message: 'Could not load the staff profile' })
         return e
       })
       .finally(() => {

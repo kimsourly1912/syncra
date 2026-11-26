@@ -124,7 +124,7 @@ const staffName = computed(() => staff.value?.username || staff.value?.email || 
 const staffMenu = computed<DropdownMenuItem[][]>(() => [
   [{ label: staff.value?.email ?? staffName.value, type: 'label' }],
   [{ label: 'Keyboard shortcuts', icon: 'lucide:keyboard', kbds: ['?'], onSelect: () => { shortcutsOpen.value = true } }],
-  [{ label: 'Log Out', icon: 'lucide:log-out', disabled: signOut.pending.value, onSelect: () => void signOut.submit() }],
+  [{ label: 'Log out', icon: 'lucide:log-out', disabled: signOut.pending.value, onSelect: () => void signOut.submit() }],
 ])
 </script>
 

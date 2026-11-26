@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { createReusableTemplate, useObjectUrl } from '@vueuse/core'
-import type { Product } from '../fixtures/products'
+import type { Product } from '../models/product'
 
 /**
  * New product (no `product`) or Edit product. Static: there's no product API yet (open question),

@@ -4,9 +4,13 @@ Admin uses Vitest, with the projects defined in `vitest.config.ts`:
 
 | Project | Files | Environment | Use for |
 | --- | --- | --- | --- |
-| `unit` | `test/unit/*.test.ts` | Node | Pure code: the API client, errors, and session recovery (`api-client.test.ts`), contract helpers, `utils/format.ts`, feature utils |
-| `nuxt` | `test/nuxt/*.test.ts` | Nuxt (`@nuxt/test-utils`, happy-dom) | Composables, shared list components (`list-toolkit.test.ts`), the query and mutation helpers, the route guard, and mounted screens (`techpack-review-screens.test.ts`) |
-| `e2e` | `test/e2e/*.test.ts` | Node | None yet |
+| `unit` | `app/**/tests/*.test.ts` | Node | Pure code: the API client, errors, and session recovery (`api/tests/client.test.ts`), contract helpers, `utils/format.ts`, feature utils |
+| `nuxt` | `app/**/tests/*.nuxt.test.ts`, `test/app-shell/*.nuxt.test.ts` | Nuxt (`@nuxt/test-utils`, happy-dom) | Composables, shared list components (`composables/tests/list-toolkit.nuxt.test.ts`), the query and mutation helpers, mounted screens (`features/techpack-review/tests/review-screens.nuxt.test.ts`), and the app shell (route guard, layout) |
+| `e2e` | `test/e2e/**/*.test.ts` | Node, with Chromium (`@nuxt/test-utils/e2e`) | Smoke flows on the built app with every API request answered by the test (`smoke.test.ts`): sign-in from a deep link, a wired list, the TechPack queue. Not part of `pnpm test`. |
+
+### Where a test goes
+
+In a `tests/` folder beside the code it covers ([0016](../../../docs/decisions/0016-admin-tests-beside-the-code.md)): `features/<f>/tests/`, `api/tests/`, `composables/tests/`, `utils/tests/`. The suffix picks the project: `.nuxt.test.ts` needs the Nuxt app, plain `.test.ts` runs in Node. One feature per file. `test/` holds only `app-shell/` (guard, layout), `support/` (`fakeApi`), and `e2e/`.
 
 ## Commands
 
@@ -21,7 +25,7 @@ pnpm --filter admin typecheck   # nuxt typecheck (vue-tsc): app, .vue templates,
 ```
 
 ```bash
-pnpm --filter admin test
+pnpm --filter admin test       # unit + nuxt
 ```
 
 ```bash
@@ -29,20 +33,26 @@ pnpm --filter admin build
 ```
 
 ```bash
+pnpm --filter admin test:e2e   # builds the app, then drives it in Chromium; first: pnpm --filter admin exec playwright-core install chromium-headless-shell
+```
+
+```bash
 pnpm dev:admin
 ```
 
+There's no CI. The git hooks in the root `lefthook.yml` run the checks instead, when a commit or push touches `src/admin`: on commit, ESLint on the staged files, plus `scripts/check-api-contract.mjs` when the spec, the generator, or `app/api/generated` changes; on push, `typecheck` and `test` (about 90 seconds). Run `build` and `test:e2e` yourself before a merge request.
+
 ## Writing tests
 
-- **Mock the transport only.** `fakeApi({ 'GET /admin/docai/techpack-reviews/101': ok(data) })` from `test/fake-api.ts` replaces the HTTP transport (keys use the filled-in path), so tests run the real client, envelopes, models, and errors. Unknown requests fail.
-- **Screens:** mount them with `mountSuspended`, answer each endpoint through `fakeApi`, drive them through the UI (click, then `flushPromises()`), and assert the visible states and the requests sent. Call `clearNuxtData()` in `beforeEach`: queries share data by key across tests. `test/nuxt/techpack-review-screens.test.ts` is the reference.
-- **A composable on its own:** run it inside a mounted component (`inComponent` in `test/nuxt/api-composables.test.ts`), because `useApiQuery` needs a component scope.
-- **The session:** reset it in `beforeEach` (`await useSession().load()`, then `clearNuxtState(['session:status', 'session:staff'])`). Spy on the real router (`vi.spyOn(useRouter(), 'push')`); mocking `useRouter` breaks the Nuxt boot. `mountSuspended` itself calls `router.replace('/')`, so assert on the calls your code makes, not on none at all. `test/nuxt/session.test.ts` is the reference.
+- **Mock the transport only.** `fakeApi({ 'GET /admin/docai/techpack-reviews/101': ok(data) })` from `#test/fake-api` (`test/support/fake-api.ts`) replaces the HTTP transport (keys use the filled-in path), so tests run the real client, envelopes, models, and errors. Unknown requests fail.
+- **Screens:** mount them with `mountSuspended`, answer each endpoint through `fakeApi`, drive them through the UI (click, then `flushPromises()`), and assert the visible states and the requests sent. Call `clearNuxtData()` in `beforeEach`: queries share data by key across tests. `features/techpack-review/tests/review-screens.nuxt.test.ts` is the reference.
+- **A composable on its own:** run it inside a mounted component (`inComponent` in `composables/tests/api-composables.nuxt.test.ts`), because `useApiQuery` needs a component scope.
+- **The session:** reset it in `beforeEach` (`await useSession().load()`, then `clearNuxtState(['session:status', 'session:staff'])`). Spy on the real router (`vi.spyOn(useRouter(), 'push')`); mocking `useRouter` breaks the Nuxt boot. `mountSuspended` itself calls `router.replace('/')`, so assert on the calls your code makes, not on none at all. `features/session/tests/session.nuxt.test.ts` is the reference.
 - **Cover the failures** for an action: a `success: false` envelope (`refused(reason)`), a thrown error (`httpError(status)`), and a response that breaks the model. Where a decision depends on loaded data (an approval gate), also cover a reload that fails while the old data is still shown.
 - **Use sanitized fixtures** that are shaped like the API response. Never use real customer files, names, or credentials.
 - **Tests never reach a real API.** The `nuxt` project overrides `apiURL` to `http://api.test.invalid`, because the route guard loads the session when the app boots. Each test then installs `fakeApi`.
 - **The Nuxt boot is slow.** It takes about 15 seconds on a cold Windows run, so the `nuxt` project's `hookTimeout` is 60 seconds.
-- Imports in tests use relative paths into `app/` (`../../app/features/auth`), as Portal's tests do.
+- **Imports:** a test imports its own feature relatively (`../components/LeadListScreen.vue`), and everything else through `@/` (another feature only through its `index.ts`). `unit` tests import relatively: the Node project has no Nuxt aliases. Lint and typecheck cover tests like the code beside them.
 
 ## Browser verification
 

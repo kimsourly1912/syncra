@@ -6,6 +6,8 @@ allowBuilds:
   '@parcel/watcher': true
   core-js: true
   esbuild: true
+  # Its install script runs `lefthook install`: the git hooks in lefthook.yml.
+  lefthook: true
   sharp: true
   unrs-resolver: true
   vue-demi: true

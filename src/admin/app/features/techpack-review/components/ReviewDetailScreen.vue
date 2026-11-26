@@ -41,7 +41,10 @@ const metadata = computed(() => current.value ? `Company ${current.value.company
 </script>
 
 <template>
-  <UDashboardPanel :ui="{ body: 'gap-3 sm:gap-3 py-3 sm:py-3 min-h-0' }">
+  <UDashboardPanel
+    class="page-wide"
+    :ui="{ body: 'gap-3 sm:gap-3 py-3 sm:py-3 min-h-0' }"
+  >
     <template #header>
       <UDashboardNavbar
         :title="title"

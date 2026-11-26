@@ -54,7 +54,7 @@ At 390px (down to 320px), the navbar fits the title and **at most two icon butto
 
 ## Page width
 
-The navbar, toolbar, and body share one side padding, `--page-gutter`, so they line up on one centered edge. Content is capped at **80rem**; forms and settings add `class="page-narrow"` to their `UDashboardPanel` for **56rem**. Pages set no `max-w-*` on their content and no width breakpoints.
+The navbar, toolbar, and body share one side padding, `--page-gutter`, so they line up on one centered edge. Content is capped at **80rem**; forms and settings add `class="page-narrow"` to their `UDashboardPanel` for **56rem**, and the TechPack review workspace adds `class="page-wide"` for **96rem** (1536px). Pages set no `max-w-*` on their content and no width breakpoints.
 
 A tab row that doesn't fit scrolls sideways, never cutting a label. On a phone `UDashboardToolbar` wraps (search on one line, filters on the next), so give fixed-width controls a shrinkable width (`w-full max-w-sm`).
 
@@ -65,7 +65,7 @@ Copy the reference; it is the spec.
 | Pattern | Reference | Shape |
 | --- | --- | --- |
 | Queue | `techpack-review/components/ReviewQueueScreen.vue` | Status tabs + total + Refresh in the toolbar → a grid of cards; the filename opens the record → `ListPagination` |
-| Table list with totals | `lead-inquiry/components/LeadListScreen.vue` | Status tabs with `count` badges, then `InputSearch` and filters in a second toolbar → `UTable :loading` from `md`, cards on a phone → `ListPagination` with rows per page → a read-only `USlideover` kept in the URL (`useUrlRecord`) |
+| Table list with totals | `lead-inquiry/components/LeadListScreen.vue` | Status tabs with `count` badges, then `InputSearch` and filters in a second toolbar → `<ListResults>` (`UTable` from `md`, cards on a phone, `ListPagination` with rows per page) → a read-only `USlideover` kept in the URL (`useUrlRecord`) |
 | Detail with tabs | `account/components/AccountDetailScreen.vue` | Back button, summary, `ListToolbarTabs` bound to `useUrlTab`. Layout follows the panel (`@container`). Tabs without an API carry a Sample badge and a notice. |
 | Review workspace | `techpack-review/components/ReviewDetailScreen.vue` | PDF and workbook panes that each scroll inside themselves: side by side in a `USplitter` from `xl`, tabs below it. Footer: staged corrections, or the approval checklist above the attestation and Approve. |
 | Create or edit form | `product/components/ProductFormScreen.vue` (UI only) | One screen for New and Edit: `UPageCard` sections, Unsaved changes and Discard once edited, a Danger zone, a live preview beside the form from `lg` (in a `UModal` below it) |
@@ -88,7 +88,8 @@ A record's **name opens it**: a `ULink`, or a `UButton variant="link"` for an ov
 
 ## Review checklist
 
-- [ ] `pnpm --filter admin exec eslint .` passes (colors, forms, imports, row links).
+- [ ] `pnpm --filter admin exec eslint .` passes (colors, forms, imports, row links, icon-only buttons).
+- [ ] The page sets its tab title, its own name only: `useHead({ title: 'Lead Inquiries' })`. `app.vue` adds " · Syncra Admin".
 - [ ] Top-level page: title `icon`. Nested page: back button, `:toggle="false"`, no icon.
 - [ ] At 390px, in every mode, the navbar fits one line: two icon-only actions at most, each with an `aria-label`.
 - [ ] Loading, refreshing, empty, error, and pending states all render; a filter or page change shows `ListSkeleton`.

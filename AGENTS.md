@@ -42,7 +42,7 @@ Read the sections the task needs. Links are navigation, not a request to read ev
 
 ## Verification and completion
 
-- Use pnpm from the repository root, and run the checks for each app you changed. The commands are in each app's `AGENTS.md`.
+- Use pnpm from the repository root, and run the checks for each app you changed. The commands are in each app's `AGENTS.md`. There's no CI: git hooks (`lefthook.yml`) lint staged files on commit and run tests on push, only for the app touched. Never skip them (`--no-verify`) to get a change through.
 - For a changed workflow, exercise its normal entry point and its relevant disabled, error, and permission states.
 - Report the commands you ran, the routes and roles you checked, whether responses were mocked or came from a running service, and any check you couldn't run.
 - When a rule, convention, or contract changes, update the doc that owns it in the same change. [`docs/README.md`](docs/README.md) shows which doc owns which rule.

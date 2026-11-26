@@ -99,181 +99,139 @@ const columns: TableColumn<SaleRequestRow>[] = [
         @retry="refreshSummary"
       />
 
-      <AlertApiError
-        v-if="error"
+      <ListResults
+        :items="items"
+        :columns="columns"
+        :row-key="row => row.id"
+        noun="sale requests"
+        label="Sale requests"
         :error="error"
-        title="Could not load sale requests"
-        :retrying="pending"
-        @retry="refresh"
-      />
-      <ListRefresh
-        v-else
-        :active="refreshing"
-      >
-        <!-- Tablet and up: a table. -->
-        <UTable
-          :data="items"
-          :columns="columns"
-          :loading="loading"
-          :ui="{ root: 'hidden md:block rounded-lg border border-default', tr: 'relative' }"
-          aria-label="Sale requests"
-        >
-          <template #request-cell="{ row }">
-            <div class="min-w-0 space-y-0.5">
-              <button
-                type="button"
-                class="row-link"
-                @click="openRequest(row.original.id)"
-              >
-                {{ code(row.original) }}
-                <UIcon
-                  name="lucide:chevron-right"
-                  class="absolute inset-e-3 top-1/2 size-4 -translate-y-1/2 text-muted"
-                  aria-hidden="true"
-                />
-              </button>
-              <p
-                class="text-xs text-dimmed"
-                :title="formatAge(row.original.submitDate).full"
-              >
-                {{ meta(row.original) }}
-              </p>
-            </div>
-          </template>
-          <template #requester-cell="{ row }">
-            <div class="min-w-0 space-y-0.5">
-              <p class="wrap-anywhere text-highlighted">
-                {{ requester(row.original) }}
-              </p>
-              <p
-                v-if="showsEmail(row.original)"
-                class="wrap-anywhere text-muted"
-              >
-                {{ row.original.emailAddress }}
-              </p>
-            </div>
-          </template>
-          <template #type-cell="{ row }">
-            <span
-              v-if="requestType(row.original)"
-              class="inline-flex items-center gap-1.5"
-            >
-              <UIcon
-                :name="requestType(row.original)!.icon"
-                class="size-4 text-muted"
-                aria-hidden="true"
-              />
-              {{ requestType(row.original)!.label }}
-            </span>
-            <template v-else>
-              —
-            </template>
-          </template>
-          <template #status-cell="{ row }">
-            <UBadge
-              v-if="status(row.original)"
-              :label="status(row.original)!.label"
-              :color="status(row.original)!.color"
-              variant="subtle"
-            />
-            <template v-else>
-              —
-            </template>
-          </template>
-          <template #loading>
-            <ListSkeleton label="Loading sale requests…" />
-          </template>
-          <template #empty>
-            <ListEmptyState
-              noun="sale requests"
-              :filtered="isFiltered"
-              @clear="clearFilters"
-            />
-          </template>
-        </UTable>
-
-        <!-- Phone: one card per request. -->
-        <div class="md:hidden">
-          <ListSkeleton
-            v-if="loading"
-            label="Loading sale requests…"
-          />
-          <ListEmptyState
-            v-else-if="!items.length"
-            noun="sale requests"
-            :filtered="isFiltered"
-            @clear="clearFilters"
-          />
-          <ul
-            v-else
-            class="space-y-3"
-            aria-label="Sale requests"
-          >
-            <li
-              v-for="row in items"
-              :key="row.id"
-              class="relative space-y-2 rounded-lg border border-default bg-elevated/40 p-4 pe-9"
-            >
-              <div class="flex flex-wrap items-center gap-2">
-                <button
-                  type="button"
-                  class="row-link after:rounded-lg"
-                  @click="openRequest(row.id)"
-                >
-                  {{ code(row) }}
-                </button>
-                <UBadge
-                  v-if="status(row)"
-                  :label="status(row)!.label"
-                  :color="status(row)!.color"
-                  variant="subtle"
-                  size="sm"
-                />
-              </div>
-              <div class="min-w-0 text-sm">
-                <p class="wrap-anywhere text-highlighted">
-                  {{ requester(row) }}
-                </p>
-                <p
-                  v-if="showsEmail(row)"
-                  class="wrap-anywhere text-muted"
-                >
-                  {{ row.emailAddress }}
-                </p>
-              </div>
-              <p class="flex flex-wrap items-center gap-x-2 gap-y-1 text-xs text-dimmed">
-                <span
-                  v-if="requestType(row)"
-                  class="inline-flex items-center gap-1"
-                >
-                  <UIcon
-                    :name="requestType(row)!.icon"
-                    class="size-3.5"
-                    aria-hidden="true"
-                  />
-                  {{ requestType(row)!.label }}
-                </span>
-                <span :title="formatAge(row.submitDate).full">{{ meta(row) }}</span>
-              </p>
-              <UIcon
-                name="lucide:chevron-right"
-                class="absolute inset-e-3 top-4 size-4 text-muted"
-                aria-hidden="true"
-              />
-            </li>
-          </ul>
-        </div>
-      </ListRefresh>
-
-      <ListPagination
+        error-title="Could not load sale requests"
+        :loading="loading"
+        :refreshing="refreshing"
+        :pending="pending"
+        :filtered="isFiltered"
         :page="page"
         :page-count="totalPages"
         :page-sizes="SALE_REQUEST_PAGE_SIZES"
         :page-size="pageSize"
-        :disabled="pending"
+        card-class="space-y-2 pe-9"
+        @retry="refresh"
+        @clear="clearFilters"
         @update:page="showPage"
         @update:page-size="setPageSize"
-      />
+      >
+        <template #request-cell="{ row }">
+          <div class="min-w-0 space-y-0.5">
+            <button
+              type="button"
+              class="row-link"
+              @click="openRequest(row.original.id)"
+            >
+              {{ code(row.original) }}
+              <UIcon
+                name="lucide:chevron-right"
+                class="absolute inset-e-3 top-1/2 size-4 -translate-y-1/2 text-muted"
+                aria-hidden="true"
+              />
+            </button>
+            <p
+              class="text-xs text-dimmed"
+              :title="formatAge(row.original.submitDate).full"
+            >
+              {{ meta(row.original) }}
+            </p>
+          </div>
+        </template>
+        <template #requester-cell="{ row }">
+          <div class="min-w-0 space-y-0.5">
+            <p class="wrap-anywhere text-highlighted">
+              {{ requester(row.original) }}
+            </p>
+            <p
+              v-if="showsEmail(row.original)"
+              class="wrap-anywhere text-muted"
+            >
+              {{ row.original.emailAddress }}
+            </p>
+          </div>
+        </template>
+        <template #type-cell="{ row }">
+          <span
+            v-if="requestType(row.original)"
+            class="inline-flex items-center gap-1.5"
+          >
+            <UIcon
+              :name="requestType(row.original)!.icon"
+              class="size-4 text-muted"
+              aria-hidden="true"
+            />
+            {{ requestType(row.original)!.label }}
+          </span>
+          <template v-else>
+            —
+          </template>
+        </template>
+        <template #status-cell="{ row }">
+          <UBadge
+            v-if="status(row.original)"
+            :label="status(row.original)!.label"
+            :color="status(row.original)!.color"
+            variant="subtle"
+          />
+          <template v-else>
+            —
+          </template>
+        </template>
+        <template #card="{ row }">
+          <div class="flex flex-wrap items-center gap-2">
+            <button
+              type="button"
+              class="row-link after:rounded-lg"
+              @click="openRequest(row.id)"
+            >
+              {{ code(row) }}
+            </button>
+            <UBadge
+              v-if="status(row)"
+              :label="status(row)!.label"
+              :color="status(row)!.color"
+              variant="subtle"
+              size="sm"
+            />
+          </div>
+          <div class="min-w-0 text-sm">
+            <p class="wrap-anywhere text-highlighted">
+              {{ requester(row) }}
+            </p>
+            <p
+              v-if="showsEmail(row)"
+              class="wrap-anywhere text-muted"
+            >
+              {{ row.emailAddress }}
+            </p>
+          </div>
+          <p class="flex flex-wrap items-center gap-x-2 gap-y-1 text-xs text-dimmed">
+            <span
+              v-if="requestType(row)"
+              class="inline-flex items-center gap-1"
+            >
+              <UIcon
+                :name="requestType(row)!.icon"
+                class="size-3.5"
+                aria-hidden="true"
+              />
+              {{ requestType(row)!.label }}
+            </span>
+            <span :title="formatAge(row.submitDate).full">{{ meta(row) }}</span>
+          </p>
+          <UIcon
+            name="lucide:chevron-right"
+            class="absolute inset-e-3 top-4 size-4 text-muted"
+            aria-hidden="true"
+          />
+        </template>
+      </ListResults>
 
       <SaleRequestDetailSlideover
         :id="openId"

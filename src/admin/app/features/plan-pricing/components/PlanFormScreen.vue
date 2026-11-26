@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { createReusableTemplate } from '@vueuse/core'
-import type { Plan } from '../fixtures/plans'
+import type { Plan } from '../models/plan'
 
 /**
  * New plan (no `plan`) or Edit plan. Static: there's no plan API yet (open question), so nothing is

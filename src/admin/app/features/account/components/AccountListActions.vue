@@ -2,14 +2,38 @@
 // Static UI: the two dialogs have no submit wiring yet (open question). Rendered in
 // AccountListScreen's `#actions` slot, which it draws twice (navbar from `sm`, a row below it
 // on a phone), so each copy keeps its own dialog state.
+import AccountCreateAdminModal from './AccountCreateAdminModal.vue'
+
 interface OpenItem {
   create: boolean
-  success: boolean
+  createAdmin: boolean
 }
 
 const open = reactive<OpenItem>({
   create: false,
-  success: false,
+  createAdmin: false,
+})
+
+// Local only until the create endpoint exists: no schema, no submit.
+type MemberRole = 'Admin' | 'Operator'
+
+const roleItems = [
+  { label: 'Admin', value: 'Admin', icon: 'lucide:shield-check' },
+  { label: 'Operator', value: 'Operator', icon: 'lucide:user-round' },
+] satisfies { label: string, value: MemberRole, icon: string }[]
+
+const blankForm = () => ({
+  companyName: '',
+  firstName: '',
+  lastName: '',
+  email: '',
+  role: undefined as MemberRole | undefined,
+})
+const form = reactive(blankForm())
+
+// Each opening starts with an empty form.
+watch(() => open.create, (isOpen) => {
+  if (isOpen) Object.assign(form, blankForm())
 })
 </script>
 
@@ -23,160 +47,135 @@ const open = reactive<OpenItem>({
   />
   <UButton
     label="Create Admin"
-    @click="open.success = true"
+    @click="open.createAdmin = true"
   />
 
   <UModal
     v-model:open="open.create"
-    title="Create Company Admin"
-    description="Create a workspace and its primary admin"
+    title="Add Member"
+    description="Add a person to a company workspace and choose their role"
   >
     <template #body>
       <UForm
+        :state="form"
         :validate-on="[]"
-        class="space-y-5"
+        class="space-y-6"
       >
-        <UFormField
-          label="Company Name"
-        >
-          <UInput
-            class="w-full"
-            placeholder="Input Company Name"
-          />
-        </UFormField>
-
-        <section class="grid sm:grid-cols-2 grid-cols-1 gap-5">
+        <fieldset class="space-y-4">
+          <legend class="mb-3 flex items-center gap-2 text-sm font-semibold text-highlighted">
+            <UIcon
+              name="lucide:building-2"
+              class="size-4 text-muted"
+            />
+            Company
+          </legend>
           <UFormField
-            label="First Name"
+            label="Company name"
+            name="companyName"
+            required
           >
             <UInput
+              v-model="form.companyName"
               class="w-full"
-              placeholder="Input First Name"
+              placeholder="e.g. Northwind Apparel"
+              autocomplete="off"
             />
           </UFormField>
+        </fieldset>
+
+        <USeparator />
+
+        <fieldset class="space-y-4">
+          <legend class="mb-3 flex items-center gap-2 text-sm font-semibold text-highlighted">
+            <UIcon
+              name="lucide:user-round"
+              class="size-4 text-muted"
+            />
+            Member
+          </legend>
+
+          <div class="grid grid-cols-1 gap-4 sm:grid-cols-2">
+            <UFormField
+              label="First name"
+              name="firstName"
+              required
+            >
+              <UInput
+                v-model="form.firstName"
+                class="w-full"
+                autocomplete="off"
+              />
+            </UFormField>
+            <UFormField
+              label="Last name"
+              name="lastName"
+              required
+            >
+              <UInput
+                v-model="form.lastName"
+                class="w-full"
+                autocomplete="off"
+              />
+            </UFormField>
+          </div>
+
           <UFormField
-            label="Last Name"
+            label="Work email"
+            name="email"
+            help="They sign in with this email."
+            required
           >
             <UInput
+              v-model="form.email"
+              type="email"
+              icon="lucide:mail"
               class="w-full"
-              placeholder="Input Last Name"
+              placeholder="name@company.com"
+              autocomplete="off"
             />
           </UFormField>
-        </section>
 
-        <UFormField
-          label="Email Address"
-        >
-          <UInput
-            class="w-full"
-            placeholder="Input Email Address"
-          />
-        </UFormField>
+          <UFormField
+            label="Role"
+            name="role"
+            required
+          >
+            <USelect
+              v-model="form.role"
+              :items="roleItems"
+              :icon="roleItems.find(item => item.value === form.role)?.icon"
+              class="w-full"
+              placeholder="Select a role"
+            />
+          </UFormField>
+        </fieldset>
 
-        <UFormField
-          label="Role"
-        >
-          <UInput
-            class="w-full"
-            placeholder="Admin"
-            disabled
-            :ui="{
-              base: 'disabled:bg-elevated',
-            }"
-          />
+        <UAlert
+          icon="lucide:info"
+          color="neutral"
+          variant="subtle"
+          description="Adding members isn't connected to the API yet, so Add member is off."
+        />
 
-          <USelect
-            value-key="Operator"
-            :items="['Operator', 'Admin']"
-            class="w-full"
-            placeholder="Select Role"
-          />
-        </UFormField>
-
-        <footer class="flex gap-5">
+        <footer class="-mx-4 -mb-4 flex flex-col-reverse gap-2 border-t border-default px-4 py-4 sm:-mx-6 sm:-mb-6 sm:flex-row sm:justify-end sm:px-6">
           <UButton
             label="Cancel"
+            color="neutral"
             variant="outline"
-            color="error"
-            block
+            class="justify-center"
+            @click="open.create = false"
           />
           <UButton
-            label="Create Account"
-            block
+            type="submit"
+            label="Add member"
+            icon="lucide:user-plus"
+            class="justify-center"
+            disabled
           />
         </footer>
       </UForm>
     </template>
   </UModal>
 
-  <UModal
-    v-model:open="open.success"
-  >
-    <template #content>
-      <section class="p-8 space-y-6">
-        <header class="space-y-4 text-center flex items-center justify-center flex-col">
-          <UBadge
-            icon="lucide:circle-check"
-            size="xl"
-            square
-            class="rounded-full p-3"
-          />
-          <section class="space-y-1">
-            <h1 class="text-2xl text-highlighted font-medium">
-              Company Admin Created
-            </h1>
-            <p class="text-muted">
-              Sarah Chan Has been registered as the company admin for Syncra Inc.
-            </p>
-          </section>
-        </header>
-
-        <UForm
-          :validate-on="[]"
-          class="space-y-6"
-        >
-          <UFormField
-            label="Login Email"
-          >
-            <section class="flex items-center gap-2.5">
-              <UInput class="flex-1" />
-              <UButton
-                icon="lucide:copy"
-                color="neutral"
-                variant="outline"
-              />
-            </section>
-          </UFormField>
-
-          <UFormField
-            label="Temporary Password"
-          >
-            <section class="flex items-center gap-2.5">
-              <InputPassword />
-              <UButton
-                icon="lucide:copy"
-                color="neutral"
-                variant="outline"
-              />
-            </section>
-          </UFormField>
-
-          <footer class="flex gap-5">
-            <UButton
-              label="Copy All"
-              icon="lucide:copy"
-              color="info"
-              variant="outline"
-              block
-            />
-
-            <UButton
-              label="Done"
-              block
-            />
-          </footer>
-        </UForm>
-      </section>
-    </template>
-  </UModal>
+  <AccountCreateAdminModal v-model:open="open.createAdmin" />
 </template>

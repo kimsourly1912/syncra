@@ -111,7 +111,8 @@ export function createApiClient({ fetch, lockName = 'syncra-admin:session-renewa
       return await attempt()
     }
     catch (error) {
-      if (!auth || (error as ApiError).kind !== 'unauthorized') throw error
+      if (!auth) throw asRefusal(error as ApiError)
+      if ((error as ApiError).kind !== 'unauthorized') throw error
       if (await recovery.recover(checkpoint) === 'expired') throw (error as ApiError).silenced()
     }
 
@@ -124,6 +125,16 @@ export function createApiClient({ fetch, lockName = 'syncra-admin:session-renewa
       await recovery.expire()
       throw (error as ApiError).silenced()
     }
+  }
+
+  /**
+   * An `auth: false` call (sign-in, a reset link, renewal) has no session to expire, so its 401
+   * refuses what was sent, and the API's reason ("Incorrect username or password.") is for the
+   * user, not "Your session has expired".
+   */
+  function asRefusal(error: ApiError) {
+    if (error.kind !== 'unauthorized') return error
+    return new ApiError({ kind: 'rejected', status: error.status, reason: error.reason, code: error.code, source: error.source, cause: error.cause })
   }
 
   function unwrap(body: unknown, options: AnyOptions, source: string) {

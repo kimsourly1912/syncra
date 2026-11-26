@@ -73,7 +73,7 @@ onMounted(scrollToSelection)
 <template>
   <div
     ref="viewport"
-    class="min-h-0 flex-1 overflow-auto bg-default"
+    class="min-h-0 flex-1 overflow-auto bg-default outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-primary/50"
     tabindex="0"
     :aria-label="`${sheet.name} workbook preview`"
   >
@@ -126,13 +126,17 @@ onMounted(scrollToSelection)
 </template>
 
 <style scoped>
-/* Fixed sizes the sticky offsets use. Nothing is measured, so they can't drift. */
+/* Fixed sizes the sticky offsets use. Nothing is measured, so they can't drift.
+   Separate borders, not Tailwind's default `collapse`: with collapsed borders the table paints the
+   sticky cells' borders and backgrounds, and cells scrolling underneath showed through the bottom
+   of the column letters. Each cell draws only its right and bottom border, so none double up. */
 .review-grid {
   --letters-height: 2.25rem;
   --row-number-width: 3.75rem;
 
   width: max-content;
   min-width: 100%;
+  border-collapse: separate;
   border-spacing: 0;
   font-size: 0.875rem;
   white-space: nowrap;

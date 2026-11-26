@@ -41,7 +41,7 @@ export default defineConfig({
       operations: { include: ['/^[A-Z]+ \\/admin\\//'] },
     },
     patch: {
-      input: spec => normalizeSchema((spec as SchemaNode).components),
+      input: spec => normalizeSchema((spec as unknown as SchemaNode).components),
     },
   },
   plugins: [

@@ -4,14 +4,15 @@
   "private": true,
   "scripts": {
     "build": "nuxt build",
-    "dev": "nuxt dev --public",
-    "dev:local": "nuxt dev --public --dotenv .env.local",
+    "dev": "nuxt dev",
+    "dev:local": "nuxt dev --dotenv .env.local",
     "generate": "nuxt generate",
     "preview": "nuxt preview",
     "postinstall": "nuxt prepare",
     "api:pull": "node --env-file-if-exists=.env scripts/pull-openapi.mjs",
     "api:gen": "openapi-ts && node scripts/gen-endpoints.mjs",
-    "test": "vitest run",
+    "test": "vitest run --project unit --project nuxt",
+    "test:e2e": "vitest run --project e2e",
     "typecheck": "nuxt typecheck",
     "lint": "eslint .",
     "lint:fix": "eslint . --fix"

@@ -15,7 +15,7 @@ const [provideReviewDetail, injectReviewDetail] = createInjectionState((fileId: 
   const workbook = useWorkbookReview(draftUuid, inspection.inspection, inspection.findings)
   const actions = useReviewActions(record, source, inspection, workbook)
 
-  useHead({ title: computed(() => `${record.review.value?.filename ?? 'TechPack review'} · Syncra Admin`) })
+  useHead({ title: computed(() => `${record.review.value?.filename ?? 'TechPack review'}`) })
 
   /** Below `xl` the workspace shows one pane at a time. */
   const pane = ref<'source' | 'workbook'>('source')

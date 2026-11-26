@@ -1,6 +1,6 @@
 # 0002: Feature folders with a public `index.ts`
 
-- Status: Accepted. Lint enforcement pending.
+- Status: Accepted. Lint enforcement pending for Portal and Web. For Admin, items 3 and 4 and the lint follow-up are superseded by [0015](0015-admin-feature-index-exports-screens.md).
 - Date: 2026-11-21
 - Scope: Portal, Admin, Web
 

@@ -1,6 +1,6 @@
 # Admin agent instructions
 
-Admin (`src/admin`, package `admin`, port 555) is Syncra's internal staff console. It covers company accounts (company info, modules, tokens, seats), TechPack review and release, lead inquiries, hero content, products, and plans and pricing. Stack: Nuxt 4 SPA, Nuxt UI 4 (light and dark, light by default), Tailwind 4, and Valibot. Admin has **no Pinia and no i18n**; its tests are Vitest `unit` and `nuxt` projects. The [root rules](../../AGENTS.md) and [shared conventions](../../docs/conventions.md) apply here too.
+Admin (`src/admin`, package `admin`, port 555) is Syncra's internal staff console. It covers company accounts (company info, modules, tokens, seats), TechPack review and release, lead inquiries, hero content, products, and plans and pricing. Stack: Nuxt 4 SPA, Nuxt UI 4 (light and dark, light by default), Tailwind 4, and Valibot. Admin has **no Pinia and no i18n**; tests sit in `tests/` beside the code ([testing](docs/testing.md)). The [root rules](../../AGENTS.md) and [shared conventions](../../docs/conventions.md) apply here too.
 
 ## Admin rules
 
@@ -44,6 +44,10 @@ pnpm --filter admin test
 
 ```bash
 pnpm --filter admin build
+```
+
+```bash
+pnpm --filter admin test:e2e
 ```
 
 Tests mock the API and never reach a real one ([testing](docs/testing.md)). Also check changed flows in the browser with `pnpm dev:admin` and a staff test account, and report what was static, mocked, or live.

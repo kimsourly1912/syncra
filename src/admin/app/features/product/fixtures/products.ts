@@ -1,23 +1,13 @@
+import type { Product } from '../models/product'
+
+const HOUR = 60 * 60 * 1000
+const hoursAgo = (hours: number) => new Date(Date.now() - hours * HOUR).toISOString()
+
 /**
  * Sample products until the product API exists (open question). The list and the edit page read
  * the same rows, so an edit link opens the product it came from. Pages that show them say
  * "Sample data".
  */
-export interface Product {
-  id: string
-  icon: string
-  name: string
-  description: string
-  /** Whether the product's public detail page is live, or still "Coming soon". */
-  detailLive: boolean
-  /** Shown on the website's product list (the list's Active/Inactive). */
-  active: boolean
-  updatedAt: string
-}
-
-const HOUR = 60 * 60 * 1000
-const hoursAgo = (hours: number) => new Date(Date.now() - hours * HOUR).toISOString()
-
 export const SAMPLE_PRODUCTS: readonly Product[] = [
   { id: '000', icon: '/img/doc-ai.png', name: 'Doc AI', description: 'Turns supply-chain documents into structured data.', detailLive: true, active: true, updatedAt: hoursAgo(2) },
   { id: '001', icon: '/img/qc.png', name: 'Quality Control', description: 'Sample description for this product.', detailLive: false, active: false, updatedAt: hoursAgo(26) },

@@ -16,7 +16,7 @@ The fixes come from another of the owner's Nuxt UI admin apps.
 
 ## Decision
 
-1. **Page width.** `--page-gutter` (`tailwind.css`) is the side padding of `UDashboardNavbar`, `UDashboardToolbar`, and the `UDashboardPanel` body, applied in `app.config.ts`. It centers each page at 80rem (`--container-7xl`). A form or settings page adds `class="page-narrow"` to its panel for 56rem. Below the cap the padding equals Nuxt UI's default (1rem, 1.5rem from `sm`). Pages set no `max-w-*` on their content.
+1. **Page width.** `--page-gutter` (`tailwind.css`) is the side padding of `UDashboardNavbar`, `UDashboardToolbar`, and the `UDashboardPanel` body, applied in `app.config.ts`. It centers each page at 80rem (`--container-7xl`). A form or settings page adds `class="page-narrow"` to its panel for 56rem. The TechPack review workspace adds `class="page-wide"` for 96rem (`--breakpoint-2xl`, 1536px), because its PDF and workbook panes sit side by side and 80rem leaves each too narrow. Below the cap the padding equals Nuxt UI's default (1rem, 1.5rem from `sm`). Pages set no `max-w-*` on their content.
 2. **App-wide overrides are allowed in `app.config.ts`, for layout and overlays only:**
    - the gutter
    - the toolbar wrapping on phones

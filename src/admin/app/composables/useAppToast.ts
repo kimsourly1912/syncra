@@ -15,7 +15,8 @@ export function useAppToast() {
   function error(e: unknown, title?: string) {
     const err = ApiError.from(e)
     if (err.silent) return
-    if (err.kind === 'contract' || err.kind === 'unknown') console.error(err)
+    // A broken model means the API changed shape; an unknown error is a bug. The team needs both.
+    if (err.kind === 'contract' || err.kind === 'unknown') reportAppError(err, { source: err.source, message: title })
     return failed(err.message, title)
   }
 

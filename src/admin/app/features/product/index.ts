@@ -1,4 +1,4 @@
 export { default as ProductListScreen } from './components/ProductListScreen.vue'
 export { default as ProductFormScreen } from './components/ProductFormScreen.vue'
-export { findSampleProduct } from './fixtures/products'
-export type { Product } from './fixtures/products'
+export { default as ProductEditScreen } from './components/ProductEditScreen.vue'
+export type { Product } from './models/product'
