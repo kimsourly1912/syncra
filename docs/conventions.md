@@ -8,7 +8,7 @@ These rules are the same in Web, Portal, and Admin. Each app's docs cover only h
 | --- | --- | --- |
 | Framework | Nuxt 4, `ssr: false` (single-page apps) | Code runs in the browser. Middleware returns early on the server: `import.meta.server` (Portal) or `IS_SERVER` (Admin). |
 | UI | Nuxt UI 4 + Tailwind CSS 4 | Theme tokens live in each app's `app/assets/css/tailwind.css` and `app/app.config.ts`. |
-| Validation | Valibot | Form schemas only. API responses are typed, not validated. |
+| Validation | Valibot | Form schemas everywhere. API responses: typed, not validated, in Portal and Web; parsed into feature models from the generated schemas in Admin ([0007](decisions/0007-generated-api-contract.md)). |
 | HTTP | `$fetch.create` in an app plugin, used through `useAPI` (Portal, Web) or `api` from `@/api` (Admin) | Never call `$fetch` or `useFetch` directly in feature code. |
 | Lint | `@nuxt/eslint` with `stylistic: true` | Two-space indent, single quotes, no semicolons. Run the app's `lint:fix` (Portal and Web), or `pnpm --filter admin exec eslint . --fix` for Admin. |
 | Package manager | pnpm, version pinned in the root `package.json` | Node `^24` |
@@ -16,7 +16,7 @@ These rules are the same in Web, Portal, and Admin. Each app's docs cover only h
 ## TypeScript
 
 - Avoid `any`. If a library type forces it, add `// eslint-disable-next-line @typescript-eslint/no-explicit-any` with a reason.
-- Prefer inference. Annotate exported function parameters, DTOs, and component props.
+- Prefer inference. Annotate exported function parameters, API types (DTOs, or Admin's models), and component props.
 - Use `satisfies` to check an object literal without widening its type: `FIELD_NAME = { … } satisfies SchemaToString<IForm>`. `SchemaToString` is defined in Portal `types/common.ts`; Admin writes it inline as `satisfies { [K in keyof IForm]: K }`. Web has only the weaker `ObjectValueToString`.
 - Use `as const` objects for fixed sets: endpoint parts, `ASYNC_DATA` keys, route maps, status maps. Derive types from them, for example `ExtractObjectValue<typeof ROUTE_PRIVATE>`.
 - Put type-only imports in their own statement:

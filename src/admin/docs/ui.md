@@ -1,6 +1,6 @@
 # Admin UI
 
-Admin is a dense, desktop-first staff console built from Nuxt UI and Admin's shared components ([building blocks](building-blocks.md)). Lint enforces the color and form rules below ([what lint enforces](architecture.md#what-lint-enforces)).
+Admin is a dense, desktop-first staff console built from Nuxt UI and Admin's shared components ([building blocks](building-blocks.md)). Lint enforces the color and form rules below ([what lint enforces](architecture.md#what-lint-enforces)). The [UI standard](../../../docs/ui-standard.md) sets the UX rules for every app; this doc covers how Admin meets them.
 
 ## Foundation
 

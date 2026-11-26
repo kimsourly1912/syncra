@@ -1,6 +1,6 @@
 # Portal UI
 
-Theme, page anatomy, page patterns, required states, tables, localization, and the review checklist. The shared components themselves are listed in [building blocks](building-blocks.md).
+Theme, page anatomy, page patterns, required states, tables, localization, and the review checklist. The shared components themselves are listed in [building blocks](building-blocks.md). The [UI standard](../../../docs/ui-standard.md) sets the UX rules for every app; this doc covers how Portal meets them.
 
 ## Foundation
 

@@ -1,5 +1,7 @@
 # Portal testing
 
+Which tests a feature needs is set by the [testing standard](../../../docs/testing-standard.md). This doc covers how to write and run them in Portal.
+
 Portal uses Vitest with `@nuxt/test-utils`. Projects are defined in `vitest.config.ts`.
 
 | Project | Folder | Environment | Use for |
@@ -96,6 +98,7 @@ vi.mock('../../app/services/docai.service', () => ({
 
 ## Known test debt
 
+- **The `nuxt` suite doesn't load.** All of `test/nuxt/` fails before any test runs, with `Missing "#nuxt-test-utils/h3" specifier in "@nuxt/test-utils" package`; the unit tests pass. Report it as known, not as a regression, and cover component behavior in the browser check until it's fixed. Fixing it is its own change.
 - `test/unit/sum.test.ts` is a placeholder (`1 + 1 === 2`). Don't copy it.
 - There are no tests for team management, settings, or Bookkeeping. Add focused tests when you change those flows.
 

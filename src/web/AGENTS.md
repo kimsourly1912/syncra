@@ -38,4 +38,4 @@ pnpm --filter @syncra/web build
 pnpm --filter @syncra/web test:unit --run
 ```
 
-The only unit test, `test/unit/sum.test.ts`, is a placeholder that fails (it expects `1 + 1` to be `4`). Report it as known, don't count it as a regression, and don't "fix" it as part of unrelated work. For pages, check normal navigation, direct visits, a second product navigation, and phone and desktop widths.
+Web has no tests yet, so the test commands exit 1 with "No test files found". Report that as known, not as a regression ([testing](docs/testing.md)). For pages, check normal navigation, direct visits, a second product navigation, and phone and desktop widths.

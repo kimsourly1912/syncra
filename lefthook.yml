@@ -8,7 +8,8 @@
 #   By hand:   the plain build, before a merge request (the commands are in each app's AGENTS.md).
 #
 # Run a hook without committing: `pnpm exec lefthook run pre-commit` (or `pre-push`).
-# Skip once, when you must: `git commit --no-verify` (or `git push --no-verify`).
+# Never skip a hook with `--no-verify`: hosted CI costs money on this private repo, so these are
+# the only checks (AGENTS.md).
 
 pre-commit:
   parallel: true
@@ -52,11 +53,11 @@ pre-push:
       glob: "*"
       run: pnpm test:e2e
 
-    # Only Portal's unit tests: 65 of its 69 Nuxt tests fail on main. Add `pnpm test:nuxt --run`
+    # Only Portal's unit tests: its Nuxt suite doesn't load (src/portal/docs/testing.md). Add `pnpm test:nuxt --run`
     # here once they pass.
     - name: portal unit tests
       root: src/portal/
       glob: "*"
       run: pnpm test:unit --run
 
-  # Web has no push check yet: its only test is the failing `sum.test.ts` placeholder (src/web/AGENTS.md).
+  # Web has no push check yet: it has no tests (src/web/docs/testing.md).

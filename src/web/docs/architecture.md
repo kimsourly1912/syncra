@@ -25,7 +25,7 @@ src/web/
 │   └── utils/                   # api.ts (buildEndPoint), common.ts (tw)
 ├── config/icon.ts               # @nuxt/icon options and custom collections
 ├── i18n/locales/                # en-US.json enabled; zh-CN.json present but disabled in nuxt.config.ts
-└── test/unit/                   # sum.test.ts placeholder
+└── vitest.config.ts             # unit (test/unit) and nuxt (test/nuxt) projects; no tests yet
 ```
 
 ### What gets imported automatically
@@ -66,5 +66,5 @@ pages/<route>.vue → (features/<f>/ when a workflow needs it) → composables/u
 - **Contact Sales reports success after a failure.** `submit()` in `composables/useContactSale.ts` calls `onSuccess()` after `execute()` even when `execute()` caught an error or got `success: false`. The success dialog therefore isn't proof of delivery.
 - **The product detail key is fixed.** `pages/products/[slug].vue` uses the key `'marketing-content'` and doesn't watch `slug`. Going from one product to another can show the previous product's content.
 - **Mock catalog data.** `moduleItems` in `composables/useModule.ts` is a hardcoded list with staging asset URLs, marked TODO.
-- **Placeholder test.** `test/unit/sum.test.ts` asserts `1 + 1 === 4` and fails.
+- **No tests.** Vitest is configured, but there are no test files, so the test commands exit 1 ([testing](testing.md)).
 - **The `components/admin/` folder** holds the public site shell. The name is misleading, but keep it until a dedicated rename.

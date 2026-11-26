@@ -73,7 +73,7 @@ Paths in the first table refer to the customer portal. Dynamic segments in squar
 | Admin Account Management `/` | Observed and Source | The dashboard shows registration and onboarding summaries and a company account table. A row's **Manage** link opened `/account/0` in the local build. Source now loads the summary from `GET /admin/portal-users/summary` and the rows from `GET /admin/portal-users` (search and paging), and a row's name opens `/account/<userId>`; this isn't yet observed against a live API. The Add Member and Create Company Admin dialogs are static. [Account list screen](../../src/admin/app/features/account/components/AccountListScreen.vue) |
 | Admin Account Detail `/account/[id]` | Source | The shared account summary sits above the Company information, Modules, Tokens, and Seats tabs. The URL stores the selected tab, for example `?tab=module`. The summary and Company information read `GET /admin/portal-users/{userId}/account-detail` (not yet observed live). The Modules, Tokens, and Seats tabs are marked Sample, filter sample history and members in the browser, and disable account mutation controls. [Account Detail](../../src/admin/app/features/account/components/AccountDetailScreen.vue) |
 | Admin navigation and remaining pages | Observed links and Source | The sidebar includes TechPack Reviews and the lead, hero, product, and pricing sections. It also displays Sale Request (`/sale-request`), Community Management (`/community`), and Setting (`/setting`). In source, the Sale Request page lists requests from `GET /admin/sale-requests` with totals from `/dashboard` and opens a request read-only in a side panel from `GET /admin/sale-requests/{id}` (not yet observed live, no actions), and the lead list reads `GET /admin/lead-inquiries` and `/summary` and opens a lead read-only in a side panel from `GET /admin/lead-inquiries/{id}` (no status actions). In source, Setting edits the signed-in staff member's display name and logo, invites staff and turns their sign-in on or off by email, and lists email templates and token packages read-only (not yet observed live). Community is a placeholder with no data or actions. The TechPack review queue and detail have source-backed review and release controls. [Admin sidebar](../../src/admin/app/layouts/default.vue), [Admin pages](../../src/admin/app/pages) |
-| Admin authentication | Local redirect observed and Source | Source has sign-in, forgot, and reset routes. The isolated build redirected `/auth/sign-in` to `/` with no credential entry. Staff sign-in, role enforcement, and unauthenticated routing need a check against the configured Admin API. [Guest middleware](../../src/admin/app/middleware/guest.ts), [Admin auth pages](../../src/admin/app/pages/auth) |
+| Admin authentication | Local redirect observed and Source | Source has sign-in, forgot, and reset routes. The isolated build redirected `/auth/sign-in` to `/` with no credential entry. Staff sign-in, role enforcement, and unauthenticated routing need a check against the configured Admin API. [Route guard](../../src/admin/app/middleware/access.global.ts), [Admin auth pages](../../src/admin/app/pages/auth) |
 
 ## User journeys and business rules
 
@@ -144,6 +144,35 @@ These are frontend concepts and API contracts. The checkout contains three Nuxt 
 | Token balance and transaction | Company balance supports preflight and display. Ledger entries record amount, type, status, timestamps, initiator and activity. A job estimate and a recorded debit are distinct fields. | [Token DTOs](../../src/portal/app/types/dto/token), [job detail](../../src/portal/app/pages/workspace/activity-history/%5Bid%5D.vue) |
 | Audit event and sales inquiry | Audit events support company, user, module, and date filtering. Sales inquiries carry product or token request details. | [Activity log DTO](../../src/portal/app/types/dto/activity-log.dto.ts), [contact sales service](../../src/portal/app/services/contact-sale.service.ts) |
 | Bookkeeping period, statement, transaction, payroll | A year/month period groups uploaded bank statements, transaction and category data, exports, and a payroll record with employees. | [Bookkeeping DTO](../../src/portal/app/types/dto/bookkeeping.dto.ts), [payroll DTO](../../src/portal/app/types/dto/payroll.dto.ts) |
+
+## Glossary
+
+The words the rules and code use, and what each one isn't. Source evidence unless marked. Where a term has two meanings, the code name tells them apart.
+
+| Term | Meaning | Don't confuse with |
+| --- | --- | --- |
+| Admin (app) | `src/admin`, the console Syncra **staff** use | **Portal Admin**, the `ADMIN` role inside a customer company |
+| Portal Admin, Operator | The two roles in a customer company (`ADMIN`, `OPERATOR`). Invitations create Operators. | **Account type** (`COMPANY` or `MEMBER`), a separate field |
+| Module | A product a company is entitled to; it decides which launcher entries Portal shows. Also a sale request type. | A **processor** |
+| Processor | A Doc AI extraction type enabled for a company: TechPack and Invoice. Purchase Order is recognized but has no launch card. | A **module** |
+| Doc AI | Syncra's extraction product: customers upload documents and get workbooks back | — |
+| TechPack | A product's technical specification PDF. Doc AI extracts it into a workbook, which staff review in Admin before release. | — |
+| Invoice set | An invoice, a packing list (PDF or XLSX), and an optional fabric rolls PDF, sent as one combined PDF or as separate files | — |
+| Extraction job | One submission. `jobId` is the internal ID for API calls and routes. | `formattedId`, the display **Processing ID** (`PID-0174`), never sent as an ID |
+| File | One document within a job, `fileId`. Admin review routes use it. | The job |
+| Draft (Portal) | A job in `DRAFT` status: the wizard's staged upload, which can be restored before Confirm | **Review draft** |
+| Review draft (Admin) | The current version of a workbook under staff review, `draftUuid`. A correction or replacement XLSX makes a new version; saves and approval must name the current one. | A Portal **draft** |
+| Workbook | The XLSX that extraction produces | The source PDF |
+| Finding | An issue tied to a workbook cell: from comparing with the PDF (`pdfValue`) or from AI (`aiValue`). PDF differences and flagged layout issues block release; an AI flag alone is advisory. | — |
+| Inspection | The API's check of the current review draft (`draft-inspection`). It yields the findings and the approval checklist, and belongs to one `draftUuid`. | — |
+| Attestation | The reviewer's checkbox ("I verified the critical values and required rows and sizes against the source PDF.") that Approve requires. It resets when the draft changes. | — |
+| Verification pending | A result field that keeps a file waiting for internal review after extraction | Job status |
+| Release | Making a verified workbook available to the customer | A **completed** job: a completed job's file isn't necessarily released |
+| POM Glossary | A company's English and Simplified Chinese measurement terms, in company-brand, company-wide, and global layers. What "POM" stands for isn't confirmed in the docs. | — |
+| Tokens (credits) | What Doc AI spends. The **estimate** (preflight), the **recorded charge**, a **refund**, and the **balance** are four different values. | — |
+| ERP export | Sending a TechPack workbook to the customer's ERP, for companies with the feature flag | Workbook download |
+| Lead inquiry | A Contact Sales submission from Web, listed in Admin | A **sale request** |
+| Sale request | A request for a module, tokens, or seats (`MODULE`, `TOKEN`, `SEAT`), from Portal, Web, or Admin (`CUSTOMER_PORTAL`, `WEBSITE`, `INTERNAL_ADMIN`) | A **lead inquiry** |
 
 ## Where to go next
 

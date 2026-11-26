@@ -1,6 +1,8 @@
 # Web testing and verification
 
-Web has Vitest configured (`vitest.config.ts`), with a `unit` project (`test/unit`, node) and a `nuxt` project. The only test is `test/unit/sum.test.ts`, a placeholder that **fails**: it asserts `sum(1, 1)` is `4`. Report it as a known failure. Don't count it as a regression from your change. Replacing it is its own change.
+Which tests a feature needs is set by the [testing standard](../../../docs/testing-standard.md). This doc covers how to write and run them in Web.
+
+Web has Vitest configured (`vitest.config.ts`), with a `unit` project (`test/unit`, node) and a `nuxt` project. Web has **no tests yet**, so `test:unit --run` and `test:nuxt --run` exit 1 with "No test files found". Report that as known, not as a regression from your change. When you add Web's first test, put it in `test/unit/` or `test/nuxt/` and update this paragraph.
 
 ## Commands
 

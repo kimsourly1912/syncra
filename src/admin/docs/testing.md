@@ -1,5 +1,7 @@
 # Admin testing and verification
 
+Which tests a feature needs is set by the [testing standard](../../../docs/testing-standard.md). This doc covers how to write and run them in Admin.
+
 Admin uses Vitest, with the projects defined in `vitest.config.ts`:
 
 | Project | Files | Environment | Use for |

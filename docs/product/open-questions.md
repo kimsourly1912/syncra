@@ -60,3 +60,4 @@ Known code defects aren't questions. They're listed under **Known gaps** in each
 | Question | Blocks | Evidence that would settle it |
 | --- | --- | --- |
 | Where are the API source, the authoritative API contracts, the deployment environments, and the owners for Doc AI, billing, and identity? | Confirming any server rule | Links to the owning repositories or API specs, and an environment inventory |
+| Which test API and test accounts should agents and developers use for browser checks: a staff test account for Admin, and a test company with Portal Admin and Operator users? How are they issued without putting credentials in the repository? | The browser check in the [testing standard](../testing-standard.md); live checks of sign-in, extraction, and other API-backed flows | A named test environment, its URL in the `.env` templates, and an owner who issues test accounts |
