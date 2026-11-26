@@ -17,6 +17,11 @@
     "defineAppConfig"
   ],
   "eslint.useFlatConfig": true,
+  // Each app has its own eslint.config.mjs (and Admin's needs its tsconfig): lint a file with the
+  // config of the app it's in, as the commit hook does.
+  "eslint.workingDirectories": [{ "mode": "auto" }],
+  // LF, as .gitattributes stores every file.
+  "files.eol": "\n",
   // autocomplete on function (tw)
   "tailwindCSS.experimental.classRegex": [
     "tw`(.*?)`",

@@ -42,22 +42,11 @@ Every app uses the same file names, so you can find a topic in any app the same 
 
 ## Maintaining the docs
 
-- Root instructions stay under 6 KiB and each app's `AGENTS.md` under 4 KiB. Codex joins every instruction file from the root to its working folder, up to a 32 KiB total.
+- Root instructions stay under 6 KiB and each app's `AGENTS.md` under 4 KiB. Codex joins every instruction file from the root to its working folder, up to a 32 KiB total. `scripts/check-instruction-size.mjs` enforces the limits on commit (`lefthook.yml`).
 - Each `CLAUDE.md` contains only `@AGENTS.md`.
 - Code examples must match real code. When you name a reference file, check that the file still exists and still follows the rule.
-- After moving or renaming a doc, run this from the repository root. It prints every relative Markdown link whose target is missing:
+- Relative links must point at a file and `#heading` that exist. The commit hook runs `scripts/check-doc-links.mjs` when a `.md` file is staged; after moving or renaming a doc, run it from the repository root:
 
 ```bash
-python3 -I -c "
-import re,os,urllib.parse
-for r,d,fs in os.walk('.'):
-    d[:]=[x for x in d if x not in('node_modules','.git','.nuxt','.output')]
-    for f in fs:
-        if not f.endswith('.md'): continue
-        p=os.path.join(r,f)
-        for u in re.findall(r'\]\(([^)\s]+)\)',open(p,encoding='utf-8').read()):
-            if u.startswith(('http','#','mailto')): continue
-            t=os.path.normpath(os.path.join(r,urllib.parse.unquote(u.split('#')[0])))
-            if not os.path.exists(t): print(p,'->',u)
-"
+node scripts/check-doc-links.mjs
 ```

@@ -8,6 +8,8 @@ allowBuilds:
   esbuild: true
   # Its install script runs `lefthook install`: the git hooks in lefthook.yml.
   lefthook: true
+  # Its install script copies the browser service worker; Admin's tests use msw/node only.
+  msw: false
   sharp: true
   unrs-resolver: true
   vue-demi: true

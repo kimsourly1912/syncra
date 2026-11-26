@@ -1,0 +1,19 @@
+{
+  "$schema": "https://unpkg.com/knip@6/schema.json",
+  "workspaces": {
+    "src/admin": {
+      "vitest": false,
+      "entry": [
+        "app/**/tests/**/*.test.ts",
+        "test/**/*.test.ts",
+        "scripts/*.mjs",
+        "app/api/index.ts"
+      ],
+      "project": ["app/**/*.{ts,vue}", "test/**/*.ts", "scripts/*.mjs"],
+      "ignore": ["app/api/generated/**"],
+      "ignoreDependencies": ["@iconify-json/lucide", "@nuxt/devtools", "eslint-plugin-format", "vue-tsc"]
+    },
+    "src/portal": {},
+    "src/web": {}
+  }
+}
