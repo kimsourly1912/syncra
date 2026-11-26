@@ -38,7 +38,8 @@ export default defineConfig({
           environmentOptions: {
             nuxt: {
               // The profile plugin requests the API on boot; never let tests reach a real one.
-              overrides: { runtimeConfig: { public: { apiURL: 'http://api.test.invalid' } } },
+              // The WebMCP list tools are on, as in `nuxt dev`, for their tests (docs/agent-tools.md).
+              overrides: { runtimeConfig: { public: { apiURL: 'http://api.test.invalid', agentTools: true } } },
             },
           },
         },

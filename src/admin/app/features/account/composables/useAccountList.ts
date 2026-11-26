@@ -39,6 +39,8 @@ export function useAccountList() {
     isFiltered: list.isFiltered,
     items: computed(() => users.data.value?.items ?? []),
     totalPages: computed(() => users.data.value?.totalPages ?? 0),
+    /** Rows are loaded for the current URL state (not the previous search's, still shown). */
+    loaded: computed(() => users.data.value != null),
     loading: users.loading,
     refreshing: users.refreshing,
     pending: users.pending,

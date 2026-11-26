@@ -1,17 +1,20 @@
 <script setup lang="ts">
 import type { TableColumn } from '@nuxt/ui'
 import type { ToolbarTab } from '@/components/list/ListToolbarTabs.vue'
+import { useLeadAgentTools } from '../composables/useLeadAgentTools'
 import { LEAD_PAGE_SIZES, useLeadList } from '../composables/useLeadList'
 import type { LeadStatusTab } from '../composables/useLeadList'
 import type { LeadRow } from '../models/lead'
 import { LEAD_STATUS } from '../utils/status'
 import LeadDetailSlideover from './LeadDetailSlideover.vue'
 
+const list = useLeadList()
 const {
   tab, search, page, pageSize, isFiltered, items, totalPages, loading, refreshing, pending, error, refresh,
   summary, summaryError, refreshSummary, showStatus, setSearch, showPage, setPageSize, clearFilters,
   openId, openLead, closeLead,
-} = useLeadList()
+} = list
+useLeadAgentTools(list)
 
 // In the toolbar, so the tabs sit on its line. The API's totals become the tab counts. It has none
 // for New, and its "rejected" total isn't confirmed to be the Not interested status (open
