@@ -1,7 +1,18 @@
 /** The largest page the API accepts (a Java int). */
 const MAX_PAGE = 2147483647
 
-type Choices<F> = { [K in keyof F]: readonly F[K][] }
+/** Rows per page for a list whose endpoint takes `size`. The API's default is 20; its largest page isn't documented (open question). */
+export const LIST_PAGE_SIZES = [20, 50, 100] as const
+
+/** Each filter's allowed URL values; the first is the default. */
+export type ListChoices<F> = { [K in keyof F]: readonly F[K][] }
+
+/** The paging and search a list request sends. The Admin API's `page` is zero-based. */
+export interface ListApiQuery {
+  page: number
+  size?: number
+  search?: string
+}
 
 export interface ListQueryOptions {
   /** The list has a search box, kept in `?search=`. */
@@ -24,7 +35,7 @@ interface ListState<F> {
  *
  * - Each filter is one of its `choices`; anything else in the URL reads as the first choice,
  *   which is the default and is left out of the URL. The same goes for the page size.
- * - `page` is 1-based, as the user sees it. Send `page - 1` to the zero-based Admin API.
+ * - `page` is 1-based, as the user sees it. `apiQuery` has the zero-based page the Admin API takes.
  * - Changing a filter, the search, or the page size goes back to page 1.
  * - Filter, page, and page-size changes are history entries. A search replaces the current entry,
  *   so Back doesn't step through what was typed.
@@ -37,7 +48,7 @@ interface ListState<F> {
  * const leads = useListQuery({ status: ['all', 'new'] as const }, { search: true, pageSizes: [20, 50, 100] })
  * leads.setSearch('acme')
  */
-export function useListQuery<F extends Record<string, string>>(choices: Choices<F>, options: ListQueryOptions = {}) {
+export function useListQuery<F extends Record<string, string>>(choices: ListChoices<F>, options: ListQueryOptions = {}) {
   const route = useRoute()
   const router = useRouter()
   const keys = Object.keys(choices) as (keyof F & string)[]
@@ -67,6 +78,26 @@ export function useListQuery<F extends Record<string, string>>(choices: Choices<
   /** Whether a filter or the search hides rows: "No leads match your filters" instead of "No leads yet". */
   const isFiltered = computed(() => search.value !== '' || keys.some(key => filters.value[key] !== choices[key][0]))
 
+  /**
+   * The whole URL state as one string (`status=new&page=2&size=50&search=acme`): every input a
+   * list request may use, so a query key built from it can't leave a new filter out.
+   */
+  const stateKey = computed(() => {
+    const state = new URLSearchParams()
+    for (const key of keys) state.set(key, filters.value[key] ?? '')
+    state.set('page', String(page.value))
+    if (pageSize.value !== undefined) state.set('size', String(pageSize.value))
+    if (search.value) state.set('search', search.value)
+    return state.toString()
+  })
+
+  /** `page` (zero-based), `size`, and `search`, ready for the request's `query`. Unused ones are `undefined`. */
+  const apiQuery = computed((): ListApiQuery => ({
+    page: page.value - 1,
+    size: pageSize.value,
+    search: search.value || undefined,
+  }))
+
   const current = (): ListState<F> => ({ filters: filters.value, search: search.value, page: page.value, pageSize: pageSize.value })
 
   function go(next: ListState<F>, replace = false) {
@@ -91,7 +122,11 @@ export function useListQuery<F extends Record<string, string>>(choices: Choices<
     search,
     page,
     pageSize,
+    /** The rows-per-page choices, for `ListPagination`'s `page-sizes`. */
+    pageSizes,
     isFiltered,
+    stateKey,
+    apiQuery,
     setFilters: (changes: Partial<F>) => go({ ...current(), filters: { ...filters.value, ...changes }, page: 1 }),
     setSearch: (text: string) => {
       const value = text.trim()

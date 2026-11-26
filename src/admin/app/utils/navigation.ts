@@ -1,6 +1,6 @@
 /**
  * Whether a sidebar link is the section the current page is in: its own page, a page under it
- * (`/product/create` under `/product`), or a page under one of `also` (Account Management is `/`,
+ * (`/product/create` under `/product`), or a page under one of `also` (Account management is `/`,
  * and its detail pages are `/account/<id>`). `/` matches only itself.
  *
  * @example

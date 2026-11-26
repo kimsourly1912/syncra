@@ -8,17 +8,18 @@ import ProfileSettings from '../components/ProfileSettings.vue'
 import StaffAccessSettings from '../components/StaffAccessSettings.vue'
 import TokenPackageSettings from '../components/TokenPackageSettings.vue'
 import { fakeApi, ok } from '#test/fake-api'
+import type { Api } from '@/api'
 
 const route = reactive({ query: {} as Record<string, string>, params: {}, path: '/setting' })
 mockNuxtImport('useRoute', () => () => route)
 
 // Sanitized fixtures shaped like the Admin settings endpoints.
-const profile = { id: 1, username: 'Test Staff', email: 'staff@example.test', logoUrl: null, role: { name: 'Super Admin' }, userStatus: 'CONFIRMED' }
-const template = { name: 'welcome_email', subject: 'Welcome to Syncra', html: '<p>Hello</p>', text: 'Hello' }
+const profile = { id: 1, username: 'Test Staff', email: 'staff@example.test', logoUrl: null, role: { name: 'Super Admin' }, userStatus: 'CONFIRMED' } satisfies Api.SyncraAdminProfileResponse
+const template = { name: 'welcome_email', subject: 'Welcome to Syncra', html: '<p>Hello</p>', text: 'Hello' } satisfies Api.EmailTemplate
 const packages = [
   { id: 2, code: 'LARGE', name: 'Large pack', tokenAmount: 5000, price: 40, currency: 'USD', expiryDays: 365, sortOrder: 2 },
   { id: 1, code: 'SMALL', name: 'Small pack', tokenAmount: 1000, price: 10, currency: 'USD', expiryDays: 30, sortOrder: 1 },
-]
+] satisfies Api.CreditPackageDto[]
 
 const mounted: { unmount: () => void }[] = []
 afterEach(() => {

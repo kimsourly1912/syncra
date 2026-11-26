@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest'
 import { ApiError, defineModel, parseData, vReviewItem } from '..'
+import type { Api } from '..'
 
 // Sanitized fixture shaped like GET /admin/docai/techpack-reviews/{fileId}.
 const reviewItem = {
@@ -11,7 +12,7 @@ const reviewItem = {
   status: 'IN_REVIEW',
   reviewedByProfileId: null,
   reviewedAt: null,
-}
+} satisfies Api.ReviewItem
 
 const reviewModel = defineModel(vReviewItem, {
   required: ['fileId', 'status'],

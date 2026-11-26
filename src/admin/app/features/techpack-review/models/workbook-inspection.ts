@@ -8,19 +8,19 @@ const vPdfFinding = v.object({ ...vFinding.entries, pdfValue: v.nullish(v.string
 
 const findingOptional = ['measurement', 'sourcePage', 'workbookValue'] as const
 
-export const pdfFindingModel = defineModel(vPdfFinding, {
+const pdfFindingModel = defineModel(vPdfFinding, {
   required: ['rowNumber', 'columnIndex', 'column', 'pdfValue'],
   optional: findingOptional,
 })
 
-export const aiFindingModel = defineModel(vFinding, {
+const aiFindingModel = defineModel(vFinding, {
   required: ['sheetIndex', 'rowNumber', 'columnIndex', 'column', 'aiValue'],
   optional: findingOptional,
 })
 
 const workbookRowModel = defineModel(vPreviewRow, { required: ['number', 'cells'] })
 
-export const workbookSheetModel = v.object({
+const workbookSheetModel = v.object({
   // `name` keys and labels the sheet tabs.
   ...defineModel(vSheet, { required: ['name', 'columns'], optional: ['gridHeaderRow'] }).entries,
   rows: v.array(workbookRowModel),
@@ -38,7 +38,5 @@ export const workbookInspectionModel = v.object({
 })
 
 export type PdfFinding = v.InferOutput<typeof pdfFindingModel>
-export type AiFinding = v.InferOutput<typeof aiFindingModel>
-export type WorkbookRow = v.InferOutput<typeof workbookRowModel>
 export type WorkbookSheet = v.InferOutput<typeof workbookSheetModel>
 export type WorkbookInspection = v.InferOutput<typeof workbookInspectionModel>

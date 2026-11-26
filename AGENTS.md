@@ -48,4 +48,4 @@ Read the sections the task needs. Links are navigation, not a request to read ev
 - Report the commands you ran, the routes and roles you checked, whether responses were mocked or came from a running service, and any check you couldn't run.
 - When a rule, convention, or contract changes, update the doc that owns it in the same change. [`docs/README.md`](docs/README.md) shows which doc owns which rule.
 - When a decision with real alternatives changes, add a decision record.
-- Keep instruction files short: under 6 KiB at the root and under 4 KiB per app.
+- Keep instruction files short: under 6 KiB at the root and under 4 KiB per app. The pre-commit hook checks.

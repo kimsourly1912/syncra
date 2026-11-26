@@ -4,7 +4,7 @@ Admin is a dense, desktop-first staff console built from Nuxt UI and Admin's sha
 
 ## Foundation
 
-- **Colors.** `primary` is the `brand` palette (`app/app.config.ts`, `--color-brand-*` in `app/assets/css/tailwind.css`); every other color is Nuxt UI's. Use semantic utilities (`text-highlighted`, `text-muted`, `bg-elevated`, `border-default`), never hex, `bg-white`, or `dark:`. Light mode's primary is the 800 shade, because brand-500 fails WCAG AA on white; change it in `tailwind.css`, never per page. The TechPack PDF page and the email template preview stay white on purpose.
+- **Colors.** `primary` is the `brand` palette (`app/app.config.ts`, `--color-brand-*` in `app/assets/css/tailwind.css`); every other color is Nuxt UI's. Use semantic utilities (`text-highlighted`, `text-muted`, `bg-elevated`, `border-default`), never hex, `bg-white`, or `dark:`. Light mode's primary is the 800 shade, because brand-500 fails WCAG AA on white, and the status colors are darkened the same way (success and warning 800, info and error 700). Dark mode keeps Nuxt UI's 400 shades for all of them: the light-mode shades sink into the dark background. Change them in `tailwind.css`, never per page. Secondary text is `text-muted`; `text-dimmed` (2.6:1) is banned by lint. The e2e sweep runs axe (WCAG 2.1 AA) on every page in light and in dark, so a contrast regression in either mode fails it. The TechPack PDF page and the email template preview stay white on purpose.
 - **Light and dark.** Every browser starts in light (`colorMode` in `nuxt.config.ts` ignores the system setting) until staff pick a mode with `UColorModeButton` or the search palette.
 - **Nuxt UI defaults.** Components use their default theme. `app/app.config.ts` holds the only app-wide overrides, all layout: the page gutter, toolbar wrapping on phones, scrolling tab rows, and the dim behind overlays ([0012](../../../docs/decisions/0012-admin-page-width-and-layout-overrides.md)). Pages never override color, size, radius, or shadow; pass `:ui` only for a one-off layout need.
 - **Font** League Spartan. **Scrollbars** thin everywhere; `scrollbar-none` hides one on a sideways-scrolling row.
@@ -89,7 +89,7 @@ A record's **name opens it**: a `ULink`, or a `UButton variant="link"` for an ov
 ## Review checklist
 
 - [ ] `pnpm --filter admin exec eslint .` passes (colors, forms, imports, row links, icon-only buttons).
-- [ ] The page sets its tab title, its own name only: `useHead({ title: 'Lead Inquiries' })`. `app.vue` adds " · Syncra Admin".
+- [ ] The page sets its name, in sentence case, only: `definePageMeta({ title: 'Lead inquiries' })`. The tab and the sidebar link read it; the navbar `title` matches it.
 - [ ] Top-level page: title `icon`. Nested page: back button, `:toggle="false"`, no icon.
 - [ ] At 390px, in every mode, the navbar fits one line: two icon-only actions at most, each with an `aria-label`.
 - [ ] Loading, refreshing, empty, error, and pending states all render; a filter or page change shows `ListSkeleton`.

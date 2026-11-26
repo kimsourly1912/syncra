@@ -3,6 +3,7 @@ import type { CommandPaletteGroup, DropdownMenuItem, NavigationMenuItem } from '
 import { breakpointsTailwind, useBreakpoints } from '@vueuse/core'
 import { useSignOut } from '@/features/auth'
 import { useSession } from '@/features/session'
+import type { RouteNamedMap } from 'vue-router/auto-routes'
 
 const signOut = useSignOut()
 const { staff } = useSession()
@@ -14,70 +15,35 @@ const SECTION_PATHS: Record<string, string[]> = {
   '/': ['/account'],
 }
 
-const menuItems: NavigationMenuItem[] = [
-  {
-    label: 'Customer Portal',
-    type: 'label',
-  },
-  {
-    label: 'Account Management',
-    icon: 'lucide:building-2',
-    to: '/',
-  },
-  {
-    label: 'TechPack Reviews',
-    icon: 'lucide:file-check',
-    to: '/techpack-reviews',
-  },
-  {
-    label: 'Sale Request',
-    icon: 'lucide:shopping-cart',
-    to: '/sale-request',
-  },
-  {
-    label: 'Website Management',
-    type: 'label',
-  },
-  {
-    label: 'Lead Inquiry',
-    icon: 'lucide:inbox',
-    to: '/lead-inquiry',
-  },
-  {
-    label: 'HeroPage Management',
-    icon: 'lucide:panels-top-left',
-    to: '/hero',
-  },
-  {
-    label: 'Product Management',
-    icon: 'lucide:package',
-    to: '/product',
-  },
-  {
-    label: 'Plan & Pricing Management',
-    icon: 'lucide:tags',
-    to: '/plan-pricing',
-  },
-  {
-    label: 'Community Management',
-    icon: 'lucide:users',
-    to: '/community',
-  },
-  {
-    label: 'System',
-    type: 'label',
-  },
-  {
-    label: 'Setting',
-    icon: 'lucide:settings',
-    to: '/setting',
-  },
+/**
+ * The sidebar, top to bottom: headings, and links to pages by route name (typed: a renamed or
+ * missing page fails typecheck). A link is labeled with its page's `title` (`definePageMeta`), so
+ * it reads the same as the browser tab of the page it opens.
+ */
+const MENU: ({ heading: string } | { page: keyof RouteNamedMap, icon: string })[] = [
+  { heading: 'Customer Portal' },
+  { page: 'index', icon: 'lucide:building-2' },
+  { page: 'techpack-reviews', icon: 'lucide:file-check' },
+  { page: 'sale-request', icon: 'lucide:shopping-cart' },
+  { heading: 'Website management' },
+  { page: 'lead-inquiry', icon: 'lucide:inbox' },
+  { page: 'hero', icon: 'lucide:panels-top-left' },
+  { page: 'product', icon: 'lucide:package' },
+  { page: 'plan-pricing', icon: 'lucide:tags' },
+  { page: 'community', icon: 'lucide:users' },
+  { heading: 'System' },
+  { page: 'setting', icon: 'lucide:settings' },
 ]
 
-// Links to pages that don't exist yet are hidden, and so is a heading left with no links.
-// Checked against the route table: `router.resolve` warns for every unknown path.
-const routePaths = new Set(router.getRoutes().map(route => route.path))
-const links = menuItems.filter(item => item.type === 'label' || routePaths.has(item.to as string))
+// A heading left with no links is hidden.
+const pages = new Map(router.getRoutes().map(page => [page.name, page]))
+const links = MENU.flatMap((item): NavigationMenuItem[] => {
+  if ('heading' in item) return [{ label: item.heading, type: 'label' }]
+  const page = pages.get(item.page)
+  if (!page) return []
+  if (import.meta.dev && !page.meta.title) console.warn(`[sidebar] ${page.path} has no definePageMeta({ title }).`)
+  return [{ label: page.meta.title ?? page.path, icon: item.icon, to: page.path }]
+})
 const visibleItems = links.filter((item, index) => item.type !== 'label' || (links[index + 1] && links[index + 1]!.type !== 'label'))
 
 // The section stays highlighted on the pages under it (a review, an account, a create form).

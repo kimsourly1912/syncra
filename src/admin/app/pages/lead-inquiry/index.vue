@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { LeadListScreen } from '@/features/lead-inquiry'
 
-useHead({ title: 'Lead Inquiries' })
+definePageMeta({ title: 'Lead inquiries' })
 </script>
 
 <template>

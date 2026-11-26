@@ -1,4 +1,5 @@
 <script lang="ts">
+/** @public A row of the grid, for screens that build its `items`. */
 export interface DetailItem {
   label: string
   /** A missing value shows as a dash. */

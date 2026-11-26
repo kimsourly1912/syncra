@@ -2,7 +2,7 @@ import { afterEach, beforeEach, describe, expect, it } from 'vitest'
 import { flushPromises } from '@vue/test-utils'
 import { mountSuspended } from '@nuxt/test-utils/runtime'
 import { defineComponent, h } from 'vue'
-import { useState } from '#imports'
+import { useRouter, useState } from '#imports'
 import { UApp } from '#components'
 import DefaultLayout from '@/layouts/default.vue'
 
@@ -63,5 +63,17 @@ describe('layout shortcuts', () => {
 
     expect(wrapper.find('img[alt="Syncra"]').exists()).toBe(true)
     input.remove()
+  })
+})
+
+describe('page names', () => {
+  it('gives every page without params a title, which its sidebar link shows', async () => {
+    const router = useRouter()
+    const untitled = router.getRoutes().filter(page => !page.path.includes(':') && !page.meta.title).map(page => page.path)
+    expect(untitled).toEqual([])
+
+    const wrapper = await mount()
+    const links = wrapper.findAll('nav a').map(link => link.text().trim()).filter(Boolean)
+    expect(links).toEqual(expect.arrayContaining(['Account management', 'TechPack reviews', 'Lead inquiries', 'Settings']))
   })
 })

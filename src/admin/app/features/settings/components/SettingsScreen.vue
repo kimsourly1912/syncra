@@ -21,7 +21,7 @@ const tab = useUrlTab(tabs.map(item => item.value))
     <template #header>
       <UDashboardNavbar
         icon="lucide:settings"
-        title="Setting"
+        title="Settings"
       />
       <UDashboardToolbar>
         <template #left>

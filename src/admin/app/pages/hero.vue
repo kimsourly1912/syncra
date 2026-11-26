@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { HeroScreen } from '@/features/hero'
 
-useHead({ title: 'HeroPage Management' })
+definePageMeta({ title: 'Hero page management' })
 </script>
 
 <template>

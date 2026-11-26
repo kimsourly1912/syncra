@@ -23,3 +23,7 @@ The apps disagreed on capitalization. Admin labels are sentence case ("Discard c
 
 - One rule for agents and reviewers, checked in the [UI standard](../ui-standard.md) checklist.
 - Portal and Web convert gradually, a screen at a time. A full conversion is its own change.
+
+## Follow-up
+
+- 2026-11-26: Admin wasn't fully sentence case, as the context said: its sidebar, page and navbar titles, "Add Member", and "In Review" were Title Case. They're converted. Names stay proper where the [glossary](../product/scope.md#glossary) makes them so ("Customer Portal", "Create Admin" for a Portal Admin). Admin page names now come from `definePageMeta({ title })` ([0020](0020-admin-lists-and-page-names-from-one-source.md)).

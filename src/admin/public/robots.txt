@@ -1,2 +1,4 @@
+# Syncra Admin is a staff-only console: keep it out of search results (nuxt.config.ts also
+# sends a noindex meta tag, for crawlers that reach a page through a link).
 User-Agent: *
-Disallow:
+Disallow: /

@@ -30,7 +30,7 @@ const columns: TableColumn<Plan>[] = [
     <template #header>
       <UDashboardNavbar
         icon="lucide:tags"
-        title="Plan & Pricing Management"
+        title="Plan & pricing management"
       >
         <template #right>
           <UBadge
@@ -84,7 +84,7 @@ const columns: TableColumn<Plan>[] = [
               >
                 {{ row.original.name }}
               </ULink>
-              <span class="text-xs text-dimmed tabular-nums">#{{ row.original.id }}</span>
+              <span class="text-xs text-muted tabular-nums">#{{ row.original.id }}</span>
             </p>
             <p class="max-w-sm truncate text-sm text-muted">
               {{ row.original.description }}
@@ -95,7 +95,7 @@ const columns: TableColumn<Plan>[] = [
         <template #price-cell="{ row }">
           <p
             v-if="row.original.prefix"
-            class="text-xs text-dimmed"
+            class="text-xs text-muted"
           >
             {{ row.original.prefix }}
           </p>
@@ -163,12 +163,12 @@ const columns: TableColumn<Plan>[] = [
               >
                 {{ plan.name }}
               </ULink>
-              <span class="text-xs text-dimmed tabular-nums">#{{ plan.id }}</span>
+              <span class="text-xs text-muted tabular-nums">#{{ plan.id }}</span>
             </p>
             <p>
               <span
                 v-if="plan.prefix"
-                class="text-xs text-dimmed"
+                class="text-xs text-muted"
               >{{ plan.prefix }} </span>
               <span class="font-medium text-highlighted tabular-nums">{{ price(plan) }}</span>
               <span class="text-sm text-muted"> / {{ plan.cycle }}</span>
@@ -184,7 +184,7 @@ const columns: TableColumn<Plan>[] = [
                 size="sm"
               />
               <span
-                class="text-xs text-dimmed"
+                class="text-xs text-muted"
                 :title="formatAge(plan.updatedAt).full"
               >Updated {{ formatAge(plan.updatedAt).age }}</span>
             </div>

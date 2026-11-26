@@ -1,5 +1,5 @@
 import { afterEach, describe, expect, it, vi } from 'vitest'
-import { formatAge, formatChange, formatCount, formatDate, formatDateTime, formatMoney, NO_VALUE } from '../format'
+import { formatAge, formatChange, formatCount, formatDate, formatDateTime, formatMoney, NO_VALUE, parseCalendarDay } from '../format'
 
 describe('format', () => {
   it('formats counts in one locale and dashes a missing one', () => {
@@ -45,6 +45,12 @@ describe('format', () => {
       expect(formatDate('2026-11-25')).toBe('Nov 25, 2026')
       expect(formatDateTime('2026-11-25')).toBe('Nov 25, 2026')
       expect(formatAge('2026-11-25', new Date(2026, 10, 28, 12)).full).toBe('Nov 25, 2026')
+    })
+
+    it('parses a calendar day for UCalendar, and nothing that is not one', () => {
+      expect(parseCalendarDay('2024-02-29')?.toString()).toBe('2024-02-29')
+      expect(parseCalendarDay('2026-02-29')).toBeUndefined()
+      expect(parseCalendarDay('2026-11-25T10:00:00')).toBeUndefined()
     })
 
     it('shows a day that does not exist as sent', () => {

@@ -27,8 +27,9 @@ Before you touch a static screen, add this to the PR or the feature spec:
 ```text
 app/features/product/models/product.ts                 exists (the UI's shape): replace with defineModel(vProductResponse, …) + list model
 app/features/product/schemas/product-form.ts            form schema + toProductRequest(form)
-app/features/product/composables/useProductList.ts      useListQuery + useApiQuery
+app/features/product/composables/useProductList.ts      useApiList
 app/features/product/composables/useProductActions.ts   useApiMutation per write
+app/features/product/composables/useProductReorder.ts   exists: drag and ↑/↓ reorder; save the order once the API takes it
 app/features/product/components/ProductListScreen.vue   exists (sample data): switch it to useProductList
 app/features/product/components/ProductFormScreen.vue   exists (UI only): wire its Save to useProductActions
 app/features/product/components/ProductEditScreen.vue   exists: swap findSampleProduct(id) for a useApiQuery of the record
@@ -47,29 +48,26 @@ import { api } from '@/api'
 import { productPageModel } from '../models/product'
 
 export function useProductList() {
-  const list = useListQuery({ status: ['active', 'archived'] as const })
-
-  const products = useApiQuery(
-    () => `product:list:${list.filters.value.status}:${list.page.value}`,
-    ({ signal }) => api.get('/admin/products', {
-      query: { status: list.filters.value.status, page: list.page.value - 1 },   // the API's page is zero-based
+  // The key is `product:list:<URL state>`, and `query` holds the zero-based page, size, and search.
+  const products = useApiList(
+    'product:list',
+    { status: ['active', 'archived'] as const },
+    { search: true, pageSizes: LIST_PAGE_SIZES },   // only if the endpoint takes `search` and `size`
+    ({ filters, query, signal }) => api.get('/admin/products', {
+      query: { ...query, status: filters.status },
       signal,
-      model: productPageModel,
+      model: productPageModel,                      // returns { items, totalPages }
     }),
   )
-  list.keepPageInRange(() => products.data.value?.totalPages)
 
   return {
-    ...list,
-    items: computed(() => products.data.value?.content ?? []),
-    totalPages: computed(() => products.data.value?.totalPages ?? 0),
-    loading: products.loading,
-    refreshing: products.refreshing,
-    error: products.error, // an ApiError, for <AlertApiError>
-    refresh: products.refresh,
+    ...products, // URL state and setters, items, totalPages, loaded, loading, refreshing, pending, error, refresh
+    tab: computed(() => products.filters.value.status),
   }
 }
 ```
+
+Add `'product'` to `QUERY_FEATURES` (`composables/useApiQuery.ts`) with its first query.
 
 ## Writes
 
@@ -93,6 +91,6 @@ The action acts only on `result.ok`. For review-style workflows, carry the recor
 
 ## Verify
 
-- `pnpm --filter admin exec eslint .`, `pnpm --filter admin typecheck`, `pnpm --filter admin test`, and `pnpm --filter admin build`
+- `pnpm --filter admin verify` (lint, typecheck, test) and `pnpm --filter admin build`
 - Add a `features/<feature>/tests/<screen>.nuxt.test.ts` that answers through `fakeApi` and covers the model, a refused request, a contract error, and the requests each action sends ([testing](testing.md))
 - In the browser: the list with data, empty, and with a failed request; creating, editing, and deleting a record; and page and filter changes, including Back

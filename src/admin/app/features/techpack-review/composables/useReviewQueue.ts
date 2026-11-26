@@ -12,28 +12,25 @@ export type ReviewQueueTab = keyof typeof STATUS
 /** The review queue. The status tab and the page live in the URL (`?status=reviewed&page=2`). */
 export function useReviewQueue() {
   const route = useRoute()
-  // The API has a fixed page size and no search.
-  const list = useListQuery({ status: ['in-review', 'reviewed'] as const })
-  const status = computed(() => STATUS[list.filters.value.status])
-
-  const reviews = useApiQuery(
-    () => `techpack-review:list:${status.value}:${list.page.value}`,
-    ({ signal }) => api.get('/admin/docai/techpack-reviews', {
-      query: { status: status.value, page: list.page.value - 1 }, // the API's page is zero-based
+  // The API has a fixed page size and no search, so `query` holds only the page.
+  const reviews = useApiList(
+    'techpack-review:list',
+    { status: Object.keys(STATUS) as ReviewQueueTab[] },
+    {},
+    ({ filters, query, signal }) => api.get('/admin/docai/techpack-reviews', {
+      query: { page: query.page, status: STATUS[filters.status] },
       signal,
       model: reviewPageModel,
-    }),
+    }).then(({ content, ...page }) => ({ ...page, items: content })),
   )
 
-  list.keepPageInRange(() => reviews.data.value?.totalPages)
-
   return {
-    tab: computed(() => list.filters.value.status),
-    page: list.page,
+    tab: computed(() => reviews.filters.value.status),
+    page: reviews.page,
     /** The list's URL query, kept by links into a review so Back returns here. */
     listQuery: computed(() => route.query),
-    items: computed(() => reviews.data.value?.content ?? []),
-    totalPages: computed(() => reviews.data.value?.totalPages ?? 0),
+    items: reviews.items,
+    totalPages: reviews.totalPages,
     /** Reviews in the current tab across every page; undefined until loaded or when the API leaves it out. */
     total: computed(() => (reviews.loading.value ? undefined : reviews.data.value?.totalElements ?? undefined)),
     loading: reviews.loading,
@@ -41,7 +38,7 @@ export function useReviewQueue() {
     pending: reviews.pending,
     error: reviews.error,
     refresh: reviews.refresh,
-    showStatus: (next: ReviewQueueTab) => list.setFilters({ status: next }),
-    showPage: list.setPage,
+    showStatus: (next: ReviewQueueTab) => reviews.setFilters({ status: next }),
+    showPage: reviews.showPage,
   }
 }

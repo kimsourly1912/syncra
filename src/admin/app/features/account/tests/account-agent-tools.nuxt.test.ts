@@ -4,8 +4,9 @@ import { flushPromises } from '@vue/test-utils'
 import { mockNuxtImport, mountSuspended } from '@nuxt/test-utils/runtime'
 import { clearNuxtData, useRouter } from '#imports'
 import AccountListScreen from '../components/AccountListScreen.vue'
-import { fakeApi, ok } from '#test/fake-api'
+import { fakeApi, listPage, ok } from '#test/fake-api'
 import { installModelContext } from '#test/model-context'
+import type { Api } from '@/api'
 
 const route = reactive({ query: {} as Record<string, string>, params: {}, path: '/' })
 
@@ -23,9 +24,8 @@ const user = {
   token: 1200,
   seatUsed: 2,
   seatTotal: 5,
-}
-const page = (items: unknown[], totalPages = 1) => ({ page: 0, size: 20, totalItems: items.length, totalPages, items })
-const summary = { accountRegistered: 1, completedOnboardingVerification: 1, pendingOnboardingVerification: 0 }
+} satisfies Api.UserResponseRow
+const summary = { accountRegistered: 1, completedOnboardingVerification: 1, pendingOnboardingVerification: 0 } satisfies Api.AdminUserSummaryResponse
 
 const modelContext = installModelContext()
 let wrapper: { unmount: () => void } | undefined
@@ -51,7 +51,7 @@ afterEach(() => {
 describe('account list agent tools', () => {
   it('searches through the list\'s URL state and answers with the accounts it loaded', async () => {
     const { transport } = fakeApi({
-      'GET /admin/portal-users': ({ query }: { query?: unknown }) => ok((query as { search?: string }).search ? page([user]) : page([])),
+      'GET /admin/portal-users': ({ query }: { query?: unknown }) => ok((query as { search?: string }).search ? listPage([user]) : listPage([])),
       'GET /admin/portal-users/summary': ok(summary),
     })
     wrapper = await mountSuspended(AccountListScreen)
@@ -73,7 +73,7 @@ describe('account list agent tools', () => {
   })
 
   it('says so when nothing matches', async () => {
-    fakeApi({ 'GET /admin/portal-users': ok(page([])), 'GET /admin/portal-users/summary': ok(summary) })
+    fakeApi({ 'GET /admin/portal-users': ok(listPage([])), 'GET /admin/portal-users/summary': ok(summary) })
     wrapper = await mountSuspended(AccountListScreen)
     await flushPromises()
     await modelContext.registered('search_accounts')

@@ -1,7 +1,7 @@
 <script setup lang="ts">
-useHead({ title: 'Community Management' })
+definePageMeta({ title: 'Community management' })
 
-// Placeholder: Community Management has no requirement and no API yet (open question). The page
+// Placeholder: Community management has no requirement and no API yet (open question). The page
 // says so and lists what's needed, so it isn't mistaken for a broken or empty screen.
 const NEEDED = [
   {
@@ -27,7 +27,7 @@ const NEEDED = [
     <template #header>
       <UDashboardNavbar
         icon="lucide:users"
-        title="Community Management"
+        title="Community management"
       >
         <template #right>
           <UBadge
@@ -49,7 +49,7 @@ const NEEDED = [
         </span>
         <div class="space-y-2">
           <h2 class="text-xl font-semibold text-highlighted">
-            Community Management is coming
+            Community management is coming
           </h2>
           <p class="text-pretty text-muted">
             This section has a place in Admin, but what it does hasn't been decided yet. It'll be built once these are in place.

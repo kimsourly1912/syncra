@@ -146,7 +146,7 @@ const notFound = computed(() => props.userId === undefined || error.value?.kind 
             >
               <UIcon
                 :name="fact.icon"
-                class="mt-0.5 size-4 shrink-0 text-dimmed"
+                class="mt-0.5 size-4 shrink-0 text-muted"
                 aria-hidden="true"
               />
               <div class="min-w-0">

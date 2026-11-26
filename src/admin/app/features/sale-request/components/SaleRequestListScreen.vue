@@ -1,14 +1,14 @@
 <script setup lang="ts">
 import type { TableColumn } from '@nuxt/ui'
 import type { ToolbarTab } from '@/components/list/ListToolbarTabs.vue'
-import { SALE_REQUEST_PAGE_SIZES, useSaleRequestList } from '../composables/useSaleRequestList'
+import { useSaleRequestList } from '../composables/useSaleRequestList'
 import type { SaleRequestStatusTab, SaleRequestTypeFilter } from '../composables/useSaleRequestList'
 import type { SaleRequestRow } from '../models/sale-request'
 import { SALE_REQUEST_SOURCE, SALE_REQUEST_STATUS, SALE_REQUEST_TYPE } from '../utils/labels'
 import SaleRequestDetailSlideover from './SaleRequestDetailSlideover.vue'
 
 const {
-  tab, type, search, page, pageSize, isFiltered, items, totalPages, loading, refreshing, pending, error, refresh,
+  tab, type, search, page, pageSize, pageSizes, isFiltered, items, totalPages, loading, refreshing, pending, error, refresh,
   summary, summaryError, refreshSummary, showStatus, showType, setSearch, showPage, setPageSize, clearFilters,
   openId, openRequest, closeRequest,
 } = useSaleRequestList()
@@ -55,7 +55,7 @@ const columns: TableColumn<SaleRequestRow>[] = [
     <template #header>
       <UDashboardNavbar
         icon="lucide:shopping-cart"
-        title="Sale Requests"
+        title="Sale requests"
       />
 
       <UDashboardToolbar>
@@ -113,7 +113,7 @@ const columns: TableColumn<SaleRequestRow>[] = [
         :filtered="isFiltered"
         :page="page"
         :page-count="totalPages"
-        :page-sizes="SALE_REQUEST_PAGE_SIZES"
+        :page-sizes="pageSizes"
         :page-size="pageSize"
         card-class="space-y-2 pe-9"
         @retry="refresh"
@@ -136,7 +136,7 @@ const columns: TableColumn<SaleRequestRow>[] = [
               />
             </button>
             <p
-              class="text-xs text-dimmed"
+              class="text-xs text-muted"
               :title="formatAge(row.original.submitDate).full"
             >
               {{ meta(row.original) }}
@@ -211,7 +211,7 @@ const columns: TableColumn<SaleRequestRow>[] = [
               {{ row.emailAddress }}
             </p>
           </div>
-          <p class="flex flex-wrap items-center gap-x-2 gap-y-1 text-xs text-dimmed">
+          <p class="flex flex-wrap items-center gap-x-2 gap-y-1 text-xs text-muted">
             <span
               v-if="requestType(row)"
               class="inline-flex items-center gap-1"

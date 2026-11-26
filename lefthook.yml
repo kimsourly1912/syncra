@@ -2,9 +2,10 @@
 # are the checks: each job runs only when the commit or push touches its own app's folder, so an
 # Admin change never runs Portal or Web checks.
 #
-#   On commit: ESLint on the staged files of the app you touched (seconds).
-#   On push:   typecheck and tests of each app with changes in the pushed commits, and Admin's e2e
-#              smoke tests (about 1–2 minutes for an Admin push).
+#   On commit: ESLint on the staged files of the app you touched (seconds), Admin's API contract,
+#              the size of any staged AGENTS.md, and the docs' links when a .md file is staged.
+#   On push:   typecheck and tests of each app with changes in the pushed commits, plus Admin's knip
+#              and e2e smoke tests (about 2–3 minutes for an Admin push).
 #   By hand:   the plain build, before a merge request (the commands are in each app's AGENTS.md).
 #
 # Run a hook without committing: `pnpm exec lefthook run pre-commit` (or `pre-push`).
@@ -25,6 +26,16 @@ pre-commit:
       glob: "src/admin/{openapi/**,app/api/generated/**,openapi-ts.config.ts,scripts/gen-endpoints.mjs}"
       run: node src/admin/scripts/check-api-contract.mjs
 
+    # Agent instruction files stay under their limits: 6 KiB at the root, 4 KiB per app (AGENTS.md).
+    - name: instruction file size
+      glob: "{AGENTS.md,src/*/AGENTS.md}"
+      run: node scripts/check-instruction-size.mjs
+
+    # Relative links between the docs point at files and headings that exist.
+    - name: doc links
+      glob: "*.md"
+      run: node scripts/check-doc-links.mjs
+
     # Portal and Web already have lint errors in files nobody is changing, so only the staged files
     # are checked: fix what's in a file you touch (AGENTS.md, Scope).
     - name: portal lint
@@ -41,6 +52,12 @@ pre-push:
   # Stop at the first failure: no e2e build after failing tests.
   piped: true
   jobs:
+    # Unused files, exports, and dependencies (knip.json), in about 2 seconds. Runs from the root:
+    # knip reads the whole workspace.
+    - name: admin knip
+      glob: "src/admin/**"
+      run: pnpm exec knip --workspace src/admin --no-progress
+
     - name: admin typecheck and tests
       root: src/admin/
       glob: "*"

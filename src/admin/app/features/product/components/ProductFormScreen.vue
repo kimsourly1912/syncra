@@ -159,19 +159,19 @@ const VISIBILITY = [
               <UIcon
                 v-else
                 name="lucide:package"
-                class="size-6 text-dimmed"
+                class="size-6 text-muted"
               />
             </span>
             <div class="min-w-0 space-y-1">
               <p
                 class="font-medium wrap-anywhere"
-                :class="form.name.trim() ? 'text-highlighted' : 'text-dimmed'"
+                :class="form.name.trim() ? 'text-highlighted' : 'text-muted'"
               >
                 {{ previewName }}
               </p>
               <p
                 class="line-clamp-3 text-sm wrap-anywhere"
-                :class="form.description.trim() ? 'text-muted' : 'text-dimmed'"
+                :class="form.description.trim() ? 'text-muted' : 'text-muted italic'"
               >
                 {{ previewDescription }}
               </p>
@@ -203,7 +203,7 @@ const VISIBILITY = [
       >
         <p class="text-sm text-muted">
           <span class="font-medium text-highlighted">{{ product.name }}</span>
-          <span class="text-dimmed tabular-nums"> #{{ product.id }}</span>
+          <span class="text-muted tabular-nums"> #{{ product.id }}</span>
           · Updated {{ updated }}
         </p>
         <div
@@ -399,7 +399,7 @@ const VISIBILITY = [
             Preview
           </p>
           <ReusePreview />
-          <p class="text-xs text-dimmed">
+          <p class="text-xs text-muted">
             Saving isn't connected yet, so this preview is all that changes.
           </p>
         </aside>

@@ -54,5 +54,11 @@ export default defineConfig({
       requests: false,
       responses: false,
     },
+    // Test-only (decision 0021): an MSW request handler per operation, answering with what the test
+    // passes in, typed by the spec. Never imported by app code (lint blocks it). The plugin is "In
+    // Progress" upstream, so tests reach it only through test/support/msw.ts, one place to adapt.
+    // Not the `@faker-js/faker` plugin: the patch above makes every field nullable, so its fakes
+    // are `null` half the time and fail the feature models. Revisit when the spec marks required fields.
+    { name: 'msw', source: [] },
   ],
 })

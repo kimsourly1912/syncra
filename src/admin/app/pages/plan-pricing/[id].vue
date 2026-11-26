@@ -1,11 +1,11 @@
 <script setup lang="ts">
 import { PlanEditScreen } from '@/features/plan-pricing'
 
-useHead({ title: 'Edit plan' })
+definePageMeta({ title: 'Edit plan' })
 
-const route = useRoute()
+const route = useRoute('plan-pricing-id')
 </script>
 
 <template>
-  <PlanEditScreen :id="String(route.params.id)" />
+  <PlanEditScreen :id="route.params.id" />
 </template>

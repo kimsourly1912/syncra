@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { AccountListActions, AccountListScreen } from '@/features/account'
 
-useHead({ title: 'Account Management' })
+definePageMeta({ title: 'Account management' })
 </script>
 
 <template>

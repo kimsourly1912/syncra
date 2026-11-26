@@ -5,7 +5,7 @@ import type { Api } from '@/api'
 export type OnboardingStatus = NonNullable<Api.UserResponseRow['onboardingStatus']>
 
 // A row of the account list. Only the user id is needed to open the account.
-export const portalUserRowModel = defineModel(vUserResponseRow, {
+const portalUserRowModel = defineModel(vUserResponseRow, {
   required: ['userId'],
   optional: ['companyId', 'email', 'firstname', 'lastname', 'onboardingStatus', 'moduleActiveCount', 'token', 'seatUsed', 'seatTotal'],
 })
@@ -23,4 +23,3 @@ export const portalUserSummaryModel = defineModel(vAdminUserSummaryResponse, {
 })
 
 export type PortalUserRow = v.InferOutput<typeof portalUserRowModel>
-export type PortalUserSummary = v.InferOutput<typeof portalUserSummaryModel>

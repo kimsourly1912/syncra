@@ -1,6 +1,2 @@
 export { default as ReviewQueueScreen } from './components/ReviewQueueScreen.vue'
 export { default as ReviewDetailScreen } from './components/ReviewDetailScreen.vue'
-export type { ReviewItem, ReviewPage, ReviewStatus } from './models/review-item'
-export type { SourcePreview } from './models/source-preview'
-export type { AiFinding, PdfFinding, WorkbookInspection, WorkbookRow, WorkbookSheet } from './models/workbook-inspection'
-export type { ReviewFinding } from './utils/findings'

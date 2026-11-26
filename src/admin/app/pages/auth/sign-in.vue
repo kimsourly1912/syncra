@@ -1,8 +1,7 @@
 <script setup lang="ts">
 import { SignInScreen } from '@/features/auth'
 
-definePageMeta({ access: 'guest', layout: 'auth' })
-useHead({ title: 'Sign in' })
+definePageMeta({ title: 'Sign in', access: 'guest', layout: 'auth' })
 </script>
 
 <template>

@@ -1,8 +1,7 @@
 <script setup lang="ts">
 import { ForgotPasswordScreen } from '@/features/auth'
 
-definePageMeta({ access: 'guest', layout: 'auth' })
-useHead({ title: 'Reset your password' })
+definePageMeta({ title: 'Reset your password', access: 'guest', layout: 'auth' })
 </script>
 
 <template>

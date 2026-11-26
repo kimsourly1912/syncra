@@ -2,7 +2,7 @@ import * as v from 'valibot'
 import { defineModel, vCreditPackageDto } from '@/api'
 
 // A credit (token) package customers can buy. Only the id is needed to list it.
-export const tokenPackageModel = defineModel(vCreditPackageDto, {
+const tokenPackageModel = defineModel(vCreditPackageDto, {
   required: ['id'],
   optional: ['code', 'name', 'description', 'tokenAmount', 'price', 'currency', 'expiryDays', 'sortOrder'],
 })

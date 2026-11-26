@@ -31,3 +31,7 @@ For Admin:
 
 - A screen rename only changes the feature and its `index.ts`.
 - Portal and Web still follow 0002 as written until they add feature indexes.
+
+## Follow-up
+
+- 2026-11-26: Indexes had grown to export what nothing outside the feature imported (auth's sign-in, reset, and schema internals; model types in five features). They're trimmed, and `app/features/tests/feature-exports.test.ts` fails any export that code outside the feature doesn't import. A feature's own tests import its files directly.

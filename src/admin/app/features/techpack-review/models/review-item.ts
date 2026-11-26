@@ -19,6 +19,5 @@ export const reviewPageModel = v.object({
 })
 
 export type ReviewItem = v.InferOutput<typeof reviewItemModel>
-export type ReviewPage = v.InferOutput<typeof reviewPageModel>
 
 export type ReviewDraft = Pick<ReviewItem, 'fileId' | 'filename'> & { draftUuid: string }

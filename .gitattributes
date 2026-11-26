@@ -1,0 +1,14 @@
+# LF in the repository and in every checkout, whatever `core.autocrlf` says. Without this, a
+# Windows checkout shows files as modified when only their line endings differ, including
+# src/admin/app/api/generated, which nobody may edit by hand.
+* text=auto eol=lf
+
+*.png binary
+*.jpg binary
+*.jpeg binary
+*.gif binary
+*.ico binary
+*.webp binary
+*.pdf binary
+*.woff binary
+*.woff2 binary

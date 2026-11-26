@@ -7,7 +7,7 @@ import type { useLeadList } from './useLeadList'
 
 const searchLeads = defineAgentTool({
   name: 'search_leads',
-  description: 'Find sales lead inquiries on Lead Inquiries by status and by name, company, or email, and list them with their contact details, products of interest, and status. Shows the same results on screen. Read-only.',
+  description: 'Find sales lead inquiries on Lead inquiries by status and by name, company, or email, and list them with their contact details, products of interest, and status. Shows the same results on screen. Read-only.',
   input: toStandardJsonSchema(v.object({
     status: v.optional(v.pipe(
       v.picklist(LEAD_STATUS_TABS),

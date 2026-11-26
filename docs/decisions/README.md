@@ -23,6 +23,8 @@ A decision record explains an architecture or documentation choice that had real
 | [0017](0017-admin-webmcp-pilot.md) | Admin pilots WebMCP with read-only list tools, on only in `nuxt dev` | Accepted. Admin only. |
 | [0018](0018-shared-testing-and-ui-standards.md) | Shared testing and UI standards at the root: every feature ships a test plan; app docs keep the mechanics | Accepted. All apps. |
 | [0019](0019-sentence-case-ui-text.md) | UI text is sentence case in every app; Title Case screens convert when edited | Accepted. All apps. |
+| [0020](0020-admin-lists-and-page-names-from-one-source.md) | Admin list keys come from the URL state (`useApiList`); page names from `definePageMeta({ title })` | Accepted. Admin only. |
+| [0021](0021-admin-tooling-from-libraries.md) | Admin checks layers (eslint-plugin-boundaries), routes (typedPages), accessibility (axe), dead code (Knip), and Tailwind classes (Nuxt UI) with libraries; dates use `@internationalized/date`; MSW pilot | Accepted. Admin only. |
 
 ## Template
 

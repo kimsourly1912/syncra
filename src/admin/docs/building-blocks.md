@@ -44,7 +44,8 @@ Auto-imported.
 | `useApiQuery(key, fetcher, { enabled })` | Every read ([reads](data-access.md#reads-useapiquery)) |
 | `useApiMutation(fn, { success, error, invalidate })` | Every write ([writes](data-access.md#writes-useapimutation)) |
 | `invalidateQueries(...prefixes)` | Refresh on-screen queries by key prefix, by hand |
-| `useListQuery(choices, { search, pageSizes })` | A list's filters, search, page, and page size in the URL ([lists](data-access.md#lists-uselistquery)) |
+| `useApiList(name, choices, options, fetcher)` | A list that loads one page of an endpoint: URL state, key, and request in one ([lists](data-access.md#lists-uselistquery)) |
+| `useListQuery(choices, { search, pageSizes })` | A list's filters, search, page, and page size in the URL, with `stateKey` and `apiQuery` ([lists](data-access.md#lists-uselistquery)) |
 | `useUrlRecord(param)` | A record open in a panel on a list (`?lead=7`): `id`, `open(id)`, `close()` |
 | `useUrlTab(tabs, param?)` | A page's tab in `?tab=`, as a writable computed |
 | `useCenteredTab(root, active)` | Keeps a scrolling tab row's active tab in view (`ListToolbarTabs` calls it; a page's own `UTabs` passes a ref) |
@@ -58,6 +59,7 @@ Auto-imported.
 | Export | Use for |
 | --- | --- |
 | `formatCount`, `formatChange`, `formatMoney`, `formatDate`, `formatDateTime`, `formatAge`, `NO_VALUE` (`utils/format.ts`) | **Every** number, amount, and date on screen, in one locale (`en-US`). `formatAge` gives `{ age, full }` for a `title` tooltip; a missing value is `NO_VALUE` (`—`). Never call `toLocaleString` or `Intl` in a component. |
+| `parseCalendarDay` (`utils/format.ts`) | An API calendar day (`2026-11-25`) as a `CalendarDate` from `@internationalized/date`, the type `UCalendar` and `UInputDate` take; `undefined` for a day that doesn't exist. Build dates for those components with `@internationalized/date`, never `Date`. |
 | `saveFile(blob, filename)` (`utils/file.ts`) | Hand a downloaded file to the browser |
 | `isSectionActive(path, to, also?)` (`utils/navigation.ts`) | Whether a sidebar link's section is the current page (the layout uses it) |
 

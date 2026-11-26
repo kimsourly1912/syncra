@@ -14,10 +14,12 @@
     "dev:portal:local": "pnpm --filter portal dev:local",
     "preview:web": "pnpm --filter web preview",
     "preview:admin": "pnpm --filter admin preview",
-    "preview:portal": "pnpm --filter portal preview"
+    "preview:portal": "pnpm --filter portal preview",
+    "knip": "knip"
   },
   "devDependencies": {
     "@types/node": "^24.10.0",
+    "knip": "^6.48.0",
     "lefthook": "2.2.2",
     "tsx": "^4.20.6",
     "typescript": "^5.9.3"

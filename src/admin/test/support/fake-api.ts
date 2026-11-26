@@ -21,11 +21,7 @@ export function fakeApi(responses: Record<string, Responder> = {}) {
   return { transport, responses, onExpired }
 }
 
-/** A `ResponseMsg*` success envelope. */
-export const ok = (data: unknown = null) => ({ success: true, msg: 'ok', reason: null, data })
-
-/** A `ResponseMsg*` resolved failure. */
-export const refused = (reason: string) => ({ success: false, msg: null, reason, data: null })
+export { listPage, ok, refused } from './responses'
 
 /** What ofetch throws for an HTTP error. */
 export function httpError(status: number, data?: unknown) {

@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { PlanListScreen } from '@/features/plan-pricing'
 
-useHead({ title: 'Plan & Pricing Management' })
+definePageMeta({ title: 'Plan & pricing management' })
 </script>
 
 <template>
