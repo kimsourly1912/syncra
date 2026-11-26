@@ -1,6 +1,6 @@
 # Web UI
 
-Web is a public marketing site. Visitors arrive on any device, often from a link straight to one page.
+Web is a public marketing site. Visitors arrive on any device, often from a link straight to one page. The [UI standard](../../../docs/ui-standard.md) sets the UX rules for every app; this doc covers how Web meets them.
 
 ## Foundation
 
@@ -54,7 +54,7 @@ Only `en` is enabled in `nuxt.config.ts`. `i18n/locales/zh-CN.json` exists, but 
 ## Review checklist
 
 - [ ] The page has a `useHead` title.
-- [ ] It works at 375px, 768px, and 1280px+, with no horizontal scroll and readable line lengths.
+- [ ] It works at 390px, 768px, and 1280px+, with no horizontal scroll and readable line lengths.
 - [ ] A direct visit works, and so does navigating there from another page (for detail pages, product A → product B).
 - [ ] Images have `alt` text, and icon-only buttons have an `aria-label`.
 - [ ] Every new `lucide:*` icon exists in `app/assets/icons/lucide/`.

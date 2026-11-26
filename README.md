@@ -33,7 +33,7 @@ Run its development command from the repository root. For the customer Portal, u
 
 For internal Admin, use `pnpm dev:admin` and open [http://localhost:555](http://localhost:555). It also prints a Network URL you can open from a phone on the same Wi-Fi.
 
-The apps connect to a separately configured API. A loaded page verifies that the frontend is running. Sign-in, extraction, and other API-backed flows need a reachable service and an appropriate test account.
+The apps connect to a separately configured API. A loaded page verifies that the frontend is running. Sign-in, extraction, and other API-backed flows need a reachable service and an appropriate test account. Which test API and accounts to use is still an [open question](docs/product/open-questions.md#platform).
 
 ## Checks
 
@@ -47,12 +47,21 @@ pnpm --filter @syncra/portal test:nuxt --run
 
 ### Git hooks
 
-There's no CI. `pnpm install` sets up git hooks ([lefthook.yml](lefthook.yml)) that check only the app a commit or push touches:
+There's no CI, on purpose: this is a private repository, and hosted runners (GitHub Actions, GitLab CI) cost money for private projects. The git hooks are the checks, so don't skip them. `pnpm install` sets up git hooks ([lefthook.yml](lefthook.yml)) that check only the app a commit or push touches:
 
 - **On commit:** ESLint on the staged files of that app, and for Admin, that `app/api/generated` still matches the OpenAPI spec.
 - **On push:** Admin's typecheck, tests, and e2e smoke tests, and Portal's unit tests. Web has no push check yet. The e2e tests need Playwright's Chromium once per machine: `pnpm --filter admin exec playwright-core install chromium-headless-shell`.
 
 A failed hook stops the commit or push and prints what to fix. Run a hook by hand with `pnpm exec lefthook run pre-commit` (or `pre-push`). The plain build isn't in the hooks: run it before a merge request.
+
+**The lockfile is shared, and no hook covers it.** All three apps resolve their dependencies from the one root `pnpm-lock.yaml`, but each hook runs only for the app folder you changed. Adding, removing, or upgrading a dependency in one app can change what the others resolve. After any change to `pnpm-lock.yaml`, run every app's tests yourself and report the results.
+
+## Branches, commits, and pull requests
+
+- **Branch** from `dev` as `<type>/<short-kebab-name>`, where the type is `feat`, `fix`, `chore`, or `docs`: `fix/admin-optimize-deps`. Agents use the same names, not their tool's name.
+- **Commit subject:** `<App>: <what changed>`, an imperative sentence: `Admin: run the e2e smoke tests in the push hook`. Use `Portal:`, `Web:`, or `Admin:`, and `Workspace:` for root files or more than one app. Keep a commit to one app where you can, because the hooks check per app.
+- **Pull request description:** what changed and why, the spec or its few lines ([feature standard](docs/feature-standard.md)), and the test plan and report ([testing standard](docs/testing-standard.md#report)). Name any open question you added and any screen that shows Sample data.
+- Never commit secrets, `.env` files, or real customer data, and never skip a hook to get a change through.
 
 Each app lists its own checks in its `AGENTS.md` and explains them in `docs/testing.md`: [Portal](src/portal/docs/testing.md), [Admin](src/admin/docs/testing.md), [Web](src/web/docs/testing.md).
 

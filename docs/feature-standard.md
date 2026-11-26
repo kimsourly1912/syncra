@@ -17,7 +17,7 @@ An inference can explain a likely goal, but it can't authorize behavior. New rol
 
 1. Write or update the spec using the template below. For a small change, a few lines in the PR description are enough.
 2. Find the closest reference implementation in the owning app's `docs/architecture.md`.
-3. Confirm the API contract: endpoint, method, request and response DTOs, the error shape, and whether the request is scoped to the company. If the contract doesn't exist, write the DTO you propose and record the question. Don't build an unconfirmed flow as if it were supported.
+3. Confirm the API contract: endpoint, method, request and response DTOs (in Admin, the generated contract), the error shape, and whether the request is scoped to the company. If the contract doesn't exist, write the request and response shapes you propose and record the question. Don't build an unconfirmed flow as if it were supported.
 
 ## Spec template
 
@@ -25,27 +25,27 @@ An inference can explain a likely goal, but it can't authorize behavior. New rol
 | --- | --- |
 | Purpose and scope | User, goal, entry point, expected outcome, and what is explicitly out of scope |
 | Roles and availability | App, company settings, module entitlements, and roles. List client visibility and confirmed API authorization separately. |
-| Journey and screen states | Main steps and outcomes. For each step, the states that apply: empty, loading, validation, disabled, error, success, recovery. |
-| Forms and data | Labels, types, required or optional, defaults, limits, and how the form maps to the request. Link the service and DTO. |
+| Journey and screen states | Main steps and outcomes. For each step, the [required states](ui-standard.md#required-states) that apply: empty, loading, validation, disabled, error, success, recovery. |
+| Forms and data | Labels, types, required or optional, defaults, limits, and how the form maps to the request. Link the service and DTO (in Admin, the composable and feature model). |
 | Business rules and side effects | What changes state, spends tokens, publishes a result, or calls another system. Cover retries, double submission, and stale state where they apply. |
-| Acceptance and verification | Specific inputs, actions, and expected results. Name the focused tests and the browser checks that need a running service. |
+| Acceptance and verification | Specific inputs, actions, and expected results, and the [test plan](testing-standard.md#the-test-plan): one line per test layer, with the tests to add or why a layer isn't needed. Name the browser checks that need a running service. |
 | Open questions | Unresolved policy, contract, and deployment details, with the evidence or decision that would settle each one |
 
 ## Definition of done
 
 **Code**
 
-- The code follows the owning app's layers and folders: thin route, feature screen, `use<Feature>` composable, service, DTO.
+- The code follows the owning app's layers and folders: thin route, feature screen, `use<Feature>` composable, service, DTO. Admin has no service or DTO layer: the composable calls the generated `api` with a feature model ([Admin data access](../src/admin/docs/data-access.md)).
 - Company scope comes from the profile. Identity (company, job, file, draft) is carried through every action and retry.
 - Both API failure paths are handled, and success shows only after it's confirmed ([decision 0003](decisions/0003-request-and-error-flow.md)).
-- Every screen state in the spec exists: loading, empty, error with a way to retry, disabled with a reason, success.
+- Every screen state in the spec exists and follows the [UI standard](ui-standard.md): loading, empty, error with a way to retry, disabled with a reason, success.
 - New text follows the screen's localization (Portal: see its `docs/ui.md`).
 
 **Verification**
 
-- The app's lint passes, and its relevant tests pass. New logic that can be tested has a test.
+- The app's lint passes, and its relevant tests pass. Every layer in the [test plan](testing-standard.md) is done, or marked not needed with a reason.
 - The normal entry point works for each affected role, and so do the error or recovery states.
-- The report says what ran, what was mocked, and what needs a configured service.
+- The report follows the [testing standard's template](testing-standard.md#report): what ran, what was mocked, and what needs a configured service.
 
 **Docs (same change)**
 

@@ -21,6 +21,8 @@ A decision record explains an architecture or documentation choice that had real
 | [0015](0015-admin-feature-index-exports-screens.md) | Admin feature indexes export their screens; lint enforces the boundary | Accepted. Admin only. |
 | [0016](0016-admin-tests-beside-the-code.md) | Admin tests sit in `tests/` beside the code; the `.nuxt.test.ts` suffix picks the environment | Accepted. Admin only. |
 | [0017](0017-admin-webmcp-pilot.md) | Admin pilots WebMCP with read-only list tools, on only in `nuxt dev` | Accepted. Admin only. |
+| [0018](0018-shared-testing-and-ui-standards.md) | Shared testing and UI standards at the root: every feature ships a test plan; app docs keep the mechanics | Accepted. All apps. |
+| [0019](0019-sentence-case-ui-text.md) | UI text is sentence case in every app; Title Case screens convert when edited | Accepted. All apps. |
 
 ## Template
 

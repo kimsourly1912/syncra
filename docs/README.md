@@ -16,11 +16,13 @@ Start with the [root instructions](../AGENTS.md), then the instructions for the 
 | [Workspace architecture](architecture.md) | App ownership, the external API boundary, sessions and permissions, IDs that cross apps, local ports |
 | [Shared conventions](conventions.md) | TypeScript, naming, service and DTO shape, response envelope, Valibot schemas, file names |
 | [Feature standard](feature-standard.md) | How to specify a feature, and the definition of done |
+| [Testing standard](testing-standard.md) | The test plan every feature ships with: which layers, what each covers, the report |
+| [UI standard](ui-standard.md) | UX rules for every screen: required states, feedback, widths, accessibility |
 | [Decision records](decisions/README.md) | Why the architecture and docs look the way they do |
-| [Product scope](product/scope.md) | Users, roles, screen map, journeys, data concepts: current behavior with evidence labels |
+| [Product scope](product/scope.md) | Users, roles, screen map, journeys, data concepts, the glossary: current behavior with evidence labels |
 | [Open questions](product/open-questions.md) | Unresolved product, permission, and contract questions |
 | [Doc AI](features/doc-ai.md) | Cross-app contract for extraction, results, glossary, workbook review, ERP export |
-| [README](../README.md) | Setup, environment files, run commands |
+| [README](../README.md) | Setup, environment files, run commands, git hooks, branches, commits, and pull requests |
 
 ## App docs
 
@@ -31,11 +33,11 @@ Every app uses the same file names, so you can find a topic in any app the same 
 | App instructions | [AGENTS.md](../src/portal/AGENTS.md) | [AGENTS.md](../src/admin/AGENTS.md) | [AGENTS.md](../src/web/AGENTS.md) |
 | Folders, layers, routes, reference and legacy code | [architecture](../src/portal/docs/architecture.md) | [architecture](../src/admin/docs/architecture.md) | [architecture](../src/web/docs/architecture.md) |
 | API client, services, reads, writes, errors | [data-access](../src/portal/docs/data-access.md) | [data-access](../src/admin/docs/data-access.md) | [data-access](../src/web/docs/data-access.md) |
-| Theme, layout, page patterns, UI states, review checklist | [ui](../src/portal/docs/ui.md) | [ui](../src/admin/docs/ui.md) | [ui](../src/web/docs/ui.md) |
+| Theme, layout, page patterns, UI states, review checklist (shared rules: [UI standard](ui-standard.md)) | [ui](../src/portal/docs/ui.md) | [ui](../src/admin/docs/ui.md) | [ui](../src/web/docs/ui.md) |
 | Forms and validation | [forms](../src/portal/docs/forms.md) | [forms](../src/admin/docs/forms.md) | [forms](../src/web/docs/forms.md) |
 | End-to-end CRUD recipe | [crud-recipe](../src/portal/docs/crud-recipe.md) | [crud-recipe](../src/admin/docs/crud-recipe.md) | Not needed: Web has one public write |
 | Shared components, composables, utils | [building-blocks](../src/portal/docs/building-blocks.md) | [building-blocks](../src/admin/docs/building-blocks.md) | [building-blocks](../src/web/docs/building-blocks.md) |
-| Tests and verification | [testing](../src/portal/docs/testing.md) | [testing](../src/admin/docs/testing.md) | [testing](../src/web/docs/testing.md) |
+| Tests and verification (shared rules: [testing standard](testing-standard.md)) | [testing](../src/portal/docs/testing.md) | [testing](../src/admin/docs/testing.md) | [testing](../src/web/docs/testing.md) |
 | Agent tools (WebMCP) | Not used | [agent-tools](../src/admin/docs/agent-tools.md) | Not used |
 
 ## Maintaining the docs
